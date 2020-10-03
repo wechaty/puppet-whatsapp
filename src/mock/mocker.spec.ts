@@ -18,7 +18,7 @@ import {
   FileBox,
 }                         from 'wechaty-puppet'
 
-import { PuppetMock }         from '../puppet-mock'
+import { PuppetWhatsapp }         from '../puppet-whatsapp'
 
 import { MessageMock }        from './user/message-mock'
 
@@ -32,7 +32,7 @@ class MockerTest extends Mocker {
 
 function createFixture () {
   const mocker = new Mocker()
-  const puppet = new PuppetMock({ mocker })
+  const puppet = new PuppetWhatsapp({ mocker })
 
   const [user, mike, mary] = mocker.createContacts(3)
   const room = mocker.createRoom({
@@ -56,7 +56,7 @@ function createFixture () {
 test('Mocker restart without problem', async t => {
   const mocker = new MockerTest()
   mocker.use(SimpleEnvironment())
-  const puppet = new PuppetMock({ mocker })
+  const puppet = new PuppetWhatsapp({ mocker })
   void puppet
 
   try {
