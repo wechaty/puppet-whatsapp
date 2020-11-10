@@ -17,65 +17,54 @@
  *
  */
 
-import { Client, Message } from 'whatsapp-web.js'
-import path  from 'path'
+import {
+  Client,
+  Message,
+  Contact,
+} from 'whatsapp-web.js'
+import path from 'path'
 
 import {
   ContactPayload,
   FileBox,
-
   FriendshipPayload,
-
   ImageType,
-
+  log,
+  MemoryCard,
   MessagePayload,
-
+  MessageType,
+  ContactType,
+  ContactGender,
+  MiniProgramPayload,
+  PayloadType,
   Puppet,
   PuppetOptions,
-
   RoomInvitationPayload,
   RoomMemberPayload,
   RoomPayload,
-
+  ScanStatus,
   UrlLinkPayload,
-  MiniProgramPayload,
-
-  log,
-  PayloadType,
-  MessageType, ScanStatus,
 } from 'wechaty-puppet'
 
 import {
-  VERSION, CHATIE_OFFICIAL_ACCOUNT_QRCODE, qrCodeForChatie, SESSION_FILE_PATH,
-}                                   from './config'
+  CHATIE_OFFICIAL_ACCOUNT_QRCODE,
+  MEMORY_SLOT,
+  qrCodeForChatie,
+  VERSION,
+} from './config'
 
 // import { Attachment } from './mock/user/types'
-
-import {
-  Mocker,
-  // ContactMock,
-}                     from './mock/mod'
+import { Mocker } from './mock/mod'
 // import { UrlLink, MiniProgram } from 'wechaty'
-import * as fs from 'fs'
 
 export type PuppetWhatsAppOptions = PuppetOptions & {
   mocker?: Mocker,
+  memory?: MemoryCard
 }
 
 const messageStore: any = {}
-let sessionCfg
-if (fs.existsSync(SESSION_FILE_PATH)) {
-  sessionCfg = require(SESSION_FILE_PATH)
-}
-const client = new Client(
-  {
-    puppeteer : {
-      headless: true,
-    },
-
-    session: sessionCfg,
-  }
-)
+const contactStore: any = {}
+let client = new Client({})
 
 class PuppetWhatsapp extends Puppet {
 
@@ -112,11 +101,22 @@ class PuppetWhatsapp extends Puppet {
     }
 
     this.state.on('pending')
+    const sessionCfg = (await this.memory.get(MEMORY_SLOT))
 
-    client.on('ready', () => {
-      this.id = client.info.me.user
+    client = new Client({
+      puppeteer: {
+        headless: false,
+      },
+      session: sessionCfg,
+    })
+    client.on('ready', async () => {
+      this.id = client.info.wid.user
       this.state.on(true)
-      this.emit('login', { contactId: client.info.me.user })
+      const contacts: Contact[] = await client.getContacts()
+      for (const contact of contacts) {
+        contactStore[contact.id._serialized] = contact
+      }
+      this.emit('login', { contactId: client.info.wid._serialized })
     })
 
     client.on('message', (msg: Message) => {
@@ -130,13 +130,10 @@ class PuppetWhatsapp extends Puppet {
       this.emit('scan', { qrcode : qr, status : ScanStatus.Waiting })
     })
 
-    client.on('authenticated', (session) => {
-      sessionCfg = session
-      fs.writeFile(SESSION_FILE_PATH, JSON.stringify(session), function (err) {
-        if (err) {
-          console.error(err)
-        }
-      })
+    client.on('authenticated', async (session) => {
+      // save session file
+      await this.memory.set(MEMORY_SLOT, session)
+      await this.memory.save()
     })
     void client.initialize()
     /**
@@ -289,10 +286,34 @@ class PuppetWhatsapp extends Puppet {
     return FileBox.fromFile(WECHATY_ICON_PNG)
   }
 
-  async contactRawPayloadParser (payload: ContactPayload) { return payload }
+  async contactRawPayloadParser (whatsAppPayload: Contact): Promise<ContactPayload> {
+    let type, name
+    if (whatsAppPayload.isUser) {
+      type = ContactType.Individual
+    } else if (whatsAppPayload.isEnterprise) {
+      type = ContactType.Corporation
+    } else {
+      type = ContactType.Unknown
+    }
+
+    if (whatsAppPayload.name === undefined) {
+      name = ''
+    } else {
+      name = whatsAppPayload.name
+    }
+    return {
+      avatar : await whatsAppPayload.getProfilePicUrl(),
+      gender : ContactGender.Unknown,
+      id     : whatsAppPayload.id.user,
+      name   : name,
+      phone : [whatsAppPayload.number],
+      type   : type,
+    }
+  }
+
   async contactRawPayload (id: string): Promise<ContactPayload> {
     log.verbose('PuppetWhatsApp', 'contactRawPayload(%s)', id)
-    return this.mocker.contactPayload(id)
+    return contactStore[id]
   }
 
   /**
@@ -369,16 +390,15 @@ class PuppetWhatsapp extends Puppet {
   }
 
   async messageRawPayloadParser (whatsAppPayload: Message): Promise<MessagePayload> {
-    const payload: MessagePayload = {
-      fromId       :  whatsAppPayload.from,
-      id           :  whatsAppPayload.id.id,
-      mentionIdList:  whatsAppPayload.mentionedIds,
-      text         :  whatsAppPayload.body,
-      timestamp    :  Date.now(),
-      toId         :  whatsAppPayload.to,
-      type         :  MessageType.Text,
+    return {
+      fromId: whatsAppPayload.from,
+      id: whatsAppPayload.id.id,
+      mentionIdList: whatsAppPayload.mentionedIds,
+      text: whatsAppPayload.body,
+      timestamp: Date.now(),
+      toId: whatsAppPayload.to,
+      type: MessageType.Text,
     }
-    return payload
   }
 
   async messageRawPayload (id: string): Promise<MessagePayload> {

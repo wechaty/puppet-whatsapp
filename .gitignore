@@ -1,3 +1,5 @@
+*.memory-card.json
+.idea
 session.json
 # Logs
 logs
