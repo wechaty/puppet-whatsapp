@@ -105,7 +105,7 @@ class PuppetWhatsapp extends Puppet {
 
     client = new Client({
       puppeteer: {
-        headless: false,
+        headless: true,
       },
       session: sessionCfg,
     })
