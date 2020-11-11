@@ -17,35 +17,33 @@
  *
  */
 import {
-  Wechaty,
-  log,
-  Message,
-  Contact,
-  ScanStatus,
-}  from 'wechaty'
+  EventLogoutPayload,
+  EventLoginPayload,
+  EventScanPayload,
+  EventErrorPayload,
+  EventMessagePayload,
+}                         from 'wechaty-puppet'
 
 import { PuppetWhatsapp } from '../src/mod'
 
+import qrcode from 'qrcode-terminal'
 /**
  *
  * 1. Declare your Bot!
  *
  */
 const puppet = new PuppetWhatsapp()
-const bot = new Wechaty({
-  name : 'ding-dong-bot',
-  puppet: puppet,
-})
 
 /**
  *
  * 2. Register event handlers for Bot
  *
  */
-bot
+puppet
   .on('logout', onLogout)
   .on('login',  onLogin)
   .on('scan',   onScan)
+  .on('error',  onError)
   .on('message', onMessage)
 
 /**
@@ -53,9 +51,12 @@ bot
  * 3. Start the bot!
  *
  */
-bot.start()
-  .then(() => log.info('StarterBot', 'Starter Bot Started.'))
-  .catch(e => log.error('StarterBot', e))
+puppet.start()
+  .catch(async e => {
+    console.error('Bot start() fail:', e)
+    await puppet.stop()
+    process.exit(-1)
+  })
 
 /**
  *
@@ -69,30 +70,29 @@ bot.start()
  *  `scan`, `login`, `logout`, `error`, and `message`
  *
  */
-function onScan (qrcode: string, status: ScanStatus) {
-  if (status === ScanStatus.Waiting || status === ScanStatus.Timeout) {
-    require('qrcode-terminal').generate(qrcode, { small: true })  // show qrcode on console
-
-    log.info('StarterBot', 'onScan: %s(%s) - %s', ScanStatus[status], status)
-
+function onScan (payload: EventScanPayload) {
+  if (payload.qrcode) {
+    qrcode.generate(payload.qrcode, { small: true })
   } else {
-    log.info('StarterBot', 'onScan: %s(%s)', ScanStatus[status], status)
+    console.info(`[${payload.status}]`)
   }
 }
 
-function onLogin (user: Contact) {
-  log.info('StarterBot', '%s login', user)
+function onLogin (payload: EventLoginPayload) {
+  console.info(`${payload.contactId} login`)
 }
 
-function onLogout (user: Contact) {
-  log.info('StarterBot', '%s logout', user)
+function onLogout (payload: EventLogoutPayload) {
+  console.info(`${payload.contactId} logouted`)
 }
 
-async function onMessage (msg: Message) {
-  log.info('StarterBot', msg.toString())
-  if (msg.text() === 'ding') {
-    await msg.say('dong')
+function onError (payload: EventErrorPayload) {
+  console.error('Bot error:', payload.data)
+  /*
+  if (bot.logonoff()) {
+    bot.say('Wechaty error: ' + e.message).catch(console.error)
   }
+  */
 }
 
 /**
@@ -101,6 +101,12 @@ async function onMessage (msg: Message) {
  *    dealing with Messages.
  *
  */
+async function onMessage (payload: EventMessagePayload) {
+  const msgPayload = await puppet.messagePayload(payload.messageId)
+  if ((/ding/.test(msgPayload.text || '') )) {
+    await puppet.messageSendText(msgPayload.fromId!, 'dong')
+  }
+}
 
 /**
  *
@@ -111,5 +117,6 @@ const welcome = `
 Puppet Version: ${puppet.version()}
 
 Please wait... I'm trying to login in...
+
 `
 console.info(welcome)

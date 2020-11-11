@@ -391,13 +391,13 @@ class PuppetWhatsapp extends Puppet {
 
   async messageRawPayloadParser (whatsAppPayload: Message): Promise<MessagePayload> {
     return {
-      fromId: whatsAppPayload.from,
-      id: whatsAppPayload.id.id,
-      mentionIdList: whatsAppPayload.mentionedIds,
-      text: whatsAppPayload.body,
-      timestamp: Date.now(),
-      toId: whatsAppPayload.to,
-      type: MessageType.Text,
+      fromId        : whatsAppPayload.from,
+      id            : whatsAppPayload.id.id,
+      mentionIdList : whatsAppPayload.mentionedIds,
+      text          : whatsAppPayload.body,
+      timestamp     : Date.now(),
+      toId          : whatsAppPayload.to,
+      type          : MessageType.Text,
     }
   }
 
