@@ -4,7 +4,7 @@
 [![npm (tag)](https://img.shields.io/npm/v/wechaty-puppet-whatsapp/next.svg)](https://www.npmjs.com/package/wechaty-puppet-whatsapp?activeTab=versions)
 [![NPM](https://github.com/wechaty/wechaty-puppet-whatsapp/workflows/NPM/badge.svg)](https://github.com/wechaty/wechaty-puppet-whatsapp/actions?query=workflow%3ANPM)
 
-![chatie puppet](docs/images/mock.png)
+![wechaty puppet whatsapp](docs/images/wechaty-puppet-whatsapp.png)
 
 [![Powered by Wechaty](https://img.shields.io/badge/Powered%20By-Wechaty-brightgreen.svg)](https://github.com/wechaty/wechaty)
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-blue.svg)](https://www.typescriptlang.org/)
