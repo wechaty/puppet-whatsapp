@@ -1,7 +1,6 @@
 import {
   FileBox,
 }             from 'wechaty-puppet'
-
 export const CHATIE_OFFICIAL_ACCOUNT_QRCODE = 'http://weixin.qq.com/r/qymXj7DEO_1ErfTs93y5'
 
 export function qrCodeForChatie (): FileBox {
@@ -9,3 +8,4 @@ export function qrCodeForChatie (): FileBox {
 }
 
 export { VERSION } from './version'
+export const MEMORY_SLOT = 'PUPPET_WHATSAPP'

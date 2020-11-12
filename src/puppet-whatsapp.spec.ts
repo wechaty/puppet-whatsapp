@@ -2,13 +2,13 @@
 
 import test  from 'blue-tape'
 
-import { PuppetMock } from './puppet-mock'
+import { PuppetWhatsapp } from './puppet-whatsapp'
 
-class PuppetMockTest extends PuppetMock {
+class PuppetWhatsAppTest extends PuppetWhatsapp {
 }
 
-test('PuppetMock perfect restart testing', async (t) => {
-  const puppet = new PuppetMockTest()
+test('PuppetWhatsapp perfect restart testing', async (t) => {
+  const puppet = new PuppetWhatsAppTest()
   try {
 
     for (let i = 0; i < 3; i++) {
@@ -21,7 +21,7 @@ test('PuppetMock perfect restart testing', async (t) => {
       t.pass('start/stop-ed at #' + i)
     }
 
-    t.pass('PuppetMock() perfect restart pass.')
+    t.pass('PuppetWhatsapp() perfect restart pass.')
   } catch (e) {
     t.fail(e)
   }

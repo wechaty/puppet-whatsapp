@@ -24,14 +24,15 @@ import {
   EventMessagePayload,
 }                         from 'wechaty-puppet'
 
-import { PuppetMock } from '../src/mod'
+import { PuppetWhatsapp } from '../src/mod'
 
+import qrcode from 'qrcode-terminal'
 /**
  *
  * 1. Declare your Bot!
  *
  */
-const puppet = new PuppetMock()
+const puppet = new PuppetWhatsapp()
 
 /**
  *
@@ -71,13 +72,7 @@ puppet.start()
  */
 function onScan (payload: EventScanPayload) {
   if (payload.qrcode) {
-    // Generate a QR Code online via
-    // http://goqr.me/api/doc/create-qr-code/
-    const qrcodeImageUrl = [
-      'https://api.qrserver.com/v1/create-qr-code/?data=',
-      encodeURIComponent(payload.qrcode),
-    ].join('')
-    console.info(`[${payload.status}] ${qrcodeImageUrl}\nScan QR Code above to log in: `)
+    qrcode.generate(payload.qrcode, { small: true })
   } else {
     console.info(`[${payload.status}]`)
   }
@@ -85,7 +80,6 @@ function onScan (payload: EventScanPayload) {
 
 function onLogin (payload: EventLoginPayload) {
   console.info(`${payload.contactId} login`)
-  puppet.messageSendText(payload.contactId, 'Wechaty login').catch(console.error)
 }
 
 function onLogout (payload: EventLogoutPayload) {
@@ -109,7 +103,9 @@ function onError (payload: EventErrorPayload) {
  */
 async function onMessage (payload: EventMessagePayload) {
   const msgPayload = await puppet.messagePayload(payload.messageId)
-  console.info(JSON.stringify(msgPayload))
+  if ((/ding/.test(msgPayload.text || '') )) {
+    await puppet.messageSendText(msgPayload.fromId!, 'dong')
+  }
 }
 
 /**
