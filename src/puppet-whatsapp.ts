@@ -127,6 +127,8 @@ class PuppetWhatsapp extends Puppet {
       await this.memory.set(MEMORY_SLOT, session)
       await this.memory.save()
     })
+
+    this.client = client
     await client.initialize()
   }
 
@@ -145,12 +147,18 @@ class PuppetWhatsapp extends Puppet {
       clearInterval(this.loopTimer)
     }
 
-    if (this.logonoff()) {
-      await this.logout()
+    try {
+      if (this.logonoff()) {
+        await this.logout()
+      }
+
+      // await some tasks...
+
+    } finally {
+      this.client = undefined
+      this.state.off(true)
     }
 
-    // await some tasks...
-    this.state.off(true)
   }
 
   login (contactId: string): Promise<void> {

@@ -26,6 +26,8 @@ import {
 
 import { PuppetWhatsapp } from '../src/mod'
 
+const qrcode = require('qrcode-terminal')
+
 /**
  *
  * 1. Declare your Bot!
@@ -71,9 +73,11 @@ puppet.start()
  */
 function onScan (payload: EventScanPayload) {
   if (payload.qrcode) {
+    qrcode.generate(payload.qrcode, { small: true })
+
     const qrcodeImageUrl = [
       'https://wechaty.js.org/qrcode/',
-      encodeURIComponent(payload.qrcode),
+      payload.qrcode,
     ].join('')
     console.info(`[${payload.status}] ${qrcodeImageUrl}\nScan QR Code above to log in: `)
   } else {
