@@ -16,13 +16,13 @@
  *   limitations under the License.
  *
  */
+import path from 'path'
 
 import {
   Client,
-  Message,
-  Contact,
-} from 'whatsapp-web.js'
-import path from 'path'
+  Message as WhatsappMessage,
+  Contact as WhatsappContact,
+}                                 from 'whatsapp-web.js'
 
 import {
   ContactPayload,
@@ -44,14 +44,14 @@ import {
   RoomPayload,
   ScanStatus,
   UrlLinkPayload,
-} from 'wechaty-puppet'
+}                           from 'wechaty-puppet'
 
 import {
   CHATIE_OFFICIAL_ACCOUNT_QRCODE,
   MEMORY_SLOT,
   qrCodeForChatie,
   VERSION,
-} from './config'
+}                                     from './config'
 
 // import { Attachment } from './mock/user/types'
 import { Mocker } from './mock/mod'
@@ -62,17 +62,15 @@ export type PuppetWhatsAppOptions = PuppetOptions & {
   memory?: MemoryCard
 }
 
-const messageStore: any = {}
-const contactStore: any = {}
-let client = new Client({})
-
 class PuppetWhatsapp extends Puppet {
 
   static readonly VERSION = VERSION
 
   private loopTimer?: NodeJS.Timer
 
-  mocker: Mocker
+  private messageStore: { [id: string]: WhatsappMessage }
+  private contactStore: { [id: string]: WhatsappContact }
+  private client: undefined | Client
 
   constructor (
     public options: PuppetWhatsAppOptions = {},
@@ -80,15 +78,8 @@ class PuppetWhatsapp extends Puppet {
     super(options)
     log.verbose('PuppetWhatsApp', 'constructor()')
 
-    if (options.mocker) {
-      log.verbose('PuppetWhatsApp', 'constructor() use options.mocker')
-      this.mocker = options.mocker
-    } else {
-      log.verbose('PuppetWhatsApp', 'constructor() creating the default mocker')
-      this.mocker = new Mocker()
-      // this.mocker.use(SimpleBehavior())
-    }
-    this.mocker.puppet = this
+    this.messageStore = {}
+    this.contactStore = {}
   }
 
   async start (): Promise<void> {
@@ -103,7 +94,7 @@ class PuppetWhatsapp extends Puppet {
     this.state.on('pending')
     const sessionCfg = (await this.memory.get(MEMORY_SLOT))
 
-    client = new Client({
+    const client = new Client({
       puppeteer: {
         headless: true,
       },
@@ -112,15 +103,16 @@ class PuppetWhatsapp extends Puppet {
     client.on('ready', async () => {
       this.id = client.info.wid.user
       this.state.on(true)
-      const contacts: Contact[] = await client.getContacts()
+      const contacts: WhatsappContact[] = await client.getContacts()
       for (const contact of contacts) {
-        contactStore[contact.id._serialized] = contact
+        this.contactStore[contact.id._serialized] = contact
       }
       this.emit('login', { contactId: client.info.wid._serialized })
     })
 
-    client.on('message', (msg: Message) => {
-      messageStore[msg.id.id] = msg
+    client.on('message', (msg: WhatsappMessage) => {
+      const id = msg.id.id
+      this.messageStore[id] = msg
       this.emit('message', { messageId : msg.id.id })
     })
 
@@ -135,11 +127,7 @@ class PuppetWhatsapp extends Puppet {
       await this.memory.set(MEMORY_SLOT, session)
       await this.memory.save()
     })
-    void client.initialize()
-    /**
-     * Start mocker after the puppet fully turned ON.
-     */
-    setImmediate(() => this.mocker.start())
+    await client.initialize()
   }
 
   async stop (): Promise<void> {
@@ -156,8 +144,6 @@ class PuppetWhatsapp extends Puppet {
     if (this.loopTimer) {
       clearInterval(this.loopTimer)
     }
-
-    this.mocker.stop()
 
     if (this.logonoff()) {
       await this.logout()
@@ -253,7 +239,7 @@ class PuppetWhatsapp extends Puppet {
 
   public async contactList (): Promise<string[]> {
     log.verbose('PuppetWhatsApp', 'contactList()')
-    return [...this.mocker.cacheContactPayload.keys()]
+    return []
   }
 
   async contactQRCode (contactId: string): Promise<string> {
@@ -286,7 +272,7 @@ class PuppetWhatsapp extends Puppet {
     return FileBox.fromFile(WECHATY_ICON_PNG)
   }
 
-  async contactRawPayloadParser (whatsAppPayload: Contact): Promise<ContactPayload> {
+  async contactRawPayloadParser (whatsAppPayload: WhatsappContact): Promise<ContactPayload> {
     let type, name
     if (whatsAppPayload.isUser) {
       type = ContactType.Individual
@@ -311,9 +297,9 @@ class PuppetWhatsapp extends Puppet {
     }
   }
 
-  async contactRawPayload (id: string): Promise<ContactPayload> {
+  async contactRawPayload (id: string): Promise<WhatsappContact> {
     log.verbose('PuppetWhatsApp', 'contactRawPayload(%s)', id)
-    return contactStore[id]
+    return this.contactStore[id]
   }
 
   /**
@@ -389,7 +375,7 @@ class PuppetWhatsapp extends Puppet {
     }
   }
 
-  async messageRawPayloadParser (whatsAppPayload: Message): Promise<MessagePayload> {
+  async messageRawPayloadParser (whatsAppPayload: WhatsappMessage): Promise<MessagePayload> {
     return {
       fromId        : whatsAppPayload.from,
       id            : whatsAppPayload.id.id,
@@ -401,9 +387,9 @@ class PuppetWhatsapp extends Puppet {
     }
   }
 
-  async messageRawPayload (id: string): Promise<MessagePayload> {
+  async messageRawPayload (id: string): Promise<WhatsappMessage> {
     log.verbose('PuppetWhatsApp', 'messageRawPayload(%s)', id)
-    return messageStore[id]
+    return this.messageStore[id]
   }
 
   private async messageSend (
@@ -418,7 +404,13 @@ class PuppetWhatsapp extends Puppet {
     if (typeof something !== 'string') {
       return
     }
-    void client.sendMessage(conversationId, something)
+
+    if (!this.client) {
+      log.warn('PuppetWhatsApp', 'messageSend() this.client not found')
+      return
+    }
+
+    await this.client.sendMessage(conversationId, something)
     // const user = this.mocker.ContactMock.load(this.id)
     // let conversation
 
@@ -492,12 +484,12 @@ class PuppetWhatsapp extends Puppet {
   async roomRawPayloadParser (payload: RoomPayload) { return payload }
   async roomRawPayload (id: string): Promise<RoomPayload> {
     log.verbose('PuppetWhatsApp', 'roomRawPayload(%s)', id)
-    return this.mocker.roomPayload(id)
+    return {} as any
   }
 
   async roomList (): Promise<string[]> {
     log.verbose('PuppetWhatsApp', 'roomList()')
-    return [...this.mocker.cacheRoomPayload.keys()]
+    return []
   }
 
   async roomDel (
