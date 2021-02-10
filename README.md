@@ -35,6 +35,10 @@ Initial version.
 
 1. Kick-off PR from [@univerone](https://github.com/univerone) with ding-dong-bot enabled!
 
+## Special Thanks
+
+Wechaty Puppet Whatsapp is built on top of [whatsapp-web.js](https://github.com/pedroslopez/whatsapp-web.js), which is A WhatsApp client library for NodeJS that connects through the WhatsApp Web browser app, created by Pedro S. Lopez, [@pedroslopez](https://github.com/pedroslopez).
+
 ## Creators
 
 1. [@univerone](https://github.com/univerone) Shanshan JIANG
