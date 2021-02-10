@@ -1,4 +1,4 @@
-# Wechaty Puppet Whatsapp
+# WECHATY PUPPET WHATSAPP
 
 [![NPM Version](https://badge.fury.io/js/wechaty-puppet-whatsapp.svg)](https://badge.fury.io/js/wechaty-puppet-whatsapp)
 [![npm (tag)](https://img.shields.io/npm/v/wechaty-puppet-whatsapp/next.svg)](https://www.npmjs.com/package/wechaty-puppet-whatsapp?activeTab=versions)
@@ -25,7 +25,18 @@ const wechaty = new Wechaty({ puppet })
 wechaty.start()
 ```
 
-## History
+## WECHATY GETTING STARTED
+
+TL;DR:
+
+```sh
+export WECHATY-PUPPET=wechaty-puppet-whatsapp
+npm start
+```
+
+Learn how to run Wechaty bot from <https://github.com/wechaty/wechaty-getting-started>
+
+## HISTORY
 
 ### master
 
@@ -35,11 +46,11 @@ Initial version.
 
 1. Kick-off PR from [@univerone](https://github.com/univerone) with ding-dong-bot enabled!
 
-## Special Thanks
+## SPECIAL THANKS
 
 Wechaty Puppet Whatsapp is built on top of [whatsapp-web.js](https://github.com/pedroslopez/whatsapp-web.js), which is A WhatsApp client library for NodeJS that connects through the WhatsApp Web browser app, created by Pedro S. Lopez, [@pedroslopez](https://github.com/pedroslopez).
 
-## Creators
+## MAINTAINERS
 
 1. [@univerone](https://github.com/univerone) Shanshan JIANG
 1. [@huan](https://github.com/huan) [Huan LI](http://linkedin.com/in/zixia) \<zixia@zixia.net\>
