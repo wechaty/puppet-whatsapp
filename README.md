@@ -30,7 +30,7 @@ wechaty.start()
 TL;DR:
 
 ```sh
-export WECHATY-PUPPET=wechaty-puppet-whatsapp
+export WECHATY_PUPPET=wechaty-puppet-whatsapp
 npm start
 ```
 
