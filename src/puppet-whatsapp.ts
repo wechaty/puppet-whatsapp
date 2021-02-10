@@ -29,7 +29,6 @@ import {
   FileBox,
   FriendshipPayload,
   ImageType,
-  log,
   MemoryCard,
   MessagePayload,
   MessageType,
@@ -44,14 +43,17 @@ import {
   RoomPayload,
   ScanStatus,
   UrlLinkPayload,
+
+  log,
 }                           from 'wechaty-puppet'
 
 import {
   CHATIE_OFFICIAL_ACCOUNT_QRCODE,
   MEMORY_SLOT,
   qrCodeForChatie,
-  VERSION,
 }                                     from './config'
+
+import { VERSION } from './version'
 
 // import { Attachment } from './mock/user/types'
 // import { UrlLink, MiniProgram } from 'wechaty'
@@ -90,6 +92,13 @@ class PuppetWhatsapp extends Puppet {
     }
 
     this.state.on('pending')
+
+    await this.initClient()
+  }
+
+  private async initClient () {
+    log.verbose('PuppetwhatsApp', 'initClient()')
+
     const sessionCfg = (await this.memory.get(MEMORY_SLOT))
 
     const client = new Client({
@@ -98,6 +107,7 @@ class PuppetWhatsapp extends Puppet {
       },
       session: sessionCfg,
     })
+
     client.on('ready', async () => {
       this.id = client.info.wid.user
       this.state.on(true)
@@ -127,7 +137,10 @@ class PuppetWhatsapp extends Puppet {
     })
 
     this.client = client
+
+    log.silly('PuppetWhatsApp', 'initClient() client.initialize() ...')
     await client.initialize()
+    log.silly('PuppetWhatsApp', 'initClient() client.initialize() done.')
   }
 
   async stop (): Promise<void> {
