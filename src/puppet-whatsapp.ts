@@ -19,12 +19,6 @@
 import path from 'path'
 
 import {
-  Client,
-  Message as WhatsappMessage,
-  Contact as WhatsappContact,
-}                                 from 'whatsapp-web.js'
-
-import {
   ContactPayload,
   FileBox,
   FriendshipPayload,
@@ -54,6 +48,12 @@ import {
 }                                     from './config'
 
 import { VERSION } from './version'
+import {
+  getWhatsApp,
+  WhatsApp,
+  WhatsappContact,
+  WhatsappMessage,
+}                   from './whatsapp'
 
 // import { Attachment } from './mock/user/types'
 // import { UrlLink, MiniProgram } from 'wechaty'
@@ -70,7 +70,7 @@ class PuppetWhatsapp extends Puppet {
 
   private messageStore: { [id: string]: WhatsappMessage }
   private contactStore: { [id: string]: WhatsappContact }
-  private client: undefined | Client
+  private whatsapp: undefined | WhatsApp
 
   constructor (
     public options: PuppetWhatsAppOptions = {},
@@ -93,72 +93,89 @@ class PuppetWhatsapp extends Puppet {
 
     this.state.on('pending')
 
-    await this.initClient()
+    const session = await this.memory.get(MEMORY_SLOT)
+    const whatsapp = await getWhatsApp(session)
+    this.whatsapp = whatsapp
+
+    this.initWhatsAppEvents(whatsapp)
+
+    /**
+     * Huan(202102): initialize() will rot be resolved not before bot log in
+     */
+    whatsapp
+      .initialize()
+      .then(() => log.verbose('PuppetWhatsApp', 'start() whatsapp.initialize() done'))
+      .catch(e => {
+        if (this.state.on()) {
+          console.error(e)
+          log.error('PuppetWhatsApp', 'start() whatsapp.initialize() rejection: %s', e)
+        } else {
+          // Puppet is stoping...
+          log.verbose('PuppetWhatsApp', 'start() whatsapp.initialize() rejected on a stopped puppet.')
+        }
+      })
+
+    await super.start()
+
+    /**
+     * Huan(202102): Wait for QR Code before resolve start() for robust state management
+     */
+    await Promise.race([
+      new Promise(resolve => whatsapp.on('qr', resolve)),
+      this.state.off(),
+    ])
   }
 
-  private async initClient () {
-    log.verbose('PuppetwhatsApp', 'initClient()')
+  private initWhatsAppEvents (
+    whatsapp: WhatsApp,
+  ): void {
+    log.verbose('PuppetwhatsApp', 'initWhatsAppEvents()')
 
-    const puppeteer = {
-      /**
-       * No usable sandbox!
-       *  https://github.com/pedroslopez/whatsapp-web.js/issues/344#issuecomment-691570764
-       */
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-      ],
-      headless: true,
-    }
-
-    const session = await this.memory.get(MEMORY_SLOT)
-
-    const client = new Client({
-      puppeteer,
-      session,
+    whatsapp.on('authenticated', async (session) => {
+      try {
+        // save session file
+        await this.memory.set(MEMORY_SLOT, session)
+        await this.memory.save()
+      } catch (e) {
+        console.error(e)
+        log.error('PuppetWhatsApp', 'getClient() whatsapp.on(authenticated) rejection: %s', e)
+      }
     })
 
-    client.on('ready', async () => {
-      this.id = client.info.wid.user
+    whatsapp.on('ready', async () => {
+      this.id = whatsapp.info.wid.user
       this.state.on(true)
-      const contacts: WhatsappContact[] = await client.getContacts()
+      const contacts: WhatsappContact[] = await whatsapp.getContacts()
       for (const contact of contacts) {
         this.contactStore[contact.id._serialized] = contact
       }
-      this.emit('login', { contactId: client.info.wid._serialized })
+      this.emit('login', { contactId: whatsapp.info.wid._serialized })
     })
 
-    client.on('message', (msg: WhatsappMessage) => {
+    whatsapp.on('message', (msg: WhatsappMessage) => {
       const id = msg.id.id
       this.messageStore[id] = msg
       this.emit('message', { messageId : msg.id.id })
     })
 
-    client.on('qr', (qr) => {
+    whatsapp.on('qr', (qr) => {
       // NOTE: This event will not be fired if a session is specified.
       // console.log('QR RECEIVED', qr);
       this.emit('scan', { qrcode : qr, status : ScanStatus.Waiting })
     })
-
-    client.on('authenticated', async (session) => {
-      // save session file
-      await this.memory.set(MEMORY_SLOT, session)
-      await this.memory.save()
-    })
-
-    this.client = client
-
-    log.silly('PuppetWhatsApp', 'initClient() client.initialize() ...')
-    await client.initialize()
-    log.silly('PuppetWhatsApp', 'initClient() client.initialize() done.')
   }
 
   async stop (): Promise<void> {
-    log.verbose('PuppetWhatsApp', 'stop()')
+    log.verbose('PuppetWhatsApp', 'stop() xx')
 
     if (this.state.off()) {
       log.warn('PuppetWhatsApp', 'stop() is called on a OFF puppet. await ready(off) and return.')
       await this.state.ready('off')
+      return
+    }
+
+    if (!this.whatsapp) {
+      log.error('PuppetWhatsApp', 'stop() this.whatsapp is undefined!')
       return
     }
 
@@ -173,32 +190,34 @@ class PuppetWhatsapp extends Puppet {
         await this.logout()
       }
 
-      // await some tasks...
+      await this.whatsapp?.destroy()
+
+      await super.stop()
 
     } finally {
-      this.client = undefined
+      this.whatsapp = undefined
       this.state.off(true)
     }
 
   }
 
-  login (contactId: string): Promise<void> {
-    log.verbose('PuppetWhatsApp', 'login()')
-    return super.login(contactId)
-  }
+  // login (contactId: string): Promise<void> {
+  //   log.verbose('PuppetWhatsApp', 'login()')
+  //   return super.login(contactId)
+  // }
 
-  async logout (): Promise<void> {
-    log.verbose('PuppetWhatsApp', 'logout()')
+  // async logout (): Promise<void> {
+  //   log.verbose('PuppetWhatsApp', 'logout()')
 
-    if (!this.id) {
-      throw new Error('logout before login?')
-    }
+  //   if (!this.id) {
+  //     throw new Error('logout before login?')
+  //   }
 
-    this.emit('logout', { contactId: this.id, data: 'test' }) // before we will throw above by logonoff() when this.user===undefined
-    this.id = undefined
+  //   this.emit('logout', { contactId: this.id, data: 'test' }) // before we will throw above by logonoff() when this.user===undefined
+  //   this.id = undefined
 
-    // TODO: do the logout job
-  }
+  //   // TODO: do the logout job
+  // }
 
   ding (data?: string): void {
     log.silly('PuppetWhatsApp', 'ding(%s)', data || '')
@@ -434,12 +453,12 @@ class PuppetWhatsapp extends Puppet {
       return
     }
 
-    if (!this.client) {
+    if (!this.whatsapp) {
       log.warn('PuppetWhatsApp', 'messageSend() this.client not found')
       return
     }
 
-    await this.client.sendMessage(conversationId, something)
+    await this.whatsapp.sendMessage(conversationId, something)
     // const user = this.mocker.ContactMock.load(this.id)
     // let conversation
 
