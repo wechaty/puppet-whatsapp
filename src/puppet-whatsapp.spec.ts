@@ -24,6 +24,7 @@ test('PuppetWhatsapp perfect restart testing', async (t) => {
     t.pass('PuppetWhatsapp() perfect restart pass.')
 
   } catch (e) {
+    console.error(e)
     t.fail(e)
   }
 })

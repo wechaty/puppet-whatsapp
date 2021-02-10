@@ -1,6 +1,6 @@
 {
   "name": "wechaty-puppet-whatsapp",
-  "version": "0.0.12",
+  "version": "0.2.0",
   "description": "Wechaty Puppet for WhatsApp",
   "directories": {
     "test": "tests"

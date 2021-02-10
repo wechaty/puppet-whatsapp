@@ -118,12 +118,61 @@ class PuppetWhatsapp extends Puppet {
     await super.start()
 
     /**
-     * Huan(202102): Wait for QR Code before resolve start() for robust state management
+     * Huan(202102): Wait for Puppeteer to be inited before resolve start() for robust state management
      */
+    const future = new Promise<void>(resolve => {
+      function check () {
+        if (whatsapp.pupBrowser) {
+          resolve()
+        } else {
+          // process.stdout.write('.')
+          setTimeout(check, 100)
+        }
+      }
+
+      check()
+    })
+
     await Promise.race([
-      new Promise(resolve => whatsapp.on('qr', resolve)),
-      this.state.off(),
+      future,
+      this.state.ready('off'),
     ])
+  }
+
+  async stop (): Promise<void> {
+    log.verbose('PuppetWhatsApp', 'stop()')
+
+    if (this.state.off()) {
+      log.warn('PuppetWhatsApp', 'stop() is called on a OFF puppet. await ready(off) and return.')
+      await this.state.ready('off')
+      return
+    }
+
+    if (!this.whatsapp) {
+      log.error('PuppetWhatsApp', 'stop() this.whatsapp is undefined!')
+      return
+    }
+
+    this.state.off('pending')
+
+    if (this.loopTimer) {
+      clearInterval(this.loopTimer)
+    }
+
+    try {
+      if (this.logonoff()) {
+        await this.logout()
+      }
+
+      await this.whatsapp.destroy()
+
+      await super.stop()
+
+    } finally {
+      this.whatsapp = undefined
+      this.state.off(true)
+    }
+
   }
 
   private initWhatsAppEvents (
@@ -163,42 +212,6 @@ class PuppetWhatsapp extends Puppet {
       // console.log('QR RECEIVED', qr);
       this.emit('scan', { qrcode : qr, status : ScanStatus.Waiting })
     })
-  }
-
-  async stop (): Promise<void> {
-    log.verbose('PuppetWhatsApp', 'stop() xx')
-
-    if (this.state.off()) {
-      log.warn('PuppetWhatsApp', 'stop() is called on a OFF puppet. await ready(off) and return.')
-      await this.state.ready('off')
-      return
-    }
-
-    if (!this.whatsapp) {
-      log.error('PuppetWhatsApp', 'stop() this.whatsapp is undefined!')
-      return
-    }
-
-    this.state.off('pending')
-
-    if (this.loopTimer) {
-      clearInterval(this.loopTimer)
-    }
-
-    try {
-      if (this.logonoff()) {
-        await this.logout()
-      }
-
-      await this.whatsapp?.destroy()
-
-      await super.stop()
-
-    } finally {
-      this.whatsapp = undefined
-      this.state.off(true)
-    }
-
   }
 
   // login (contactId: string): Promise<void> {

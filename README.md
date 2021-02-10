@@ -40,6 +40,10 @@ Learn how to run Wechaty bot from <https://github.com/wechaty/wechaty-getting-st
 
 ### master
 
+### v0.2 (Feb 11, 2021)
+
+1. Passed the perfect restart unit testing.
+
 ### v0.0.1 (Nov, 2020)
 
 Initial version.
