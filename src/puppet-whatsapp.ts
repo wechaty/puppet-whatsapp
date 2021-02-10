@@ -99,13 +99,23 @@ class PuppetWhatsapp extends Puppet {
   private async initClient () {
     log.verbose('PuppetwhatsApp', 'initClient()')
 
-    const sessionCfg = (await this.memory.get(MEMORY_SLOT))
+    const puppeteer = {
+      /**
+       * No usable sandbox!
+       *  https://github.com/pedroslopez/whatsapp-web.js/issues/344#issuecomment-691570764
+       */
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+      ],
+      headless: true,
+    }
+
+    const session = await this.memory.get(MEMORY_SLOT)
 
     const client = new Client({
-      puppeteer: {
-        headless: true,
-      },
-      session: sessionCfg,
+      puppeteer,
+      session,
     })
 
     client.on('ready', async () => {
