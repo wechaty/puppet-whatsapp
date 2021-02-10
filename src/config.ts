@@ -7,5 +7,4 @@ export function qrCodeForChatie (): FileBox {
   return FileBox.fromQRCode(CHATIE_OFFICIAL_ACCOUNT_QRCODE)
 }
 
-export { VERSION } from './version'
 export const MEMORY_SLOT = 'PUPPET_WHATSAPP'
