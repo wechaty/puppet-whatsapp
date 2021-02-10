@@ -54,11 +54,9 @@ import {
 }                                     from './config'
 
 // import { Attachment } from './mock/user/types'
-import { Mocker } from './mock/mod'
 // import { UrlLink, MiniProgram } from 'wechaty'
 
 export type PuppetWhatsAppOptions = PuppetOptions & {
-  mocker?: Mocker,
   memory?: MemoryCard
 }
 
