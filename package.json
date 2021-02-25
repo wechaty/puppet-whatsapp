@@ -62,7 +62,7 @@
     "wechaty-puppet": "*"
   },
   "dependencies": {
-    "whatsapp-web.js": "^1.12.3"
+    "whatsapp-web.js": "^1.12.5"
   },
   "publishConfig": {
     "access": "public",
