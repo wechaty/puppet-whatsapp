@@ -39,6 +39,7 @@ import {
   UrlLinkPayload,
 
   log,
+  throwUnsupportedError,
 }                           from 'wechaty-puppet'
 
 import {
@@ -64,7 +65,7 @@ export type PuppetWhatsAppOptions = PuppetOptions & {
 
 class PuppetWhatsapp extends Puppet {
 
-  static readonly VERSION = VERSION
+  static override readonly VERSION = VERSION
 
   private loopTimer?: NodeJS.Timer
 
@@ -73,7 +74,7 @@ class PuppetWhatsapp extends Puppet {
   private whatsapp: undefined | WhatsApp
 
   constructor (
-    public options: PuppetWhatsAppOptions = {},
+    public override options: PuppetWhatsAppOptions = {},
   ) {
     super(options)
     log.verbose('PuppetWhatsApp', 'constructor()')
@@ -82,7 +83,7 @@ class PuppetWhatsapp extends Puppet {
     this.contactStore = {}
   }
 
-  async start (): Promise<void> {
+  override async start (): Promise<void> {
     log.verbose('PuppetWhatsApp', 'start()')
 
     if (this.state.on()) {
@@ -139,7 +140,7 @@ class PuppetWhatsapp extends Puppet {
     ])
   }
 
-  async stop (): Promise<void> {
+  override async stop (): Promise<void> {
     log.verbose('PuppetWhatsApp', 'stop()')
 
     if (this.state.off()) {
@@ -237,7 +238,7 @@ class PuppetWhatsapp extends Puppet {
     setTimeout(() => this.emit('dong', { data: data || '' }), 1000)
   }
 
-  unref (): void {
+  override unref (): void {
     log.verbose('PuppetWhatsApp', 'unref()')
     super.unref()
     if (this.loopTimer) {
@@ -360,7 +361,20 @@ class PuppetWhatsapp extends Puppet {
 
   async contactRawPayload (id: string): Promise<WhatsappContact> {
     log.verbose('PuppetWhatsApp', 'contactRawPayload(%s)', id)
-    return this.contactStore[id]
+    return this.contactStore[id]!
+  }
+
+  /**
+   *
+   * Conversation
+   *
+   */
+  async conversationReadMark (
+    conversationId: string,
+    hasRead?: boolean,
+  ) : Promise<void | boolean> {
+    log.verbose('PuppetWhatsApp', 'conversationReadMark(%s, %s)', conversationId, hasRead)
+    return throwUnsupportedError()
   }
 
   /**
@@ -450,7 +464,7 @@ class PuppetWhatsapp extends Puppet {
 
   async messageRawPayload (id: string): Promise<WhatsappMessage> {
     log.verbose('PuppetWhatsApp', 'messageRawPayload(%s)', id)
-    return this.messageStore[id]
+    return this.messageStore[id]!
   }
 
   private async messageSend (
