@@ -16,7 +16,7 @@
  *   limitations under the License.
  *
  */
-import {
+import type {
   EventLogoutPayload,
   EventLoginPayload,
   EventScanPayload,
@@ -110,7 +110,7 @@ function onError (payload: EventErrorPayload) {
  */
 async function onMessage (payload: EventMessagePayload) {
   const msgPayload = await puppet.messagePayload(payload.messageId)
-  if ((/ding/.test(msgPayload.text || '') )) {
+  if ((/ding/.test(msgPayload.text || ''))) {
     await puppet.messageSendText(msgPayload.fromId!, 'dong')
   }
 }

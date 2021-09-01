@@ -38,7 +38,9 @@ Learn how to run Wechaty bot from <https://github.com/wechaty/wechaty-getting-st
 
 ## HISTORY
 
-### master
+### master v0.3
+
+1. ES Modules support
 
 ### v0.2 (Feb 11, 2021)
 

@@ -46,15 +46,15 @@ import {
   CHATIE_OFFICIAL_ACCOUNT_QRCODE,
   MEMORY_SLOT,
   qrCodeForChatie,
-}                                     from './config'
+  VERSION,
+}                                     from './config.js'
 
-import { VERSION } from './version'
 import {
   getWhatsApp,
   WhatsApp,
   WhatsappContact,
   WhatsappMessage,
-}                   from './whatsapp'
+}                   from './whatsapp.js'
 
 // import { Attachment } from './mock/user/types'
 // import { UrlLink, MiniProgram } from 'wechaty'
@@ -67,7 +67,7 @@ class PuppetWhatsapp extends Puppet {
 
   static override readonly VERSION = VERSION
 
-  private loopTimer?: NodeJS.Timer
+  private loopTimer?: ReturnType<typeof setInterval>
 
   private messageStore: { [id: string]: WhatsappMessage }
   private contactStore: { [id: string]: WhatsappContact }

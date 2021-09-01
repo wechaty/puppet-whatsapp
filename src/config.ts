@@ -1,10 +1,22 @@
 import {
   FileBox,
 }             from 'wechaty-puppet'
-export const CHATIE_OFFICIAL_ACCOUNT_QRCODE = 'http://weixin.qq.com/r/qymXj7DEO_1ErfTs93y5'
+import { packageJson } from './package-json.js'
 
-export function qrCodeForChatie (): FileBox {
+const VERSION = packageJson.version || '0.0.0'
+
+const CHATIE_OFFICIAL_ACCOUNT_QRCODE = 'http://weixin.qq.com/r/qymXj7DEO_1ErfTs93y5'
+
+function qrCodeForChatie (): FileBox {
   return FileBox.fromQRCode(CHATIE_OFFICIAL_ACCOUNT_QRCODE)
 }
 
-export const MEMORY_SLOT = 'PUPPET_WHATSAPP'
+const MEMORY_SLOT = 'PUPPET_WHATSAPP'
+
+export {
+  CHATIE_OFFICIAL_ACCOUNT_QRCODE,
+  FileBox,
+  MEMORY_SLOT,
+  qrCodeForChatie,
+  VERSION,
+}

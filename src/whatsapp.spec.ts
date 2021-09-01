@@ -1,12 +1,12 @@
-#!/usr/bin/env ts-node
+#!/usr/bin/env node --no-warnings --loader ts-node/esm
 
-import test  from 'blue-tape'
+import { test } from 'tstest'
 
 import {
   getWhatsApp,
-}                 from './whatsapp'
+}                 from './whatsapp.js'
 
-test('getWhatsApp() QR Code & Destroy', async (t) => {
+test('getWhatsApp() QR Code & Destroy', async t => {
   const whatsapp = await getWhatsApp()
 
   try {
@@ -29,6 +29,6 @@ test('getWhatsApp() QR Code & Destroy', async (t) => {
     await whatsapp.destroy()
 
   } catch (e) {
-    t.fail(e)
+    t.fail(e as any)
   }
 })
