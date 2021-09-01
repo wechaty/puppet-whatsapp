@@ -1,4 +1,4 @@
-#!/usr/bin/env ts-node
+#!/usr/bin/env node --no-warnings --loader ts-node/esm
 
 import {
   PuppetWhatsapp,
@@ -6,11 +6,12 @@ import {
 }                 from 'wechaty-puppet-whatsapp'
 
 async function main () {
+  const puppet = new PuppetWhatsapp()
+
   if (VERSION === '0.0.0') {
     throw new Error('version should not be 0.0.0 when prepare for publishing')
   }
 
-  const puppet = new PuppetWhatsapp()
   console.info(`Puppet v${puppet.version()} smoke testing passed.`)
   return 0
 }

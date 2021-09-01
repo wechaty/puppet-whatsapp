@@ -1,22 +1,22 @@
-#!/usr/bin/env ts-node
+#!/usr/bin/env node --no-warnings --loader ts-node/esm
 
-import test  from 'blue-tape'
+import { test } from 'tstest'
 
-import { PuppetWhatsapp } from './puppet-whatsapp'
+import { PuppetWhatsapp } from './puppet-whatsapp.js'
 
 class PuppetWhatsAppTest extends PuppetWhatsapp {
 }
 
-test('PuppetWhatsapp perfect restart testing', async (t) => {
+test('PuppetWhatsapp perfect restart testing', async t => {
   const puppet = new PuppetWhatsAppTest()
   try {
 
     for (let i = 0; i < 3; i++) {
       await puppet.start()
-      t.true(puppet.state.on(), 'should be turned on after start()')
+      t.ok(puppet.state.on(), 'should be turned on after start()')
 
       await puppet.stop()
-      t.true(puppet.state.off(), 'should be turned off after stop()')
+      t.ok(puppet.state.off(), 'should be turned off after stop()')
 
       t.pass('start/stop-ed at #' + i)
     }
@@ -25,6 +25,6 @@ test('PuppetWhatsapp perfect restart testing', async (t) => {
 
   } catch (e) {
     console.error(e)
-    t.fail(e)
+    t.fail(e as any)
   }
 })

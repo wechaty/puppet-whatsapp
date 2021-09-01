@@ -1,5 +1,5 @@
-import { VERSION }        from './version'
-import { PuppetWhatsapp } from './puppet-whatsapp'
+import { VERSION }        from './config.js'
+import { PuppetWhatsapp } from './puppet-whatsapp.js'
 
 export {
   VERSION,
