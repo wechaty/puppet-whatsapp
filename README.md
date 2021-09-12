@@ -3,6 +3,7 @@
 [![NPM Version](https://badge.fury.io/js/wechaty-puppet-whatsapp.svg)](https://badge.fury.io/js/wechaty-puppet-whatsapp)
 [![npm (tag)](https://img.shields.io/npm/v/wechaty-puppet-whatsapp/next.svg)](https://www.npmjs.com/package/wechaty-puppet-whatsapp?activeTab=versions)
 [![NPM](https://github.com/wechaty/wechaty-puppet-whatsapp/workflows/NPM/badge.svg)](https://github.com/wechaty/wechaty-puppet-whatsapp/actions?query=workflow%3ANPM)
+[![ES Modules](https://img.shields.io/badge/ES-Modules-brightgreen)](https://github.com/Chatie/tsconfig/issues/16)
 
 ![wechaty puppet whatsapp](docs/images/wechaty-puppet-whatsapp.png)
 
