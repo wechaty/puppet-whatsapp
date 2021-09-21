@@ -26,7 +26,7 @@ import type {
 
 import { PuppetWhatsapp } from '../src/mod'
 
-const qrcode = require('qrcode-terminal')
+import qrcode from 'qrcode-terminal'
 
 /**
  *
