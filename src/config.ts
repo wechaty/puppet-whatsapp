@@ -1,3 +1,5 @@
+/// <reference path="./typings.d.ts" />
+
 import {
   FileBox,
 }             from 'wechaty-puppet'

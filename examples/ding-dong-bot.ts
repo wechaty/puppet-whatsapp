@@ -26,7 +26,7 @@ import type {
 
 import { PuppetWhatsapp } from '../src/mod'
 
-const qrcode = require('qrcode-terminal')
+import qrTerm from 'qrcode-terminal'
 
 /**
  *
@@ -73,7 +73,7 @@ puppet.start()
  */
 function onScan (payload: EventScanPayload) {
   if (payload.qrcode) {
-    qrcode.generate(payload.qrcode, { small: true })
+    qrTerm.generate(payload.qrcode, { small: true })
 
     const qrcodeImageUrl = [
       'https://wechaty.js.org/qrcode/',
