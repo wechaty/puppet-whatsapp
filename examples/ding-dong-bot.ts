@@ -24,9 +24,9 @@ import type {
   EventMessagePayload,
 }                         from 'wechaty-puppet'
 
-import { PuppetWhatsapp } from '../src/mod'
-
 import qrTerm from 'qrcode-terminal'
+
+import { PuppetWhatsapp } from '../src/mod'
 
 /**
  *
@@ -110,7 +110,7 @@ function onError (payload: EventErrorPayload) {
  */
 async function onMessage (payload: EventMessagePayload) {
   const msgPayload = await puppet.messagePayload(payload.messageId)
-  if ((/ding/.test(msgPayload.text || ''))) {
+  if ((/ding/i.test(msgPayload.text || ''))) {
     await puppet.messageSendText(msgPayload.fromId!, 'dong')
   }
 }
