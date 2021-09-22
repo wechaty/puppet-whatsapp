@@ -26,7 +26,7 @@ import type {
 
 import qrTerm from 'qrcode-terminal'
 
-import { PuppetWhatsapp } from '../src/mod'
+import { PuppetWhatsapp } from '../src/mod.js'
 
 /**
  *
