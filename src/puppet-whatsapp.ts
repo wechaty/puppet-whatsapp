@@ -181,25 +181,29 @@ class PuppetWhatsapp extends Puppet {
   ): void {
     log.verbose('PuppetwhatsApp', 'initWhatsAppEvents()')
 
-    whatsapp.on('authenticated', async (session) => {
-      try {
-        // save session file
-        await this.memory.set(MEMORY_SLOT, session)
-        await this.memory.save()
-      } catch (e) {
-        console.error(e)
-        log.error('PuppetWhatsApp', 'getClient() whatsapp.on(authenticated) rejection: %s', e)
-      }
+    whatsapp.on('authenticated', session => {
+      (async () => {
+        try {
+          // save session file
+          await this.memory.set(MEMORY_SLOT, session)
+          await this.memory.save()
+        } catch (e) {
+          console.error(e)
+          log.error('PuppetWhatsApp', 'getClient() whatsapp.on(authenticated) rejection: %s', e)
+        }
+      })().catch(console.error)
     })
 
-    whatsapp.on('ready', async () => {
-      this.id = whatsapp.info.wid.user
-      this.state.on(true)
-      const contacts: WhatsappContact[] = await whatsapp.getContacts()
-      for (const contact of contacts) {
-        this.contactStore[contact.id._serialized] = contact
-      }
-      this.emit('login', { contactId: whatsapp.info.wid._serialized })
+    whatsapp.on('ready', () => {
+      (async () => {
+        this.id = whatsapp.info.wid.user
+        this.state.on(true)
+        const contacts: WhatsappContact[] = await whatsapp.getContacts()
+        for (const contact of contacts) {
+          this.contactStore[contact.id._serialized] = contact
+        }
+        this.emit('login', { contactId: whatsapp.info.wid._serialized })
+      })().catch(console.error)
     })
 
     whatsapp.on('message', (msg: WhatsappMessage) => {
