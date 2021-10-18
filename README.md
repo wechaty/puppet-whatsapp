@@ -66,6 +66,6 @@ Wechaty Puppet Whatsapp is built on top of [whatsapp-web.js](https://github.com/
 
 ## COPYRIGHT & LICENSE
 
-* Code & Docs © 2020-now Wechaty Contributors <https://github.com/wechaty>
-* Code released under the Apache-2.0 License
-* Docs released under Creative Commons
+- Code & Docs © 2020-now Wechaty Contributors <https://github.com/wechaty>
+- Code released under the Apache-2.0 License
+- Docs released under Creative Commons
