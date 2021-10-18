@@ -39,11 +39,11 @@ Learn how to run Wechaty bot from <https://github.com/wechaty/wechaty-getting-st
 
 ## HISTORY
 
-### master
+### master v0.5
 
-### v0.4 (Sep 2021)
+Puppet API v0.51 implemented.
 
-1. ES Modules support
+- v0.4 (Sep 2021): ES Modules support
 
 ### v0.2 (Feb 11, 2021)
 
