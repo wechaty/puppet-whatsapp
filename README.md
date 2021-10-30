@@ -39,10 +39,11 @@ Learn how to run Wechaty bot from <https://github.com/wechaty/wechaty-getting-st
 
 ## HISTORY
 
-### master v0.5
+### master v1.0 (Oct 30, 2021)
 
-Puppet API v0.51 implemented.
+Release 1.0 of Wechaty Puppet Whatsapp.
 
+- v0.5 (Sep 2021) Puppet API v0.51 implemented.
 - v0.4 (Sep 2021): ES Modules support
 
 ### v0.2 (Feb 11, 2021)
