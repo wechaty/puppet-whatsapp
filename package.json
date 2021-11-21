@@ -11,7 +11,6 @@
   },
   "typings": "./dist/esm/src/mod.d.ts",
   "engines": {
-    "wechaty": ">=1.0.4",
     "node": ">=16",
     "npm": ">=7"
   },
