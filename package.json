@@ -1,6 +1,6 @@
 {
   "name": "wechaty-puppet-whatsapp",
-  "version": "1.10.4",
+  "version": "1.11.0",
   "description": "Wechaty Puppet for WhatsApp",
   "type": "module",
   "exports": {
@@ -52,15 +52,16 @@
     "@chatie/eslint-config": "^1.0.4",
     "@chatie/git-scripts": "^0.6.2",
     "@chatie/semver": "^0.4.7",
-    "@chatie/tsconfig": "^4.5.3",
+    "@chatie/tsconfig": "^4.6.2",
     "@types/cuid": "^2.0.1",
+    "@types/qrcode-terminal": "^0.12.0",
     "qrcode-terminal": "^0.12.0"
   },
   "peerDependencies": {
-    "wechaty-puppet": "^1.10.2"
+    "wechaty-puppet": "^1.11.14"
   },
   "dependencies": {
-    "whatsapp-web.js": "^1.15.1"
+    "whatsapp-web.js": "^1.15.3"
   },
   "files": [
     "bin/",
