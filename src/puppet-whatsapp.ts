@@ -37,11 +37,13 @@ import {
   WhatsappContact,
   WhatsappMessage,
 }                   from './whatsapp.js'
+import type { ClientOptions } from 'whatsapp-web.js'
 
 // import { Attachment } from './mock/user/types'
 
 export type PuppetWhatsAppOptions = PUPPET.PuppetOptions & {
   memory?: MemoryCard
+  puppeteerOptions?: ClientOptions
 }
 
 class PuppetWhatsapp extends PUPPET.Puppet {
@@ -66,7 +68,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     log.verbose('PuppetWhatsApp', 'onStart()')
 
     const session = await this.memory.get(MEMORY_SLOT)
-    const whatsapp = await getWhatsApp(session)
+    const whatsapp = await getWhatsApp(this.options['puppeteerOptions'] as ClientOptions, session)
     this.whatsapp = whatsapp
 
     this.initWhatsAppEvents(whatsapp)
