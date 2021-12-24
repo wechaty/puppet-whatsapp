@@ -63,11 +63,7 @@
   "dependencies": {
     "whatsapp-web.js": "^1.15.3"
   },
-  "files": [
-    "bin/",
-    "dist/",
-    "src/"
-  ],
+
   "tap": {
     "check-coverage": false
   },
