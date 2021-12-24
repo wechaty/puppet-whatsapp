@@ -144,13 +144,13 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
     whatsapp.on('ready', () => {
       (async () => {
-        this.login(whatsapp.info.wid._serialized)
         // this.id = whatsapp.info.wid.user
         // this.state.active(true)
         const contacts: WhatsappContact[] = await whatsapp.getContacts()
         for (const contact of contacts) {
           this.contactStore[contact.id._serialized] = contact
         }
+        this.login(whatsapp.info.wid._serialized)
         // this.emit('login', { contactId: whatsapp.info.wid._serialized })
       })().catch(console.error)
     })
@@ -228,7 +228,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   override async contactList (): Promise<string[]> {
     log.verbose('PuppetWhatsApp', 'contactList()')
-    return []
+    return Object.keys(this.contactStore)
   }
 
   override async contactAvatar (contactId: string)                : Promise<FileBoxInterface>
