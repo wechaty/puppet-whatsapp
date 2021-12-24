@@ -1,6 +1,6 @@
 {
   "name": "@bung87/wechaty-puppet-whatsapp",
-  "version": "1.11.3",
+  "version": "1.11.4",
   "description": "Wechaty Puppet for WhatsApp",
   "type": "module",
   "exports": {
@@ -63,7 +63,6 @@
   "dependencies": {
     "whatsapp-web.js": "^1.15.3"
   },
-
   "tap": {
     "check-coverage": false
   },
