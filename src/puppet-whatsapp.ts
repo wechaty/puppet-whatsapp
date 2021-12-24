@@ -22,7 +22,7 @@ import * as PUPPET from 'wechaty-puppet'
 import { log } from 'wechaty-puppet'
 import type { MemoryCard } from 'memory-card'
 import { FileBox } from 'file-box'
-import type { FileBoxInterface } from 'file-box'
+// import type { FileBox } from 'file-box'
 
 import {
   CHATIE_OFFICIAL_ACCOUNT_QRCODE,
@@ -64,7 +64,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     this.contactStore = {}
   }
 
-  override async onStart (): Promise<void> {
+  override async start (): Promise<void> {
     log.verbose('PuppetWhatsApp', 'onStart()')
 
     const session = await this.memory.get(MEMORY_SLOT)
@@ -80,7 +80,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       .initialize()
       .then(() => log.verbose('PuppetWhatsApp', 'start() whatsapp.initialize() done'))
       .catch(e => {
-        if (this.state.active()) {
+        if (this.state.on()) {
           console.error(e)
           log.error('PuppetWhatsApp', 'start() whatsapp.initialize() rejection: %s', e)
         } else {
@@ -107,11 +107,11 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
     await Promise.race([
       future,
-      this.state.stable('inactive'),
+      this.state.ready('off'),
     ])
   }
 
-  override async onStop (): Promise<void> {
+  override async stop (): Promise<void> {
     log.verbose('PuppetWhatsApp', 'onStop()')
 
     if (!this.whatsapp) {
@@ -164,7 +164,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     whatsapp.on('qr', (qr) => {
       // NOTE: This event will not be fired if a session is specified.
       // console.log('QR RECEIVED', qr);
-      this.emit('scan', { qrcode : qr, status : PUPPET.types.ScanStatus.Waiting })
+      this.emit('scan', { qrcode : qr, status : PUPPET.ScanStatus.Waiting })
     })
   }
 
@@ -231,10 +231,10 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     return Object.keys(this.contactStore)
   }
 
-  override async contactAvatar (contactId: string)                : Promise<FileBoxInterface>
-  override async contactAvatar (contactId: string, file: FileBoxInterface) : Promise<void>
+  override async contactAvatar (contactId: string)                : Promise<FileBox>
+  override async contactAvatar (contactId: string, file: FileBox) : Promise<void>
 
-  override async contactAvatar (contactId: string, file?: FileBoxInterface): Promise<void | FileBoxInterface> {
+  override async contactAvatar (contactId: string, file?: FileBox): Promise<void | FileBox> {
     log.verbose('PuppetWhatsApp', 'contactAvatar(%s)', contactId)
 
     /**
@@ -251,14 +251,14 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     return FileBox.fromFile(WECHATY_ICON_PNG)
   }
 
-  override async contactRawPayloadParser (whatsAppPayload: WhatsappContact): Promise<PUPPET.payloads.Contact> {
+  override async contactRawPayloadParser (whatsAppPayload: WhatsappContact): Promise<PUPPET.ContactPayload> {
     let type, name
     if (whatsAppPayload.isUser) {
-      type = PUPPET.types.Contact.Individual
+      type = PUPPET.ContactType.Individual
     } else if (whatsAppPayload.isEnterprise) {
-      type = PUPPET.types.Contact.Corporation
+      type = PUPPET.ContactType.Corporation
     } else {
-      type = PUPPET.types.Contact.Unknown
+      type = PUPPET.ContactType.Unknown
     }
 
     if (whatsAppPayload.name === undefined) {
@@ -268,7 +268,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     }
     return {
       avatar : await whatsAppPayload.getProfilePicUrl(),
-      gender : PUPPET.types.ContactGender.Unknown,
+      gender : PUPPET.ContactGender.Unknown,
       id     : whatsAppPayload.id.user,
       name   : name,
       phone : [whatsAppPayload.number],
@@ -312,15 +312,15 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   override async messageImage (
     messageId: string,
-    imageType: PUPPET.types.Image,
-  ) : Promise<FileBoxInterface> {
+    imageType: PUPPET.ImageType,
+  ) : Promise<FileBox> {
     log.verbose('PuppetWhatsApp', 'messageImage(%s, %s[%s])',
       messageId,
       imageType,
-      PUPPET.types.Image[imageType],
+      PUPPET.ImageType[imageType],
     )
     // const attachment = this.mocker.MockMessage.loadAttachment(messageId)
-    // if (attachment instanceof FileBoxInterface) {
+    // if (attachment instanceof FileBox) {
     //   return attachment
     // }
     return FileBox.fromQRCode('fake-qrcode')
@@ -333,9 +333,9 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     return false
   }
 
-  override async messageFile (id: string): Promise<FileBoxInterface> {
+  override async messageFile (id: string): Promise<FileBox> {
     // const attachment = this.mocker.MockMessage.loadAttachment(id)
-    // if (attachment instanceof FileBoxInterface) {
+    // if (attachment instanceof FileBox) {
     //   return attachment
     // }
     return FileBox.fromBase64(
@@ -344,7 +344,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     )
   }
 
-  override async messageUrl (messageId: string)  : Promise<PUPPET.payloads.UrlLink> {
+  override async messageUrl (messageId: string)  : Promise<PUPPET.UrlLinkPayload> {
     log.verbose('PuppetWhatsApp', 'messageUrl(%s)', messageId)
     // const attachment = this.mocker.MockMessage.loadAttachment(messageId)
     // if (attachment instanceof UrlLink) {
@@ -356,7 +356,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     }
   }
 
-  override async messageMiniProgram (messageId: string): Promise<PUPPET.payloads.MiniProgram> {
+  override async messageMiniProgram (messageId: string): Promise<PUPPET.MiniProgramPayload> {
     log.verbose('PuppetWhatsApp', 'messageMiniProgram(%s)', messageId)
     // const attachment = this.mocker.MockMessage.loadAttachment(messageId)
     // if (attachment instanceof MiniProgram) {
@@ -367,7 +367,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     }
   }
 
-  override async messageRawPayloadParser (whatsAppPayload: WhatsappMessage): Promise<PUPPET.payloads.Message> {
+  override async messageRawPayloadParser (whatsAppPayload: WhatsappMessage): Promise<PUPPET.MessagePayload> {
     return {
       fromId        : whatsAppPayload.from,
       id            : whatsAppPayload.id.id,
@@ -375,7 +375,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       text          : whatsAppPayload.body,
       timestamp     : Date.now(),
       toId          : whatsAppPayload.to,
-      type          : PUPPET.types.Message.Text,
+      type          : PUPPET.MessageType.Text,
     }
   }
 
@@ -438,7 +438,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   override async messageSendUrl (
     conversationId: string,
-    urlLinkPayload: PUPPET.payloads.UrlLink,
+    urlLinkPayload: PUPPET.UrlLinkPayload,
   ) : Promise<void> {
     log.verbose('PuppetWhatsApp', 'messageSendUrl(%s, %s)', conversationId, JSON.stringify(urlLinkPayload))
 
@@ -448,7 +448,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   override async messageSendMiniProgram (
     conversationId: string,
-    miniProgramPayload: PUPPET.payloads.MiniProgram,
+    miniProgramPayload: PUPPET.MiniProgramPayload,
   ): Promise<void> {
     log.verbose('PuppetWhatsApp', 'messageSendMiniProgram(%s, %s)', conversationId, JSON.stringify(miniProgramPayload))
     // const miniProgram = new MiniProgram(miniProgramPayload)
@@ -470,8 +470,8 @@ class PuppetWhatsapp extends PUPPET.Puppet {
    * Room
    *
    */
-  override async roomRawPayloadParser (payload: PUPPET.payloads.Room) { return payload }
-  override async roomRawPayload (id: string): Promise<PUPPET.payloads.Room> {
+  override async roomRawPayloadParser (payload: PUPPET.RoomPayload) { return payload }
+  override async roomRawPayload (id: string): Promise<PUPPET.RoomPayload> {
     log.verbose('PuppetWhatsApp', 'roomRawPayload(%s)', id)
     return {} as any
   }
@@ -488,7 +488,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     log.verbose('PuppetWhatsApp', 'roomDel(%s, %s)', roomId, contactId)
   }
 
-  override async roomAvatar (roomId: string): Promise<FileBoxInterface> {
+  override async roomAvatar (roomId: string): Promise<FileBox> {
     log.verbose('PuppetWhatsApp', 'roomAvatar(%s)', roomId)
 
     const payload = await this.roomPayload(roomId)
@@ -520,7 +520,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       return 'mock room topic'
     }
 
-    await this.dirtyPayload(PUPPET.types.Payload.Room, roomId)
+    await this.dirtyPayload(PUPPET.PayloadType.Room, roomId)
   }
 
   override async roomCreate (
@@ -546,7 +546,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     return []
   }
 
-  override async roomMemberRawPayload (roomId: string, contactId: string): Promise<PUPPET.payloads.RoomMember>  {
+  override async roomMemberRawPayload (roomId: string, contactId: string): Promise<PUPPET.RoomMemberPayload>  {
     log.verbose('PuppetWhatsApp', 'roomMemberRawPayload(%s, %s)', roomId, contactId)
     return {
       avatar    : 'mock-avatar-data',
@@ -556,7 +556,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     }
   }
 
-  override async roomMemberRawPayloadParser (rawPayload: PUPPET.payloads.RoomMember): Promise<PUPPET.payloads.RoomMember>  {
+  override async roomMemberRawPayloadParser (rawPayload: PUPPET.RoomMemberPayload): Promise<PUPPET.RoomMemberPayload>  {
     log.verbose('PuppetWhatsApp', 'roomMemberRawPayloadParser(%s)', rawPayload)
     return rawPayload
   }
@@ -584,7 +584,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     log.verbose('PuppetWhatsApp', 'roomInvitationRawPayload(%s)', roomInvitationId)
   }
 
-  override async roomInvitationRawPayloadParser (rawPayload: any): Promise<PUPPET.payloads.RoomInvitation> {
+  override async roomInvitationRawPayloadParser (rawPayload: any): Promise<PUPPET.RoomInvitationPayload> {
     log.verbose('PuppetWhatsApp', 'roomInvitationRawPayloadParser(%s)', JSON.stringify(rawPayload))
     return rawPayload
   }
@@ -598,7 +598,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     return { id } as any
   }
 
-  override async friendshipRawPayloadParser (rawPayload: any): Promise<PUPPET.payloads.Friendship> {
+  override async friendshipRawPayloadParser (rawPayload: any): Promise<PUPPET.FriendshipPayload> {
     return rawPayload
   }
 
