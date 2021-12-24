@@ -26,7 +26,8 @@
     "lint:es": "eslint \"src/**/*.ts\" \"tests/**/*.spec.ts\" --ignore-pattern tests/fixtures/",
     "test": "npm-run-all lint test:unit",
     "test:pack": "bash -x scripts/npm-pack-testing.sh",
-    "test:unit": "tap --node-arg=--loader=ts-node/esm --node-arg=--no-warnings 'src/**/*.spec.ts' 'tests/**/*.spec.ts'"
+    "test:unit": "tap --node-arg=--loader=ts-node/esm --node-arg=--no-warnings 'src/**/*.spec.ts' 'tests/**/*.spec.ts'",
+    "prepublishOnly": "npm run dist"
   },
   "repository": {
     "type": "git",
