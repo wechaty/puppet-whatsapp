@@ -27,7 +27,16 @@ import { PuppetWhatsapp } from '../src/mod.js'
  * 1. Declare your Bot!
  *
  */
-const puppet = new PuppetWhatsapp()
+const WHATSAPP_PUPPET_PROXY = process.env['WHATSAPP_PUPPET_PROXY']
+const puppet = new PuppetWhatsapp(
+  {
+    puppeteerOptions:{
+      puppeteer:{
+        args: WHATSAPP_PUPPET_PROXY ? [`--proxy-server=${WHATSAPP_PUPPET_PROXY}`] : [],
+      },
+    },
+  },
+)
 
 /**
  *

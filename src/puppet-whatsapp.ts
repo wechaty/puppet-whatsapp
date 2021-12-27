@@ -150,7 +150,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
         for (const contact of contacts) {
           this.contactStore[contact.id._serialized] = contact
         }
-        this.login(whatsapp.info.wid._serialized)
+        await this.login(whatsapp.info.wid._serialized)
         // this.emit('login', { contactId: whatsapp.info.wid._serialized })
       })().catch(console.error)
     })
@@ -165,6 +165,15 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       // NOTE: This event will not be fired if a session is specified.
       // console.log('QR RECEIVED', qr);
       this.emit('scan', { qrcode : qr, status : PUPPET.ScanStatus.Waiting })
+    })
+
+    whatsapp.on('disconnected', (reason) => {
+      if (reason as string === 'NAVIGATION') {
+        this.emit('logout', {
+          contactId: whatsapp.info.wid._serialized,
+          data: reason,
+        })
+      }
     })
   }
 
