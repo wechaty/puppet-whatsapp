@@ -268,7 +268,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   override async contactRawPayloadParser (whatsAppPayload: WhatsappContact): Promise<PUPPET.ContactPayload> {
-    let type, name
+    let type
     if (whatsAppPayload.isUser) {
       type = PUPPET.ContactType.Individual
     } else if (whatsAppPayload.isEnterprise) {
@@ -277,18 +277,14 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       type = PUPPET.ContactType.Unknown
     }
 
-    if (whatsAppPayload.name === undefined) {
-      name = ''
-    } else {
-      name = whatsAppPayload.name
-    }
     return {
       avatar : await whatsAppPayload.getProfilePicUrl(),
       gender : PUPPET.ContactGender.Unknown,
       id     : whatsAppPayload.id.user,
-      name   : name,
+      name   : whatsAppPayload.pushname,
       phone : [whatsAppPayload.number],
       type   : type,
+      weixin : whatsAppPayload.number,
     }
   }
 
