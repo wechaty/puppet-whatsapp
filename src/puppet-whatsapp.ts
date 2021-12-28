@@ -22,6 +22,7 @@ import * as PUPPET from 'wechaty-puppet'
 import { log } from 'wechaty-puppet'
 import type { MemoryCard } from 'memory-card'
 import { FileBox } from 'file-box'
+import { distinctUntilChanged, fromEvent } from 'rxjs'
 // import type { FileBox } from 'file-box'
 
 import {
@@ -167,12 +168,10 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       this.emit('scan', { qrcode : qr, status : PUPPET.ScanStatus.Waiting })
     })
 
-    whatsapp.on('disconnected', (reason) => {
+    fromEvent(whatsapp, 'disconnected').pipe(distinctUntilChanged()).subscribe(reason => {
       if (reason as string === 'NAVIGATION') {
         console.log('disconnected NAVIGATION')
-        if (this.id) {
-          void this.logout(reason)
-        }
+        void this.logout(reason as string)
 
         // this.emit('logout', {
         //   contactId: whatsapp.info.wid._serialized,
@@ -180,6 +179,9 @@ class PuppetWhatsapp extends PUPPET.Puppet {
         // })
       }
     })
+    // whatsapp.on('disconnected', (reason) => {
+
+    // })
   }
 
   override ding (data?: string): void {
