@@ -22,7 +22,7 @@ import * as PUPPET from 'wechaty-puppet'
 import { log } from 'wechaty-puppet'
 import type { MemoryCard } from 'memory-card'
 import { FileBox } from 'file-box'
-import { distinctUntilChanged, fromEvent } from 'rxjs'
+import { distinctUntilChanged, distinctUntilKeyChanged, fromEvent, map, merge } from 'rxjs'
 // import type { FileBox } from 'file-box'
 
 import {
@@ -168,20 +168,20 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       this.emit('scan', { qrcode : qr, status : PUPPET.ScanStatus.Waiting })
     })
 
-    fromEvent(whatsapp, 'disconnected').pipe(distinctUntilChanged()).subscribe(reason => {
-      if (reason as string === 'NAVIGATION') {
-        console.log('disconnected NAVIGATION')
-        void this.logout(reason as string)
+    const events = [
+      'authenticated',
+      'ready',
+      'disconnected',
+    ]
 
-        // this.emit('logout', {
-        //   contactId: whatsapp.info.wid._serialized,
-        //   data: reason,
-        // })
+    const eventStreams = events.map((event) => fromEvent(whatsapp, event).pipe(map(value => ({ event, value }))))
+    const allEvents$ = merge(...eventStreams)
+
+    allEvents$.pipe(distinctUntilKeyChanged('event')).subscribe(({ event, value }) => {
+      if (event === 'disconnected' && value as string === 'NAVIGATION') {
+        void this.logout(value as string)
       }
     })
-    // whatsapp.on('disconnected', (reason) => {
-
-    // })
   }
 
   override ding (data?: string): void {
