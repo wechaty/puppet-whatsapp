@@ -169,10 +169,12 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
     whatsapp.on('disconnected', (reason) => {
       if (reason as string === 'NAVIGATION') {
-        this.emit('logout', {
-          contactId: whatsapp.info.wid._serialized,
-          data: reason,
-        })
+        console.log(`disconnected NAVIGATION`)
+        void this.logout(reason)
+        // this.emit('logout', {
+        //   contactId: whatsapp.info.wid._serialized,
+        //   data: reason,
+        // })
       }
     })
   }
