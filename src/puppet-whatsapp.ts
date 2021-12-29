@@ -174,10 +174,10 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       'disconnected',
     ]
 
-    const eventStreams = events.map((event) => fromEvent(whatsapp, event).pipe(map(value => ({ event, value }))))
+    const eventStreams = events.map((event) => fromEvent(whatsapp, event).pipe(map((value: any) => ({ event, value }))))
     const allEvents$ = merge(...eventStreams)
 
-    allEvents$.pipe(distinctUntilKeyChanged('event')).subscribe(({ event, value }) => {
+    allEvents$.pipe(distinctUntilKeyChanged('event')).subscribe(({ event, value } : {event:string, value:any}) => {
       if (event === 'disconnected' && value as string === 'NAVIGATION') {
         void this.logout(value as string)
       }
