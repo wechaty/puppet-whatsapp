@@ -19,9 +19,9 @@
 import path from 'path'
 
 import * as PUPPET from 'wechaty-puppet'
-import { log } from 'wechaty-puppet'
+import { log, FileBox } from 'wechaty-puppet'
 import type { MemoryCard } from 'memory-card'
-import { FileBox } from 'file-box'
+// import { FileBox } from 'file-box'
 import { distinctUntilKeyChanged, fromEvent, map, merge } from 'rxjs'
 // import type { FileBox } from 'file-box'
 
