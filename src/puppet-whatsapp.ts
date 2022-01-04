@@ -85,7 +85,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
           log.error('PuppetWhatsApp', 'start() whatsapp.initialize() rejection: %s', e)
         } else {
           // Puppet is stoping...
-          log.error('PuppetWhatsApp', 'start() whatsapp.initialize() rejected on a stopped puppet.', e)
+          log.error('PuppetWhatsApp', 'start() whatsapp.initialize() rejected on a stopped puppet. %s', e)
         }
       })
 
