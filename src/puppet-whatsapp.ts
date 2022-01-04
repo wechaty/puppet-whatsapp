@@ -82,11 +82,10 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       .then(() => log.verbose('PuppetWhatsApp', 'start() whatsapp.initialize() done'))
       .catch(e => {
         if (this.state.on()) {
-          console.error(e)
           log.error('PuppetWhatsApp', 'start() whatsapp.initialize() rejection: %s', e)
         } else {
           // Puppet is stoping...
-          log.verbose('PuppetWhatsApp', 'start() whatsapp.initialize() rejected on a stopped puppet.')
+          log.error('PuppetWhatsApp', 'start() whatsapp.initialize() rejected on a stopped puppet.', e)
         }
       })
 
