@@ -278,7 +278,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
     return {
       avatar : await whatsAppPayload.getProfilePicUrl(),
-      friend: whatsAppPayload.isMyContact,
+      friend: whatsAppPayload.isWAContact && whatsAppPayload.isUser && !whatsAppPayload.isMe,
       gender : PUPPET.ContactGender.Unknown,
       id     : whatsAppPayload.id.user,
       name   : whatsAppPayload.pushname,
