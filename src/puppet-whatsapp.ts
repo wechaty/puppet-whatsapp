@@ -38,8 +38,8 @@ import {
   WhatsappContact,
   WhatsappMessage,
 }                   from './whatsapp.js'
-import type { ClientOptions, GroupChat } from 'whatsapp-web.js'
-
+import type { ClientOptions, GroupChat  } from 'whatsapp-web.js'
+import { MessageTypes } from 'whatsapp-web.js'
 // import { Attachment } from './mock/user/types'
 
 export type PuppetWhatsAppOptions = PUPPET.PuppetOptions & {
@@ -386,6 +386,33 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   override async messageRawPayloadParser (whatsAppPayload: WhatsappMessage): Promise<PUPPET.MessagePayload> {
+    let type: PUPPET.MessageType = PUPPET.MessageType.Unknown
+    switch (whatsAppPayload.type) {
+      case MessageTypes.TEXT:
+        type = PUPPET.MessageType.Text
+        break
+      case MessageTypes.STICKER:
+        type = PUPPET.MessageType.Emoticon
+        break
+      case MessageTypes.VOICE:
+        type = PUPPET.MessageType.Audio
+        break
+      case MessageTypes.IMAGE:
+        type = PUPPET.MessageType.Image
+        break
+      case MessageTypes.AUDIO:
+        type = PUPPET.MessageType.Audio
+        break
+      // case MessageTypes.GROUP_INVITE:
+      //   type = PUPPET.MessageType.GroupNote
+      //   break
+      case MessageTypes.VIDEO:
+        type = PUPPET.MessageType.Video
+        break
+      case MessageTypes.CONTACT_CARD:
+        type = PUPPET.MessageType.Contact
+        break
+    }
     return {
       fromId        : whatsAppPayload.from,
       id            : whatsAppPayload.id.id,
@@ -393,7 +420,8 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       text          : whatsAppPayload.body,
       timestamp     : Date.now(),
       toId          : whatsAppPayload.to,
-      type          : PUPPET.MessageType.Text,
+      type,
+      // filename
     }
   }
 
