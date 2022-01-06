@@ -296,7 +296,13 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   override async contactRawPayload (id: string): Promise<WhatsappContact> {
     log.verbose('PuppetWhatsApp', 'contactRawPayload(%s)', id)
-    return this.contactStore[id]!
+    if (this.contactStore[id]) {
+      return this.contactStore[id]!
+    } else {
+      const rawContact = await this.whatsapp!.getContactById(id)
+      this.contactStore[id] = rawContact
+      return rawContact
+    }
   }
 
   /**
@@ -529,7 +535,13 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   override async roomRawPayload (id: string): Promise<WhatsappContact> {
     log.verbose('PuppetWhatsApp', 'roomRawPayload(%s)', id)
-    return this.roomStore[id]!
+    if (this.roomStore[id]) {
+      return this.roomStore[id]!
+    } else {
+      const rawRoom = await this.whatsapp!.getContactById(id)
+      this.roomStore[id] = rawRoom
+      return rawRoom
+    }
   }
 
   override async roomList (): Promise<string[]> {
