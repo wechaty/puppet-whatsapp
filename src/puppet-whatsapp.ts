@@ -588,7 +588,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   override async roomMemberRawPayloadParser (rawPayload: PUPPET.RoomMemberPayload): Promise<PUPPET.RoomMemberPayload>  {
-    log.verbose('PuppetWhatsApp', 'roomMemberRawPayloadParser(%s)', rawPayload)
+    log.verbose('PuppetWhatsApp', 'roomMemberRawPayloadParser(%O)', rawPayload)
     return rawPayload
   }
 
