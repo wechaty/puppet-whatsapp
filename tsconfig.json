@@ -1,5 +1,8 @@
 {
   "extends": "@chatie/tsconfig",
+  "ts-node": {
+    "transpileOnly": true
+  },
   "compilerOptions": {
     "outDir": "dist/esm",
   },

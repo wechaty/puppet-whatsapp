@@ -21,9 +21,7 @@ import path from 'path'
 import * as PUPPET from 'wechaty-puppet'
 import { log, FileBox } from 'wechaty-puppet'
 import type { MemoryCard } from 'memory-card'
-// import { FileBox } from 'file-box'
 import { distinctUntilKeyChanged, fromEvent, map, merge } from 'rxjs'
-// import type { FileBox } from 'file-box'
 
 import {
   CHATIE_OFFICIAL_ACCOUNT_QRCODE,
@@ -39,7 +37,9 @@ import {
   WhatsappMessage,
 }                   from './whatsapp.js'
 import type { ClientOptions, GroupChat  } from 'whatsapp-web.js'
-import { MessageTypes } from 'whatsapp-web.js'
+import WAWebJS from 'whatsapp-web.js'
+// @ts-ignore
+// import { MessageTypes } from 'whatsapp-web.js'
 // import { Attachment } from './mock/user/types'
 
 export type PuppetWhatsAppOptions = PUPPET.PuppetOptions & {
@@ -394,28 +394,25 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   override async messageRawPayloadParser (whatsAppPayload: WhatsappMessage): Promise<PUPPET.MessagePayload> {
     let type: PUPPET.MessageType = PUPPET.MessageType.Unknown
     switch (whatsAppPayload.type) {
-      case MessageTypes.TEXT:
+      case WAWebJS.MessageTypes.TEXT:
         type = PUPPET.MessageType.Text
         break
-      case MessageTypes.STICKER:
+      case WAWebJS.MessageTypes.STICKER:
         type = PUPPET.MessageType.Emoticon
         break
-      case MessageTypes.VOICE:
+      case WAWebJS.MessageTypes.VOICE:
         type = PUPPET.MessageType.Audio
         break
-      case MessageTypes.IMAGE:
+      case WAWebJS.MessageTypes.IMAGE:
         type = PUPPET.MessageType.Image
         break
-      case MessageTypes.AUDIO:
+      case WAWebJS.MessageTypes.AUDIO:
         type = PUPPET.MessageType.Audio
         break
-      // case MessageTypes.GROUP_INVITE:
-      //   type = PUPPET.MessageType.GroupNote
-      //   break
-      case MessageTypes.VIDEO:
+      case WAWebJS.MessageTypes.VIDEO:
         type = PUPPET.MessageType.Video
         break
-      case MessageTypes.CONTACT_CARD:
+      case WAWebJS.MessageTypes.CONTACT_CARD:
         type = PUPPET.MessageType.Contact
         break
     }
