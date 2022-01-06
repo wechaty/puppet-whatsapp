@@ -38,7 +38,7 @@ import {
   WhatsappContact,
   WhatsappMessage,
 }                   from './whatsapp.js'
-import type { ClientOptions } from 'whatsapp-web.js'
+import type { ClientOptions, GroupChat } from 'whatsapp-web.js'
 
 // import { Attachment } from './mock/user/types'
 
@@ -53,6 +53,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   private messageStore: { [id: string]: WhatsappMessage }
   private contactStore: { [id: string]: WhatsappContact }
+  private roomStore: { [id: string]: WhatsappContact }
   private whatsapp: undefined | WhatsApp
 
   constructor (
@@ -63,6 +64,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
     this.messageStore = {}
     this.contactStore = {}
+    this.roomStore = {}
   }
 
   override async start (): Promise<void> {
@@ -148,7 +150,11 @@ class PuppetWhatsapp extends PUPPET.Puppet {
         // this.state.active(true)
         const contacts: WhatsappContact[] = await whatsapp.getContacts()
         for (const contact of contacts) {
-          this.contactStore[contact.id._serialized] = contact
+          if (!contact.isGroup) {
+            this.contactStore[contact.id._serialized] = contact
+          } else {
+            this.roomStore[contact.id._serialized] = contact
+          }
         }
         await this.login(whatsapp.info.wid._serialized)
         // this.emit('login', { contactId: whatsapp.info.wid._serialized })
@@ -280,7 +286,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       avatar : await whatsAppPayload.getProfilePicUrl(),
       friend: whatsAppPayload.isWAContact && whatsAppPayload.isUser && !whatsAppPayload.isMe,
       gender : PUPPET.ContactGender.Unknown,
-      id     : whatsAppPayload.id.user,
+      id     : whatsAppPayload.id._serialized,
       name   : !whatsAppPayload.isMe ? whatsAppPayload.pushname : whatsAppPayload.pushname || this.whatsapp?.info.pushname || '',
       phone : [whatsAppPayload.number],
       type   : type,
@@ -482,15 +488,25 @@ class PuppetWhatsapp extends PUPPET.Puppet {
    * Room
    *
    */
-  override async roomRawPayloadParser (payload: PUPPET.RoomPayload) { return payload }
-  override async roomRawPayload (id: string): Promise<PUPPET.RoomPayload> {
+  override async roomRawPayloadParser (whatsAppPayload: WhatsappContact): Promise<PUPPET.RoomPayload> {
+    const chat = await this.whatsapp?.getChatById(whatsAppPayload.id._serialized) as GroupChat
+    return {
+      adminIdList:chat.participants.filter(p => p.isAdmin || p.isSuperAdmin).map(p => p.id._serialized),
+      avatar : await whatsAppPayload.getProfilePicUrl(),
+      id     : whatsAppPayload.id._serialized,
+      memberIdList: chat.participants.map(p => p.id._serialized),
+      topic   : whatsAppPayload.name || whatsAppPayload.pushname || '',
+    }
+  }
+
+  override async roomRawPayload (id: string): Promise<WhatsappContact> {
     log.verbose('PuppetWhatsApp', 'roomRawPayload(%s)', id)
-    return {} as any
+    return this.roomStore[id]!
   }
 
   override async roomList (): Promise<string[]> {
     log.verbose('PuppetWhatsApp', 'roomList()')
-    return []
+    return Object.keys(this.roomStore)
   }
 
   override async roomDel (
@@ -529,7 +545,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     log.verbose('PuppetWhatsApp', 'roomTopic(%s, %s)', roomId, topic)
 
     if (typeof topic === 'undefined') {
-      return 'mock room topic'
+      return this.roomStore[roomId]?.name
     }
 
     await this.dirtyPayload(PUPPET.PayloadType.Room, roomId)
@@ -555,16 +571,19 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   override async roomMemberList (roomId: string) : Promise<string[]> {
     log.verbose('PuppetWhatsApp', 'roomMemberList(%s)', roomId)
-    return []
+    const chat = await this.whatsapp?.getChatById(roomId) as GroupChat
+    return chat.participants.map(p => p.id._serialized)
   }
 
   override async roomMemberRawPayload (roomId: string, contactId: string): Promise<PUPPET.RoomMemberPayload>  {
     log.verbose('PuppetWhatsApp', 'roomMemberRawPayload(%s, %s)', roomId, contactId)
+    const contact = await this.whatsapp!.getContactById(contactId)
+    const avatar = await contact.getProfilePicUrl()
     return {
-      avatar    : 'mock-avatar-data',
-      id        : 'xx',
-      name      : 'mock-name',
-      roomAlias : 'yy',
+      avatar,
+      id        : contact.id._serialized,
+      name      : contact.pushname || contact.name || '',
+      // roomAlias : contact.name,
     }
   }
 
