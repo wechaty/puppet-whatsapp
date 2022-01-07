@@ -459,14 +459,14 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   override async messageSendText (
     conversationId: string,
     text     : string,
-  ): Promise<void> {
+  ): Promise<string | void> {
     return this.messageSend(conversationId, text)
   }
 
   override async messageSendFile (
     conversationId: string,
     file     : FileBox,
-  ): Promise<void> {
+  ): Promise<string | void> {
     return this.messageSend(conversationId, file)
   }
 
