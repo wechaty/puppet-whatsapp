@@ -173,6 +173,32 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       this.emit('scan', { qrcode : qr, status : PUPPET.ScanStatus.Waiting })
     })
 
+    whatsapp.on('group_join', noti => {
+      (async () => {
+        const contact = await noti.getContact()
+        const roomJoinPayload: PUPPET.EventRoomJoinPayload = {
+          inviteeIdList : noti.recipientIds,
+          inviterId     : noti.author,
+          roomId        : contact.id._serialized,
+          timestamp     : noti.timestamp,
+        }
+        this.emit('room-join', roomJoinPayload)
+      })().catch(console.error)
+    })
+
+    whatsapp.on('group_leave', noti => {
+      (async () => {
+        const contact = await noti.getContact()
+        const roomJoinPayload: PUPPET.EventRoomLeavePayload = {
+          removeeIdList : noti.recipientIds,
+          removerId     : noti.author,
+          roomId        : contact.id._serialized,
+          timestamp     : noti.timestamp,
+        }
+        this.emit('room-leave', roomJoinPayload)
+      })().catch(console.error)
+    })
+
     const events = [
       'authenticated',
       'ready',
