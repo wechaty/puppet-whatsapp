@@ -235,7 +235,11 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   override async contactPhone (contactId: string, phoneList?: string[]): Promise<string[] | void> {
     log.verbose('PuppetWhatsApp', 'contactPhone(%s, %s)', contactId, phoneList)
     if (typeof phoneList === 'undefined') {
-      return []
+      if (this.contactStore[contactId]) {
+        return [this.contactStore[contactId]!.number]
+      } else {
+        return []
+      }
     }
   }
 
