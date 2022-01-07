@@ -36,8 +36,7 @@ import {
   WhatsappContact,
   WhatsappMessage,
 }                   from './whatsapp.js'
-import type { ClientOptions, GroupChat  } from 'whatsapp-web.js'
-import WAWebJS from 'whatsapp-web.js'
+import WAWebJS, { ClientOptions, GroupChat, GroupNotificationTypes  } from 'whatsapp-web.js'
 // @ts-ignore
 // import { MessageTypes } from 'whatsapp-web.js'
 // import { Attachment } from './mock/user/types'
@@ -175,11 +174,10 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
     whatsapp.on('group_join', noti => {
       (async () => {
-        const contact = await noti.getContact()
         const roomJoinPayload: PUPPET.EventRoomJoinPayload = {
           inviteeIdList : noti.recipientIds,
           inviterId     : noti.author,
-          roomId        : contact.id._serialized,
+          roomId        : noti.chatId,
           timestamp     : noti.timestamp,
         }
         this.emit('room-join', roomJoinPayload)
@@ -188,14 +186,29 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
     whatsapp.on('group_leave', noti => {
       (async () => {
-        const contact = await noti.getContact()
         const roomJoinPayload: PUPPET.EventRoomLeavePayload = {
           removeeIdList : noti.recipientIds,
           removerId     : noti.author,
-          roomId        : contact.id._serialized,
+          roomId        : noti.chatId,
           timestamp     : noti.timestamp,
         }
         this.emit('room-leave', roomJoinPayload)
+      })().catch(console.error)
+    })
+
+    whatsapp.on('group_update', noti => {
+      (async () => {
+        if (noti.type === GroupNotificationTypes.SUBJECT) {
+          const oldRoom = this.roomStore[noti.chatId]
+          const roomJoinPayload: PUPPET.EventRoomTopicPayload = {
+            changerId : noti.author,
+            newTopic  : noti.body,
+            oldTopic  : oldRoom?.name || '',
+            roomId    : noti.chatId,
+            timestamp : noti.timestamp,
+          }
+          this.emit('room-topic', roomJoinPayload)
+        }
       })().catch(console.error)
     })
 
