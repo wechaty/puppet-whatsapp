@@ -36,7 +36,7 @@ import {
   WhatsappContact,
   WhatsappMessage,
 }                   from './whatsapp.js'
-import WAWebJS, { ClientOptions, GroupChat, GroupNotificationTypes  } from 'whatsapp-web.js'
+import WAWebJS, { ClientOptions, GroupChat  } from 'whatsapp-web.js'
 // @ts-ignore
 // import { MessageTypes } from 'whatsapp-web.js'
 // import { Attachment } from './mock/user/types'
@@ -198,7 +198,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
     whatsapp.on('group_update', noti => {
       (async () => {
-        if (noti.type === GroupNotificationTypes.SUBJECT) {
+        if (noti.type === WAWebJS.GroupNotificationTypes.SUBJECT) {
           const oldRoom = this.roomStore[noti.chatId]
           const roomJoinPayload: PUPPET.EventRoomTopicPayload = {
             changerId : noti.author,
