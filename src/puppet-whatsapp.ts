@@ -46,6 +46,8 @@ export type PuppetWhatsAppOptions = PUPPET.PuppetOptions & {
   puppeteerOptions?: ClientOptions
 }
 
+const InviteLinkRegex = /^(https?:\/\/)?chat\.whatsapp\.com\/(?:invite\/)?([a-zA-Z0-9_-]{22})$/
+
 class PuppetWhatsapp extends PUPPET.Puppet {
 
   static override readonly VERSION = VERSION
@@ -53,7 +55,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   private messageStore: { [id: string]: WhatsappMessage }
   private contactStore: { [id: string]: WhatsappContact }
   private roomStore: { [id: string]: WhatsappContact }
-  private roomInvitationStore: { [id: string]: WAWebJS.InviteV4Data}
+  private roomInvitationStore: { [id: string]: Partial<WAWebJS.InviteV4Data>}
   private whatsapp: undefined | WhatsApp
 
   constructor (
@@ -163,10 +165,35 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     })
 
     whatsapp.on('message', (msg: WhatsappMessage) => {
+      // @ts-ignore
+      if (msg.type === 'e2e_notification') {
+        if (msg.body === '' && msg.author === undefined) {
+          // match group join message pattern
+          return
+        }
+      }
       const id = msg.id.id
       this.messageStore[id] = msg
       if (msg.type !== WAWebJS.MessageTypes.GROUP_INVITE) {
-        this.emit('message', { messageId : msg.id.id })
+        if (msg.links.length === 1 && InviteLinkRegex.test(msg.links[0]!.link)) {
+          const matched = msg.links[0]!.link.match(InviteLinkRegex)
+          if (matched?.length === 3) {
+            const inviteCode = matched[2]!
+            const roomInvitationPayload: PUPPET.EventRoomInvitePayload = {
+              roomInvitationId: inviteCode,
+            }
+            const rawData: Partial<WAWebJS.InviteV4Data> = {
+              inviteCode,
+            }
+            this.roomInvitationStore[inviteCode] = rawData
+            this.emit('room-invite', roomInvitationPayload)
+          } else {
+            // TODO:
+          }
+        } else {
+          this.emit('message', { messageId : msg.id.id })
+        }
+
       } else {
         (async () => {
           const info = msg.inviteV4
@@ -706,7 +733,12 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     log.verbose('PuppetWhatsApp', 'roomInvitationAccept(%s)', roomInvitationId)
     const info = this.roomInvitationStore[roomInvitationId]
     if (info) {
-      this.whatsapp?.acceptGroupV4Invite(info)
+      if (Object.keys(info).length === 1) {
+        this.whatsapp?.acceptInvite(info.inviteCode!)
+      } else {
+        this.whatsapp?.acceptGroupV4Invite(info as WAWebJS.InviteV4Data)
+      }
+
     }
   }
 
