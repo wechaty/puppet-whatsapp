@@ -440,7 +440,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   private async messageSend (
     conversationId: string,
     something: string | FileBox, // | Attachment
-  ): Promise<void> {
+  ): Promise<string | void> {
     log.verbose('PuppetWhatsApp', 'messageSend(%s, %s)', conversationId, something)
 
     if (typeof something !== 'string') {
@@ -452,17 +452,8 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       return
     }
 
-    await this.whatsapp.sendMessage(conversationId, something)
-    // const user = this.mocker.ContactMock.load(this.currentUserId)
-    // let conversation
-
-    // if (/@/.test(conversationId)) {
-    //   // FIXME: extend a new puppet method messageRoomSendText, etc, for Room message?
-    //   conversation = this.mocker.RoomMock.load(conversationId)
-    // } else {
-    //   conversation = this.mocker.ContactMock.load(conversationId)
-    // }
-    // user.say(something).to(conversation)
+    const msgSent = await this.whatsapp.sendMessage(conversationId, something)
+    return msgSent.id._serialized
   }
 
   override async messageSendText (
