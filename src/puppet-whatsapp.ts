@@ -53,6 +53,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   private messageStore: { [id: string]: WhatsappMessage }
   private contactStore: { [id: string]: WhatsappContact }
   private roomStore: { [id: string]: WhatsappContact }
+  private roomInvitationStore: { [id: string]: WAWebJS.InviteV4Data}
   private whatsapp: undefined | WhatsApp
 
   constructor (
@@ -64,6 +65,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     this.messageStore = {}
     this.contactStore = {}
     this.roomStore = {}
+    this.roomInvitationStore = {}
   }
 
   override async start (): Promise<void> {
@@ -163,7 +165,23 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     whatsapp.on('message', (msg: WhatsappMessage) => {
       const id = msg.id.id
       this.messageStore[id] = msg
-      this.emit('message', { messageId : msg.id.id })
+      if (msg.type !== WAWebJS.MessageTypes.GROUP_INVITE) {
+        this.emit('message', { messageId : msg.id.id })
+      } else {
+        (async () => {
+          const info = msg.inviteV4
+          if (info) {
+            const roomInvitationPayload: PUPPET.EventRoomInvitePayload = {
+              roomInvitationId: info.inviteCode,
+            }
+            this.roomInvitationStore[info.inviteCode] = info
+            this.emit('room-invite', roomInvitationPayload)
+          } else {
+            // TODO:
+          }
+        })().catch(console.error)
+      }
+
     })
 
     whatsapp.on('qr', (qr) => {
@@ -627,12 +645,18 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     topic         : string,
   ): Promise<string> {
     log.verbose('PuppetWhatsApp', 'roomCreate(%s, %s)', contactIdList, topic)
-
-    return 'mock_room_id'
+    const group = await this.whatsapp?.createGroup(topic, contactIdList)
+    if (group) {
+      return group.gid
+    } else {
+      throw new Error('An error occurred while creating the group!')
+    }
   }
 
   override async roomQuit (roomId: string): Promise<void> {
     log.verbose('PuppetWhatsApp', 'roomQuit(%s)', roomId)
+    const chat = await this.whatsapp?.getChatById(roomId) as GroupChat
+    await chat.leave()
   }
 
   override async roomQRCode (roomId: string): Promise<string> {
@@ -680,6 +704,10 @@ class PuppetWhatsapp extends PUPPET.Puppet {
    */
   override async roomInvitationAccept (roomInvitationId: string): Promise<void> {
     log.verbose('PuppetWhatsApp', 'roomInvitationAccept(%s)', roomInvitationId)
+    const info = this.roomInvitationStore[roomInvitationId]
+    if (info) {
+      this.whatsapp?.acceptGroupV4Invite(info)
+    }
   }
 
   override async roomInvitationRawPayload (roomInvitationId: string): Promise<any> {
