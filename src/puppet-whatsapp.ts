@@ -652,6 +652,8 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     contactId : string,
   ): Promise<void> {
     log.verbose('PuppetWhatsApp', 'roomAdd(%s, %s)', roomId, contactId)
+    const chat = await this.whatsapp?.getChatById(roomId) as GroupChat
+    await chat.addParticipants([contactId])
   }
 
   override async roomTopic (roomId: string)                : Promise<string>
