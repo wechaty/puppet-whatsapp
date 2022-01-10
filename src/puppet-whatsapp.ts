@@ -17,12 +17,10 @@
  *
  */
 import path from 'path'
-
 import * as PUPPET from 'wechaty-puppet'
 import { log, FileBox } from 'wechaty-puppet'
 import type { MemoryCard } from 'memory-card'
 import { distinctUntilKeyChanged, fromEvent, map, merge } from 'rxjs'
-
 import {
   CHATIE_OFFICIAL_ACCOUNT_QRCODE,
   MEMORY_SLOT,
@@ -47,7 +45,6 @@ export type PuppetWhatsAppOptions = PUPPET.PuppetOptions & {
 }
 
 const InviteLinkRegex = /^(https?:\/\/)?chat\.whatsapp\.com\/(?:invite\/)?([a-zA-Z0-9_-]{22})$/
-
 class PuppetWhatsapp extends PUPPET.Puppet {
 
   static override readonly VERSION = VERSION
@@ -703,7 +700,10 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   override async roomQRCode (roomId: string): Promise<string> {
     log.verbose('PuppetWhatsApp', 'roomQRCode(%s)', roomId)
-    return roomId + ' mock qrcode'
+    const con = await this.whatsapp!.getChatById(roomId)as GroupChat
+    const code = await con.getInviteCode()
+    const url = `https://chat.whatsapp.com/${code}`
+    return url
   }
 
   override async roomMemberList (roomId: string) : Promise<string[]> {
