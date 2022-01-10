@@ -178,18 +178,22 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       if (msg.type !== WAWebJS.MessageTypes.GROUP_INVITE) {
         if (msg.links.length === 1 && InviteLinkRegex.test(msg.links[0]!.link)) {
           const matched = msg.links[0]!.link.match(InviteLinkRegex)
-          if (matched?.length === 3) {
-            const inviteCode = matched[2]!
-            const roomInvitationPayload: PUPPET.EventRoomInvitePayload = {
-              roomInvitationId: inviteCode,
+          if (matched) {
+            if (matched.length === 3) {
+              const inviteCode = matched[2]!
+              const roomInvitationPayload: PUPPET.EventRoomInvitePayload = {
+                roomInvitationId: inviteCode,
+              }
+              const rawData: Partial<WAWebJS.InviteV4Data> = {
+                inviteCode,
+              }
+              this.roomInvitationStore[inviteCode] = rawData
+              this.emit('room-invite', roomInvitationPayload)
+            } else {
+              // TODO:
             }
-            const rawData: Partial<WAWebJS.InviteV4Data> = {
-              inviteCode,
-            }
-            this.roomInvitationStore[inviteCode] = rawData
-            this.emit('room-invite', roomInvitationPayload)
           } else {
-            // TODO:
+            this.emit('message', { messageId : msg.id.id })
           }
         } else {
           this.emit('message', { messageId : msg.id.id })
