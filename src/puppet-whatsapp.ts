@@ -664,7 +664,10 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     if (typeof topic === 'undefined') {
       return this.roomStore[roomId]?.name
     }
-
+    const chat = await this.roomStore[roomId]?.getChat() as GroupChat
+    if (chat.isGroup) {
+      await chat.setSubject(topic)
+    }
     await this.dirtyPayload(PUPPET.PayloadType.Room, roomId)
   }
 
