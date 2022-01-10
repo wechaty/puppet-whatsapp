@@ -71,6 +71,14 @@
     "typescript",
   ],
   "cSpell.words": [
-    "Miniprogram"
+    "chatie",
+    "Miniprogram",
+    "pushname",
+    "QRCODE",
+    "vcard",
+    "vcards",
+    "wechat",
+    "wechaty",
+    "weixin"
   ],
 }
