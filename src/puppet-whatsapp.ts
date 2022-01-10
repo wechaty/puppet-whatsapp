@@ -152,7 +152,8 @@ class PuppetWhatsapp extends PUPPET.Puppet {
         // this.id = whatsapp.info.wid.user
         // this.state.active(true)
         const contacts: WhatsappContact[] = await whatsapp.getContacts()
-        for (const contact of contacts) {
+        const nonBroadcast = contacts.filter(c => c.id.server !== 'broadcast')
+        for (const contact of nonBroadcast) {
           if (!contact.isGroup) {
             this.contactStore[contact.id._serialized] = contact
           } else {
