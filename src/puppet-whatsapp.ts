@@ -359,8 +359,9 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     /**
      * 2. get
      */
-    const WECHATY_ICON_PNG = path.resolve('../../docs/images/wechaty-icon.png')
-    return FileBox.fromFile(WECHATY_ICON_PNG)
+    const con = await this.whatsapp!.getContactById(contactId)
+    const avatar = await con.getProfilePicUrl()
+    return FileBox.fromUrl(avatar)
   }
 
   override async contactRawPayloadParser (whatsAppPayload: WhatsappContact): Promise<PUPPET.ContactPayload> {
