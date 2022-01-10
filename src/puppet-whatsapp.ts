@@ -292,10 +292,12 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   override async contactSelfName (name: string): Promise<void> {
     log.verbose('PuppetWhatsApp', 'contactSelfName(%s)', name)
+    await this.whatsapp!.setDisplayName(name)
   }
 
   override async contactSelfSignature (signature: string): Promise<void> {
     log.verbose('PuppetWhatsApp', 'contactSelfSignature(%s)', signature)
+    await this.whatsapp!.setStatus(signature)
   }
 
   /**
