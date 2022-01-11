@@ -33,6 +33,8 @@ import {
   WhatsappMessage,
 }                   from './whatsapp.js'
 import WAWebJS, { ClientOptions, GroupChat  } from 'whatsapp-web.js'
+import WAError from './pure-function-helpers/error-type.js'
+import { WXWORK_ERROR_TYPE } from './schema/error-type.js'
 // @ts-ignore
 // import { MessageTypes } from 'whatsapp-web.js'
 // import { Attachment } from './mock/user/types'
@@ -686,7 +688,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     if (group) {
       return group.gid
     } else {
-      throw new Error('An error occurred while creating the group!')
+      throw new WAError(WXWORK_ERROR_TYPE.ERR_CREATE_ROOM, 'An error occurred while creating the group!')
     }
   }
 
