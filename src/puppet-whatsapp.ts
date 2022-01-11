@@ -28,7 +28,6 @@ import { CHATIE_OFFICIAL_ACCOUNT_QRCODE, MEMORY_SLOT, qrCodeForChatie, VERSION }
 
 import { getWhatsApp, WhatsApp, WhatsappContact, WhatsappMessage } from './whatsapp.js'
 import { MessageContent, MessageMedia, MessageTypes } from 'whatsapp-web.js'
-import { MessageType } from 'wechaty-puppet/dist/esm/src/schemas/message'
 
 // import { Attachment } from './mock/user/types'
 
@@ -282,7 +281,16 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     hasRead?: boolean,
   ): Promise<void | boolean> {
     log.verbose('PuppetWhatsApp', 'conversationReadMark(%s, %s)', conversationId, hasRead)
-    return PUPPET.throwUnsupportedError()
+    if (!this.whatsapp) {
+      log.error('WhatsApp instance does not exist')
+      throw new Error('WhatsApp instance does not exist')
+    }
+    const chat = await this.whatsapp.getChatById(conversationId)
+    const unreadCount = chat.unreadCount
+    if (unreadCount) {
+      return true
+    }
+    return false
   }
 
   /**
@@ -290,11 +298,10 @@ class PuppetWhatsapp extends PUPPET.Puppet {
    * Message
    *
    */
-  // FIXME: What is the return value
   /**
    * Get contact message
    * @param messageId message Id
-   * @returns I don't know. Contact name perhaps?
+   * @returns contact name
    */
   override async messageContact (messageId: string): Promise<string> {
     log.verbose('PuppetWhatsApp', 'messageContact(%s)', messageId)
@@ -305,36 +312,43 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     const msg = this.messageStore[messageId]
     if (!msg) {
       log.error('Message %s not found', messageId)
-      // FIXME: What to return if msg not found
-      return ''
+      throw new Error('Message not found')
     }
     if (msg.type !== MessageTypes.CONTACT_CARD) {
       log.error('Message %s is not contact type', messageId)
-      return ''
+      throw new Error('Message is not contact type')
     }
     // NOTE: Under current typing configuration, it is not possible to return multiple vcards that WhatsApp allows
     // Therefore sending the first vcard only (for now?)
     return msg.vCards[0]!
   }
 
-  override async messageImage (
-    messageId: string,
-    imageType: PUPPET.types.Image,
-  ): Promise<FileBoxInterface> {
-    log.verbose(
-      'PuppetWhatsApp',
-      'messageImage(%s, %s[%s])',
-      messageId,
-      imageType,
-      PUPPET.types.Image[imageType],
-    )
-    // const attachment = this.mocker.MockMessage.loadAttachment(messageId)
-    // if (attachment instanceof FileBoxInterface) {
-    //   return attachment
-    // }
-    return FileBox.fromQRCode('fake-qrcode')
+  /**
+   * get image from message
+   * @param messageId message id
+   * @param imageType image size to get (may not apply to WhatsApp)
+   * @returns the image
+   */
+  override async messageImage (messageId: string, imageType: PUPPET.types.Image): Promise<FileBoxInterface> {
+    log.verbose('PuppetWhatsApp', 'messageImage(%s, %s[%s])', messageId, imageType, PUPPET.types.Image[imageType])
+    const msg = this.messageStore[messageId]
+    if (!msg) {
+      log.error('Message %s not found', messageId)
+      throw new Error('Message Not Found')
+    }
+    if (msg.type !== MessageTypes.IMAGE || !msg.hasMedia) {
+      log.error('Message %s does not contain any media', messageId)
+      throw new Error('Message does not contain any media')
+    }
+    const media = await msg.downloadMedia()
+    return FileBox.fromBase64(media.data, media.filename ?? undefined)
   }
 
+  /**
+   * recall the message
+   * @param messageId message id
+   * @returns success
+   */
   override async messageRecall (messageId: string): Promise<boolean> {
     log.verbose('PuppetWhatsApp', 'messageRecall(%s)', messageId)
     const msg = this.messageStore[messageId]
@@ -346,46 +360,60 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     return true
   }
 
+  /**
+   * get the file attached to the message
+   * @param id message id
+   * @returns the file that attached to the message
+   */
   override async messageFile (id: string): Promise<FileBoxInterface> {
-    // const attachment = this.mocker.MockMessage.loadAttachment(id)
-    // if (attachment instanceof FileBoxInterface) {
-    //   return attachment
-    // }
+    log.verbose('PuppetWhatsApp', 'messageFile(%s)', id)
     const msg = this.messageStore[id]
     if (!msg) {
       log.error('Message %s not found', id)
       throw new Error('Message not found')
     }
+    if (!msg.hasMedia) {
+      log.error('Message %s does not contain any media', id)
+      throw new Error('Message does not contain any media')
+    }
     const media = await msg.downloadMedia()
     return FileBox.fromBase64(media.data, media.filename ?? undefined)
   }
 
+  /**
+   * get url in the message
+   * @param messageId message id
+   * @returns url in the message
+   */
   override async messageUrl (messageId: string): Promise<PUPPET.payloads.UrlLink> {
     log.verbose('PuppetWhatsApp', 'messageUrl(%s)', messageId)
-    // const attachment = this.mocker.MockMessage.loadAttachment(messageId)
-    // if (attachment instanceof UrlLink) {
-    //   return attachment.payload
-    // }
+    const msg = this.messageStore[messageId]
+    if (!msg) {
+      log.error('Message %s not found', messageId)
+      throw new Error('Message not found')
+    }
+    if (msg.links.length === 0) {
+      log.error('Message %s is does not contain links', messageId)
+      throw new Error('Message does not contain links')
+    }
     return {
-      title: 'mock title for ' + messageId,
-      url: 'https://mock.url',
+      // FIXME: Link title not available in WhatsApp
+      title: 'N/A',
+      url: msg.links[0]!.link,
     }
   }
 
+  /**
+   * Not supported for WhatsApp
+   * @param messageId message id
+   */
   override async messageMiniProgram (messageId: string): Promise<PUPPET.payloads.MiniProgram> {
     log.verbose('PuppetWhatsApp', 'messageMiniProgram(%s)', messageId)
-    // const attachment = this.mocker.MockMessage.loadAttachment(messageId)
-    // if (attachment instanceof MiniProgram) {
-    //   return attachment.payload
-    // }
-    return {
-      title: 'mock title for ' + messageId,
-    }
+    PUPPET.throwUnsupportedError()
+    throw new Error('WhatsApp does not support miniProgram')
   }
 
-  override async messageRawPayloadParser (
-    whatsAppPayload: WhatsappMessage,
-  ): Promise<PUPPET.payloads.Message> {
+  override async messageRawPayloadParser (whatsAppPayload: WhatsappMessage): Promise<PUPPET.payloads.Message> {
     return {
       fromId: whatsAppPayload.from,
       id: whatsAppPayload.id.id,
@@ -424,16 +452,18 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   override async messageSendText (conversationId: string, text: string): Promise<void> {
+    log.verbose('PuppetWhatsApp', 'messageSendText(%s, %s)', conversationId, text)
     return this.messageSend(conversationId, text)
   }
 
   override async messageSendFile (conversationId: string, file: FileBox): Promise<void> {
+    log.verbose('PuppetWhatsApp', 'messageSendFile(%s, %s)', conversationId, file.name)
     const msgContent = new MessageMedia(file.mediaType, await file.toBase64(), file.name)
     return this.messageSend(conversationId, msgContent)
   }
 
   override async messageSendContact (conversationId: string, contactId: string): Promise<void> {
-    log.verbose('PuppetWhatsApp', 'messageSendUrl(%s, %s)', conversationId, contactId)
+    log.verbose('PuppetWhatsApp', 'messageSendContact(%s, %s)', conversationId, contactId)
     if (!this.whatsapp) {
       log.error('WhatsApp instance is undefined')
       return
@@ -446,12 +476,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     conversationId: string,
     urlLinkPayload: PUPPET.payloads.UrlLink,
   ): Promise<void> {
-    log.verbose(
-      'PuppetWhatsApp',
-      'messageSendUrl(%s, %s)',
-      conversationId,
-      JSON.stringify(urlLinkPayload),
-    )
+    log.verbose('PuppetWhatsApp', 'messageSendUrl(%s, %s)', conversationId, JSON.stringify(urlLinkPayload))
     // FIXME: Does WhatsApp really support link messages like wechat? Find out and fix this!
     await this.messageSend(conversationId, urlLinkPayload.url)
   }
@@ -466,8 +491,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       conversationId,
       JSON.stringify(miniProgramPayload),
     )
-    // const miniProgram = new MiniProgram(miniProgramPayload)
-    // return this.messageSend(conversationId, miniProgram)
     PUPPET.throwUnsupportedError()
   }
 
