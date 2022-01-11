@@ -16,7 +16,6 @@
  *   limitations under the License.
  *
  */
-import path from 'path'
 import * as PUPPET from 'wechaty-puppet'
 import { log, FileBox } from 'wechaty-puppet'
 import type { MemoryCard } from 'memory-card'

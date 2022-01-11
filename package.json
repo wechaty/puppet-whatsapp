@@ -1,5 +1,5 @@
 {
-  "name": "@bung87/wechaty-puppet-whatsapp",
+  "name": "wechaty-puppet-whatsapp",
   "version": "1.11.26",
   "description": "Wechaty Puppet for WhatsApp",
   "type": "module",
