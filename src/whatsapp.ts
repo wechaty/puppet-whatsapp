@@ -16,7 +16,7 @@ import type {
 
 async function getWhatsApp (
   options: ClientOptions = {
-    clientId: ''
+    clientId: '',
   },
   session?: ClientSession,
 ): Promise<WhatsApp> {
