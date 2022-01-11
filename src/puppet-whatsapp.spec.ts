@@ -16,7 +16,7 @@ test('PuppetWhatsapp perfect restart testing', async t => {
       // TODO: src\puppet-whatsapp.ts miss this.state.ready('on') -> puppet.state.on() === false
       // t.ok(puppet.state.on(), 'should be turned active after start()')
 
-      await new Promise((resolve, reject) => {
+      await new Promise((resolve) => {
         setTimeout(() => resolve(null), 3000)
       })
 
