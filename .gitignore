@@ -70,3 +70,4 @@ t.*
 
 # cache and session
 WWebJS
+tmp.*
