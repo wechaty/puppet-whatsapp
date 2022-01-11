@@ -9,6 +9,7 @@ export class Manager {
   constructor () {
 
     this.client = new Client({})
+    void this.client.initialize()
     this.requestManager = new RequestManager(this.client)
   }
 
