@@ -129,6 +129,16 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   ): void {
     log.verbose('PuppetwhatsApp', 'initWhatsAppEvents()')
 
+    /**
+    * whatsapp events
+    * auth_failure authenticated change_battery change_state disconnected group_join group_leave group_update media_uploaded message message_ack message_create message_revoke_everyone message_revoke_me qr call ready
+    *
+    * wechaty events
+    * - CHAT_EVENT_DICT
+    * friendship login logout message room-invite room-join room-leave room-topic scan
+    * dirty dong error heartbeat ready reset
+    */
+
     whatsapp.on('authenticated', session => {
       (async () => {
         try {
@@ -139,7 +149,90 @@ class PuppetWhatsapp extends PUPPET.Puppet {
           console.error(e)
           log.error('PuppetWhatsApp', 'getClient() whatsapp.on(authenticated) rejection: %s', e)
         }
+        // session 中不具有 contactId
+        // const contacts = await this.whatsapp!.getContacts()
+        // const meContactId = contacts.filter(contact => contact.isMe).map(contact => contact.id._serialized).toString()
+        // this.emit('login', { contactId: meContactId })
+
       })().catch(console.error)
+    })
+
+    whatsapp.on('auth_failure', message => {
+      // session 失效也会导致 auth_failure -> 扫码登不上去 或者 session 失效
+      this.emit('error', { data: message })
+    })
+
+    /** Emitted when the connection state changes */
+    whatsapp.on('change_state', message => {
+      // wechaty 中没有对应的事件
+    })
+
+    whatsapp.on('disconnected', message => {
+      // wechaty 中没有对应的事件
+      // this.emit('')
+    })
+
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    whatsapp.on('group_join', async (notification) => {
+      const { chatId, timestamp, recipientIds } = notification
+      const contact = await notification.getContact()
+      const roomJoinPayload: PUPPET.EventRoomJoinPayload = {
+        inviteeIdList: recipientIds,
+        inviterId: chatId,
+        // TODO：待验证 可能获取不到 groupId
+        roomId: contact.id._serialized,
+        timestamp,
+      }
+      this.emit('room-join', roomJoinPayload)
+    })
+
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    whatsapp.on('group_leave', async (notification) => {
+      const { chatId, timestamp, recipientIds } = notification
+      const contact = await notification.getContact()
+      const roomLeavePayload: PUPPET.EventRoomLeavePayload = {
+        removeeIdList: recipientIds,
+        removerId: chatId,
+        roomId: contact.id._serialized,
+        timestamp,
+      }
+      this.emit('room-leave', roomLeavePayload)
+    })
+
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    whatsapp.on('group_update', async (notification) => {
+      const { chatId, timestamp, id } = notification
+      const contact = await notification.getContact()
+      const roomTopicPayload: PUPPET.EventRoomTopicPayload = {
+        // TODO：验证值
+        changerId: id.toString(),
+        newTopic: chatId,
+        oldTopic: chatId,
+        roomId: contact.id._serialized,
+        timestamp,
+      }
+      this.emit('room-topic', roomTopicPayload)
+    })
+
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    whatsapp.on('media_uploaded', async (message) => {
+      // media 需要额外处理
+    })
+
+    /** Emitted when a new message is created, which may include the current user's own messages */
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    whatsapp.on('message_create', async (message) => {
+      // message_ack
+    })
+
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    whatsapp.on('message_revoke_everyone', async (message) => {
+      // message_ack
+    })
+
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    whatsapp.on('message_revoke_me', async (message) => {
+      // message_ack
     })
 
     whatsapp.on('ready', () => {
