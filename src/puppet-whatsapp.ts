@@ -17,21 +17,27 @@
  *
  */
 import * as PUPPET from 'wechaty-puppet'
-import { log, FileBox } from 'wechaty-puppet'
 import type { MemoryCard } from 'memory-card'
-import { distinctUntilKeyChanged, fromEvent, map, merge } from 'rxjs'
+import {
+  distinctUntilKeyChanged,
+  fromEvent,
+  map,
+  merge,
+} from 'rxjs'
 import {
   avatarForGroup,
+  log,
+  FileBox,
   MEMORY_SLOT,
   VERSION,
-}                                     from './config.js'
+} from './config.js'
 
 import {
   getWhatsApp,
   WhatsApp,
   WhatsappContact,
   WhatsappMessage,
-}                   from './whatsapp.js'
+} from './whatsapp.js'
 import WAWebJS, { ClientOptions, GroupChat  } from 'whatsapp-web.js'
 import WAError from './pure-function-helpers/error-type.js'
 import { WXWORK_ERROR_TYPE } from './schema/error-type.js'
