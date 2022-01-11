@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import type { RequestInit } from 'node-fetch'
+// import { RequestInit } from 'node-fetch'
 import type puppeteer = require('puppeteer')
 
 declare namespace WhatsAppRaw {
@@ -692,9 +692,9 @@ declare namespace WhatsAppRaw {
     }
 
     export interface MediaFromURLOptions {
-        client?: Client
-        unsafeMime?: boolean
-        reqOptions?: RequestInit
+      client?: Client
+      unsafeMime?: boolean
+        // reqOptions?: RequestInit
     }
 
     /** Media attached to a message */
