@@ -31,7 +31,7 @@ const WHATSAPP_PUPPET_PROXY = process.env['WHATSAPP_PUPPET_PROXY']
 const puppet = new PuppetWhatsapp(
   {
     puppeteerOptions: {
-      clientId: '',
+      // clientId: '',
       puppeteer:{
         args: WHATSAPP_PUPPET_PROXY ? [`--proxy-server=${WHATSAPP_PUPPET_PROXY}`] : [],
       },
