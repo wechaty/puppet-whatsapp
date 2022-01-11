@@ -49,6 +49,7 @@ puppet
   .on('login',  onLogin)
   .on('scan',   onScan)
   .on('error',  onError)
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   .on('message', onMessage)
 
 /**
@@ -112,7 +113,7 @@ function onError (payload: PUPPET.EventErrorPayload) {
  *    dealing with Messages.
  *
  */
-async function onMessage (payload: PUPPET.EventMessagePayload) {
+async function onMessage (payload: PUPPET.EventMessagePayload): Promise<void> {
   const msgPayload = await puppet.messagePayload(payload.messageId)
   if ((/ding/i.test(msgPayload.text || ''))) {
     await puppet.messageSendText(msgPayload.fromId!, 'dong')
