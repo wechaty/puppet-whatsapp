@@ -1,8 +1,6 @@
 /// <reference path="./typings.d.ts" />
-
-import {
-  FileBox,
-}             from 'file-box'
+import { FileBox } from 'file-box'
+import { log } from 'wechaty-puppet'
 import { packageJson } from './package-json.js'
 
 const VERSION = packageJson.version || '0.0.0'
@@ -21,4 +19,5 @@ export {
   MEMORY_SLOT,
   qrCodeForChatie,
   VERSION,
+  log,
 }
