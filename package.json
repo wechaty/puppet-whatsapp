@@ -1,6 +1,6 @@
 {
-  "name": "wechaty-puppet-whatsapp",
-  "version": "1.11.2",
+  "name": "@bung87/wechaty-puppet-whatsapp",
+  "version": "1.11.26",
   "description": "Wechaty Puppet for WhatsApp",
   "type": "module",
   "exports": {
@@ -26,7 +26,8 @@
     "lint:es": "eslint \"src/**/*.ts\" \"tests/**/*.spec.ts\" --ignore-pattern tests/fixtures/",
     "test": "npm-run-all lint test:unit",
     "test:pack": "bash -x scripts/npm-pack-testing.sh",
-    "test:unit": "tap --node-arg=--loader=ts-node/esm --node-arg=--no-warnings 'src/**/*.spec.ts' 'tests/**/*.spec.ts'"
+    "test:unit": "tap --node-arg=--loader=ts-node/esm --node-arg=--no-warnings 'src/**/*.spec.ts' 'tests/**/*.spec.ts'",
+    "prepublishOnly": "npm run dist"
   },
   "repository": {
     "type": "git",
@@ -59,19 +60,15 @@
     "qrcode-terminal": "^0.12.0"
   },
   "peerDependencies": {
-    "wechaty-puppet": "^1.11.14"
+    "wechaty-puppet": "^0.41.9"
   },
   "dependencies": {
+    "rxjs": "^7.5.1",
     "file-box": "^1.4.12",
     "flash-store": "^0.12.7",
     "fs-extra": "^8.1.0",
     "whatsapp-web.js": "^1.15.3"
   },
-  "files": [
-    "bin/",
-    "dist/",
-    "src/"
-  ],
   "tap": {
     "check-coverage": false
   },

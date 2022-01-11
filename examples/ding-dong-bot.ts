@@ -27,7 +27,16 @@ import { PuppetWhatsapp } from '../src/mod.js'
  * 1. Declare your Bot!
  *
  */
-const puppet = new PuppetWhatsapp()
+const WHATSAPP_PUPPET_PROXY = process.env['WHATSAPP_PUPPET_PROXY']
+const puppet = new PuppetWhatsapp(
+  {
+    puppeteerOptions:{
+      puppeteer:{
+        args: WHATSAPP_PUPPET_PROXY ? [`--proxy-server=${WHATSAPP_PUPPET_PROXY}`] : [],
+      },
+    },
+  },
+)
 
 /**
  *
@@ -65,7 +74,7 @@ puppet.start()
  *  `scan`, `login`, `logout`, `error`, and `message`
  *
  */
-function onScan (payload: PUPPET.payloads.EventScan) {
+function onScan (payload: PUPPET.EventScanPayload) {
   if (payload.qrcode) {
     qrTerm.generate(payload.qrcode, { small: true })
 
@@ -79,15 +88,15 @@ function onScan (payload: PUPPET.payloads.EventScan) {
   }
 }
 
-function onLogin (payload: PUPPET.payloads.EventLogin) {
+function onLogin (payload: PUPPET.EventLoginPayload) {
   console.info(`${payload.contactId} login`)
 }
 
-function onLogout (payload: PUPPET.payloads.EventLogout) {
+function onLogout (payload: PUPPET.EventLogoutPayload) {
   console.info(`${payload.contactId} logouted`)
 }
 
-function onError (payload: PUPPET.payloads.EventError) {
+function onError (payload: PUPPET.EventErrorPayload) {
   console.error('Bot error:', payload.data)
   /*
   if (bot.logonoff()) {
@@ -102,7 +111,7 @@ function onError (payload: PUPPET.payloads.EventError) {
  *    dealing with Messages.
  *
  */
-async function onMessage (payload: PUPPET.payloads.EventMessage) {
+async function onMessage (payload: PUPPET.EventMessagePayload) {
   const msgPayload = await puppet.messagePayload(payload.messageId)
   if ((/ding/i.test(msgPayload.text || ''))) {
     await puppet.messageSendText(msgPayload.fromId!, 'dong')
