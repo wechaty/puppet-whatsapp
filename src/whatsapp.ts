@@ -15,7 +15,9 @@ import type {
 }                               from 'puppeteer'
 
 async function getWhatsApp (
-  options: ClientOptions = {},
+  options: ClientOptions = {
+    clientId: ''
+  },
   session?: ClientSession,
 ): Promise<WhatsApp> {
   log.verbose('PuppetWhatsApp', 'getWhatsApp()')
