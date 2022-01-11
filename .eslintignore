@@ -1,1 +1,3 @@
 /src/schema/index.ts
+node_modules
+tmp*
