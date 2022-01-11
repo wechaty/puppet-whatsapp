@@ -20,6 +20,7 @@
     "build": "tsc && tsc -p tsconfig.cjs.json",
     "fixup": "shx echo '{\"type\": \"commonjs\"}' > dist/cjs/package.json",
     "start": "cross-env NODE_OPTIONS='--no-warnings --loader=ts-node/esm' node examples/ding-dong-bot.ts",
+    "start:win": "node --loader ts-node/esm examples/ding-dong-bot.ts",
     "lint": "npm-run-all lint:es lint:ts lint:md",
     "lint:md": "markdownlint README.md",
     "lint:ts": "tsc --isolatedModules --noEmit",
