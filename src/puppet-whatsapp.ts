@@ -22,9 +22,8 @@ import { log, FileBox } from 'wechaty-puppet'
 import type { MemoryCard } from 'memory-card'
 import { distinctUntilKeyChanged, fromEvent, map, merge } from 'rxjs'
 import {
-  CHATIE_OFFICIAL_ACCOUNT_QRCODE,
+  avatarForGroup,
   MEMORY_SLOT,
-  qrCodeForChatie,
   VERSION,
 }                                     from './config.js'
 
@@ -288,7 +287,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
    */
   override async contactSelfQRCode (): Promise<string> {
     log.verbose('PuppetWhatsApp', 'contactSelfQRCode()')
-    return CHATIE_OFFICIAL_ACCOUNT_QRCODE
+    return ''
   }
 
   override async contactSelfName (name: string): Promise<void> {
@@ -648,7 +647,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       return FileBox.fromUrl(payload.avatar)
     }
     log.warn('PuppetWhatsApp', 'roomAvatar() avatar not found, use the chatie default.')
-    return qrCodeForChatie()
+    return avatarForGroup()
   }
 
   override async roomAdd (
