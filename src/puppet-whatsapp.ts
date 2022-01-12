@@ -157,7 +157,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
      * https://github.com/pedroslopez/whatsapp-web.js/blob/d86c39de3ca5699a50db98ee93e264ab8c4f25a3/src/Client.js#L116-L129
      */
     whatsapp.on('auth_failure', async (msg) => {
-      log.error('PuppetWhatsApp', 'auth_failure: %s, then restart no use exist session', msg)
+      log.warn('PuppetWhatsApp', 'auth_failure: %s, then restart no use exist session', msg)
       // msg -> auth_failure message
       // auth_failure due to session invalidation
       // clear sessionData -> reinit
@@ -236,8 +236,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
     whatsapp.on('qr', (qr) => {
       // NOTE: This event will not be fired if a session is specified.
-      // console.log('QR RECEIVED', qr);
-      this.emit('scan', { qrcode : qr, status : PUPPET.ScanStatus.Waiting })
+      this.emit('scan', { qrcode: qr, status: PUPPET.ScanStatus.Waiting })
     })
 
     whatsapp.on('group_join', noti => {
