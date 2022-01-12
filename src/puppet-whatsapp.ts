@@ -65,11 +65,16 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     this.roomInvitationStore = {}
   }
 
-  override async start (): Promise<void> {
+  override async start (useSession: boolean = true): Promise<void> {
     log.verbose('PuppetWhatsApp', 'onStart()')
+    let whatsapp: WhatsApp
 
-    const session = await this.memory.get(MEMORY_SLOT)
-    const whatsapp = await getWhatsApp(this.options['puppeteerOptions'] as ClientOptions, session)
+    if (useSession) {
+      const session = await this.memory.get(MEMORY_SLOT)
+      whatsapp = await getWhatsApp(this.options['puppeteerOptions'] as ClientOptions, session)
+    } else {
+      whatsapp = await getWhatsApp(this.options['puppeteerOptions'] as ClientOptions)
+    }
     this.whatsapp = whatsapp
 
     this.initWhatsAppEvents(whatsapp)
@@ -140,6 +145,18 @@ class PuppetWhatsapp extends PUPPET.Puppet {
           log.error('PuppetWhatsApp', 'getClient() whatsapp.on(authenticated) rejection: %s', e)
         }
       })().catch(console.error)
+    })
+
+    /**
+     * There is only one situation that will cause this event, invalid session causing timeout
+     * https://github.com/pedroslopez/whatsapp-web.js/blob/d86c39de3ca5699a50db98ee93e264ab8c4f25a3/src/Client.js#L116-L129
+     */
+    whatsapp.on('auth_failure', async (msg) => {
+      log.error('PuppetWhatsApp', 'auth_failure: %s, then restart no use exist session', msg)
+      // msg -> auth_failure message
+      // auth_failure due to session invalidation
+      // clear sessionData -> reinit
+      await this.start(false)
     })
 
     whatsapp.on('ready', () => {
