@@ -32,7 +32,7 @@ import {
   WhatsappContact,
   WhatsappMessage,
 }                   from './whatsapp.js'
-import WAWebJS, { ClientOptions, GroupChat  } from 'whatsapp-web.js'
+import WAWebJS, { ClientOptions, ClientSession, GroupChat  } from 'whatsapp-web.js'
 // @ts-ignore
 // import { MessageTypes } from 'whatsapp-web.js'
 // import { Attachment } from './mock/user/types'
@@ -65,15 +65,20 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     this.roomInvitationStore = {}
   }
 
-  override async start (useSession: boolean = true): Promise<void> {
+  override async start(useSession: boolean = true, session?: ClientSession): Promise<void> {
     log.verbose('PuppetWhatsApp', 'onStart()')
     let whatsapp: WhatsApp
-
-    if (useSession) {
-      const session = await this.memory.get(MEMORY_SLOT)
-      whatsapp = await getWhatsApp(this.options['puppeteerOptions'] as ClientOptions, session)
+    const clientOptions: ClientOptions = {
+      ...this.options['puppeteerOptions'],
+      authTimeoutMs: 10000,
+    }
+    if (useSession && session == undefined) {
+      const _session = await this.memory.get(MEMORY_SLOT)
+      whatsapp = await getWhatsApp(clientOptions, _session)
+    } else if (useSession && session) {
+      whatsapp = await getWhatsApp(clientOptions, session)
     } else {
-      whatsapp = await getWhatsApp(this.options['puppeteerOptions'] as ClientOptions)
+      whatsapp = await getWhatsApp(clientOptions)
     }
     this.whatsapp = whatsapp
 
@@ -156,6 +161,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       // msg -> auth_failure message
       // auth_failure due to session invalidation
       // clear sessionData -> reinit
+      await this.memory.delete(MEMORY_SLOT)
       await this.start(false)
     })
 
@@ -173,7 +179,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
           }
         }
         await this.login(whatsapp.info.wid._serialized)
-        // this.emit('login', { contactId: whatsapp.info.wid._serialized })
+        // this.emit('ready', { data: '' })
       })().catch(console.error)
     })
 
