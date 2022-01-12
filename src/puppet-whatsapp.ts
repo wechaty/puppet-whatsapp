@@ -125,7 +125,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       log.error('PuppetWhatsApp', 'stop() this.whatsapp is undefined!')
       return
     }
-    this.state.on('pending')
+    this.state.off('pending')
     const whatsapp = this.whatsapp
     this.whatsapp = undefined
     await whatsapp.destroy()
