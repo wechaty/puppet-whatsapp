@@ -65,6 +65,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     this.contactStore = {}
     this.roomStore = {}
     this.roomInvitationStore = {}
+
   }
 
   override async start (): Promise<void> {
@@ -76,7 +77,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     const session = await this.memory.get(MEMORY_SLOT)
     const whatsapp = await getWhatsApp(this.options['puppeteerOptions'] as ClientOptions, session)
     this.manager = new Manager(whatsapp)
-    this.whatsapp = whatsapp
     this.state.on('pending')
     this.initWhatsAppEvents(whatsapp)
 
@@ -302,7 +302,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   override async contactSelfName (name: string): Promise<void> {
     log.verbose('PuppetWhatsApp', 'contactSelfName(%s)', name)
-    await this.whatsapp!.setDisplayName(name)
+    await this.manager!.setNickname(name)
   }
 
   override async contactSelfSignature (signature: string): Promise<void> {

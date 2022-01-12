@@ -13,4 +13,8 @@ export class Manager {
     this.requestManager = new RequestManager(this.whatsapp)
   }
 
+  setNickname (nickname: string) {
+    return this.requestManager.setNickname(nickname)
+  }
+
 }
