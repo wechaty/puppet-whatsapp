@@ -53,6 +53,7 @@
     "node_modules/": true,
     "package/": true,
   },
+  "prettier.enable": false,
   "alignment": {
     "operatorPadding": "right",
     "indentBase":      "firstline",
@@ -71,6 +72,13 @@
     "typescript",
   ],
   "cSpell.words": [
-    "Miniprogram"
+    "inited",
+    "Miniprogram",
+    "pushname",
+    "Vcard",
+    "vcards",
+    "waid",
+    "wechaty",
+    "weixin"
   ],
 }
