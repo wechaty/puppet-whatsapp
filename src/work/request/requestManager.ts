@@ -1,164 +1,164 @@
-import type { Client, Contact, InviteV4Data, MessageContent, MessageSendOptions } from 'whatsapp-web.js'
+import type { Client as WhatsApp, Contact, InviteV4Data, MessageContent, MessageSendOptions } from 'whatsapp-web.js'
 import { RateManager } from './rateManager.js'
 
 export class RequestManager {
 
-  private client: Client
+  private whatsapp: WhatsApp
   private rateManager: RateManager
 
-  constructor (client: Client) {
-    this.client = client
+  constructor (whatsapp: WhatsApp) {
+    this.whatsapp = whatsapp
     this.rateManager = new RateManager()
   }
 
   public logout () {
-    return this.client.logout()
+    return this.whatsapp.logout()
   }
 
   public acceptPrivateRoomInvite (invitation: InviteV4Data) {
-    return this.client.acceptGroupV4Invite(invitation)
+    return this.whatsapp.acceptGroupV4Invite(invitation)
   }
 
   public acceptRoomInvite (inviteCode: string) {
-    return this.client.acceptInvite(inviteCode)
+    return this.whatsapp.acceptInvite(inviteCode)
   }
 
   public archiveChat (chatId: string) {
-    return this.client.archiveChat(chatId)
+    return this.whatsapp.archiveChat(chatId)
   }
 
   public unarchiveChat (chatId: string) {
-    return this.client.unarchiveChat(chatId)
+    return this.whatsapp.unarchiveChat(chatId)
   }
 
   public createRoom (name: string, participants: Contact[] | string[]) {
-    return this.client.createGroup(name, participants)
+    return this.whatsapp.createGroup(name, participants)
   }
 
   public destroy () {
-    return this.client.destroy()
+    return this.whatsapp.destroy()
   }
 
   public getBLockedContacts () {
-    return this.client.getBlockedContacts()
+    return this.whatsapp.getBlockedContacts()
   }
 
   public getChatById (chatId: string) {
-    return this.client.getChatById(chatId)
+    return this.whatsapp.getChatById(chatId)
   }
 
   public getChatLabels (chatId: string) {
-    return this.client.getChatLabels(chatId)
+    return this.whatsapp.getChatLabels(chatId)
   }
 
   public getChats () {
-    return this.client.getChats()
+    return this.whatsapp.getChats()
   }
 
   public getChatsByLabelId (labelId: string) {
-    return this.client.getChatsByLabelId(labelId)
+    return this.whatsapp.getChatsByLabelId(labelId)
   }
 
   public getContactById (contactId: string) {
-    return this.client.getContactById(contactId)
+    return this.whatsapp.getContactById(contactId)
   }
 
   public getContacts () {
-    return this.client.getContacts()
+    return this.whatsapp.getContacts()
   }
 
   public getCountryCode (whatsappId: string) {
-    return this.client.getCountryCode(whatsappId)
+    return this.whatsapp.getCountryCode(whatsappId)
   }
 
   public getFormattedNumber (whatsappId: string) {
-    return this.client.getFormattedNumber(whatsappId)
+    return this.whatsapp.getFormattedNumber(whatsappId)
   }
 
   public getInviteInfo (inviteId: string) {
-    return this.client.getInviteInfo(inviteId)
+    return this.whatsapp.getInviteInfo(inviteId)
   }
 
   public getLabelById (labelId: string) {
-    return this.client.getLabelById(labelId)
+    return this.whatsapp.getLabelById(labelId)
   }
 
   public getLabels () {
-    return this.client.getLabels()
+    return this.whatsapp.getLabels()
   }
 
   public getWhatsappIdByNumber (number: string) {
-    return this.client.getNumberId(number)
+    return this.whatsapp.getNumberId(number)
   }
 
   public getAvatarUrl (contactId: string) {
-    return this.client.getProfilePicUrl(contactId)
+    return this.whatsapp.getProfilePicUrl(contactId)
   }
 
   public getState () {
-    return this.client.getState()
+    return this.whatsapp.getState()
   }
 
-  public getClientVersion () {
-    return this.client.getWWebVersion()
+  public getwhatsappVersion () {
+    return this.whatsapp.getWWebVersion()
   }
 
   public init () {
-    return this.client.initialize()
+    return this.whatsapp.initialize()
   }
 
   public isWhatsappUser (contactId: string) {
-    return this.client.isRegisteredUser(contactId)
+    return this.whatsapp.isRegisteredUser(contactId)
   }
 
   public markChatUnread (chatId: string) {
-    return this.client.markChatUnread(chatId)
+    return this.whatsapp.markChatUnread(chatId)
   }
 
   public muteChat (chatId: string) {
-    return this.client.muteChat(chatId)
+    return this.whatsapp.muteChat(chatId)
   }
 
   public unmuteChat (chatId: string) {
-    return this.client.unmuteChat(chatId)
+    return this.whatsapp.unmuteChat(chatId)
   }
 
   public pinChat (chatId: string) {
-    return this.client.pinChat(chatId)
+    return this.whatsapp.pinChat(chatId)
   }
 
   public unpinChat (chatId: string) {
-    return this.client.unpinChat(chatId)
+    return this.whatsapp.unpinChat(chatId)
   }
 
   public resetConnection () {
-    return this.client.resetState()
+    return this.whatsapp.resetState()
   }
 
   public searchMessage (query: string, options?: { chatId?: string, page?: number, limit?: number }) {
-    return this.client.searchMessages(query, options)
+    return this.whatsapp.searchMessages(query, options)
   }
 
   public sendMessage (chatId: string, content: MessageContent, options?: MessageSendOptions) {
     return this.rateManager.exec(async () => {
-      return this.client.sendMessage(chatId, content, options)
+      return this.whatsapp.sendMessage(chatId, content, options)
     }, { delayAfter: 1, queueId: chatId })
   }
 
   public sendPresenceAvailable () {
-    return this.client.sendPresenceAvailable()
+    return this.whatsapp.sendPresenceAvailable()
   }
 
   public markChatRead (chatId: string) {
-    return this.client.sendSeen(chatId)
+    return this.whatsapp.sendSeen(chatId)
   }
 
   public setNickname (name: string) {
-    return this.client.setDisplayName(name)
+    return this.whatsapp.setDisplayName(name)
   }
 
   public setStatusMessage (status: string) {
-    return this.client.setStatus(status)
+    return this.whatsapp.setStatus(status)
   }
 
 }

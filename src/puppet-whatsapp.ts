@@ -33,6 +33,7 @@ import {
   WhatsappMessage,
 }                   from './whatsapp.js'
 import WAWebJS, { ClientOptions, GroupChat  } from 'whatsapp-web.js'
+import { Manager } from './work/manager.js'
 // @ts-ignore
 // import { MessageTypes } from 'whatsapp-web.js'
 // import { Attachment } from './mock/user/types'
@@ -52,6 +53,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   private roomStore: { [id: string]: WhatsappContact }
   private roomInvitationStore: { [id: string]: Partial<WAWebJS.InviteV4Data>}
   private whatsapp: undefined | WhatsApp
+  private manager: undefined | Manager
 
   constructor (
     override options: PuppetWhatsAppOptions = {},
@@ -73,6 +75,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     }
     const session = await this.memory.get(MEMORY_SLOT)
     const whatsapp = await getWhatsApp(this.options['puppeteerOptions'] as ClientOptions, session)
+    this.manager = new Manager(whatsapp)
     this.whatsapp = whatsapp
     this.state.on('pending')
     this.initWhatsAppEvents(whatsapp)

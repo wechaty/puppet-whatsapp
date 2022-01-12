@@ -1,16 +1,16 @@
-import { Client } from 'whatsapp-web.js'
 import { RequestManager } from './request/requestManager.js'
+import type { Client as WhatsApp } from 'whatsapp-web.js'
 
 export class Manager {
 
-  client: Client
+  whatsapp: WhatsApp
   requestManager: RequestManager
 
-  constructor () {
+  constructor (whatsapp: WhatsApp) {
 
-    this.client = new Client({})
-    void this.client.initialize()
-    this.requestManager = new RequestManager(this.client)
+    this.whatsapp = whatsapp
+    void this.whatsapp.initialize()
+    this.requestManager = new RequestManager(this.whatsapp)
   }
 
 }
