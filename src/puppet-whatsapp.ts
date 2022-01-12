@@ -442,7 +442,8 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       return
     }
 
-    await this.whatsapp.sendMessage(conversationId, content)
+    const msg = await this.whatsapp.sendMessage(conversationId, content)
+    this.messageStore[msg.id.id] = msg
     // const user = this.mocker.ContactMock.load(this.currentUserId)
     // let conversation
 
