@@ -28,7 +28,7 @@ import { CHATIE_OFFICIAL_ACCOUNT_QRCODE, MEMORY_SLOT, qrCodeForChatie, VERSION }
 
 import { getWhatsApp, WhatsApp, WhatsappContact, WhatsappMessage } from './whatsapp.js'
 import { MessageContent, MessageMedia, MessageTypes } from 'whatsapp-web.js'
-import { parseVcard } from './util/vard-parser.js'
+import { parseVcard } from './util/vcard-parser.js'
 
 // import { Attachment } from './mock/user/types'
 
