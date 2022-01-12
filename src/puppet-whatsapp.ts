@@ -28,6 +28,7 @@ import { CHATIE_OFFICIAL_ACCOUNT_QRCODE, MEMORY_SLOT, qrCodeForChatie, VERSION }
 
 import { getWhatsApp, WhatsApp, WhatsappContact, WhatsappMessage } from './whatsapp.js'
 import { MessageContent, MessageMedia, MessageTypes } from 'whatsapp-web.js'
+import { parseVcard } from './util/vard-parser.js'
 
 // import { Attachment } from './mock/user/types'
 
@@ -318,9 +319,13 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       log.error('Message %s is not contact type', messageId)
       throw new Error('Message is not contact type')
     }
-    // NOTE: Under current typing configuration, it is not possible to return multiple vcards that WhatsApp allows
+    const vcard = parseVcard(msg.vCards[0]!)
+    // FIXME: Under current typing configuration, it is not possible to return multiple vcards that WhatsApp allows
     // Therefore sending the first vcard only (for now?)
-    return msg.vCards[0]!
+    if (!vcard.TEL) {
+      log.warn('vcard has not TEL field')
+    }
+    return vcard.TEL ? vcard.TEL.waid : ''
   }
 
   /**
@@ -356,7 +361,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       log.error('Message %s not found', messageId)
       return false
     }
-    await msg.delete(true)
     return true
   }
 
