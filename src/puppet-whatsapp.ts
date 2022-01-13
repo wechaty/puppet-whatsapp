@@ -33,7 +33,7 @@ import {
   WhatsappMessage,
 }                   from './whatsapp.js'
 import WAWebJS, { ClientOptions, GroupChat, MessageContent, MessageMedia, MessageTypes  } from 'whatsapp-web.js'
-import { parseVcard } from './util/vcard-parser.js'
+import { parseVcard } from './pure-function-helpers/vcard-parser.js'
 // @ts-ignore
 // import { MessageTypes } from 'whatsapp-web.js'
 // import { Attachment } from './mock/user/types'
@@ -530,8 +530,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
    */
   override async messageMiniProgram (messageId: string): Promise<PUPPET.MiniProgramPayload> {
     log.verbose('PuppetWhatsApp', 'messageMiniProgram(%s)', messageId)
-    PUPPET.throwUnsupportedError()
-    throw new Error('WhatsApp does not support miniProgram')
+    return PUPPET.throwUnsupportedError()
   }
 
   private async messageSend (conversationId: string, content: MessageContent): Promise<void> {
@@ -583,7 +582,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       conversationId,
       JSON.stringify(miniProgramPayload),
     )
-    PUPPET.throwUnsupportedError()
+    return PUPPET.throwUnsupportedError()
   }
 
   override async messageForward (conversationId: string, messageId: string): Promise<void> {
