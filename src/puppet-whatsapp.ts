@@ -172,6 +172,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       // msg -> auth_failure message
       // auth_failure due to session invalidation
       // clear sessionData -> reinit
+      this.state.off(true)
       await this.memory.delete(MEMORY_SLOT)
       await this.start()
     })
