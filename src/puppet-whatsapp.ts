@@ -602,7 +602,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     return PUPPET.throwUnsupportedError()
   }
 
-  override async messageForward (conversationId: string, messageId: string): Promise<void> {
+  override async messageForward (conversationId: string, messageId: string): Promise<void | string> {
     log.verbose('PuppetWhatsApp', 'messageForward(%s, %s)', conversationId, messageId)
     const msg = this.messageStore[messageId]
     if (!msg) {
@@ -610,6 +610,25 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       throw new Error(`Message ${messageId} not found`)
     }
     await msg.forward(conversationId)
+    if (!this.whatsapp) {
+      throw new Error('WhatsApp instance not found')
+    }
+    const chat = await this.whatsapp.getChatById(conversationId)
+
+    // NOTE: Change this if necessary
+    const MESSAGE_MAX_FETCH_LIMIT = 50
+    const MESSAGE_FETCH_LIMIT = 10
+
+    let fetchCounter = 0
+    while (fetchCounter < MESSAGE_MAX_FETCH_LIMIT) {
+      const messages = await chat.fetchMessages({ limit: MESSAGE_FETCH_LIMIT })
+      for (const message of messages) {
+        if (message.isForwarded) {
+          return message.id.id
+        }
+      }
+      fetchCounter += MESSAGE_FETCH_LIMIT
+    }
   }
 
   override async messageRawPayloadParser (whatsAppPayload: WhatsappMessage): Promise<PUPPET.MessagePayload> {
