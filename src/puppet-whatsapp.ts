@@ -17,14 +17,20 @@
  *
  */
 import * as PUPPET from 'wechaty-puppet'
-import { log, FileBox } from 'wechaty-puppet'
 import type { MemoryCard } from 'memory-card'
-import { distinctUntilKeyChanged, fromEvent, map, merge } from 'rxjs'
+import {
+  distinctUntilKeyChanged,
+  fromEvent,
+  map,
+  merge,
+} from 'rxjs'
 import {
   avatarForGroup,
+  log,
+  FileBox,
   MEMORY_SLOT,
   VERSION,
-}                                     from './config.js'
+} from './config.js'
 
 import {
   getWhatsApp,
@@ -32,9 +38,11 @@ import {
   WhatsappContact,
   WhatsappMessage,
 }                   from './whatsapp.js'
-import WAWebJS, { ClientOptions, GroupChat, MessageContent, MessageMedia, MessageTypes  } from 'whatsapp-web.js'
+import WAWebJS, { ClientOptions, GroupChat, MessageContent } from 'whatsapp-web.js'
 import { parseVcard } from './pure-function-helpers/vcard-parser.js'
 import { Manager } from './work/manager.js'
+import WAError from './pure-function-helpers/error-type.js'
+import { WXWORK_ERROR_TYPE } from './schema/error-type.js'
 // @ts-ignore
 // import { MessageTypes } from 'whatsapp-web.js'
 // import { Attachment } from './mock/user/types'
@@ -443,7 +451,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       log.error('Message %s not found', messageId)
       throw new Error('Message not found')
     }
-    if (msg.type !== MessageTypes.CONTACT_CARD) {
+    if (msg.type !== WAWebJS.MessageTypes.CONTACT_CARD) {
       log.error('Message %s is not contact type', messageId)
       throw new Error('Message is not contact type')
     }
@@ -564,7 +572,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   override async messageSendFile (conversationId: string, file: FileBox): Promise<void> {
     log.verbose('PuppetWhatsApp', 'messageSendFile(%s, %s)', conversationId, file.name)
-    const msgContent = new MessageMedia(file.mimeType!, await file.toBase64(), file.name)
+    const msgContent = new WAWebJS.MessageMedia(file.mimeType!, await file.toBase64(), file.name)
     return this.messageSend(conversationId, msgContent)
   }
 
@@ -737,7 +745,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     if (group) {
       return group.gid
     } else {
-      throw new Error('An error occurred while creating the group!')
+      throw new WAError(WXWORK_ERROR_TYPE.ERR_CREATE_ROOM, 'An error occurred while creating the group!')
     }
   }
 

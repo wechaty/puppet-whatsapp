@@ -1,5 +1,8 @@
 /// <reference path="./typings.d.ts" />
-import { log, FileBox } from 'wechaty-puppet'
+import {
+  FileBox,
+  log,
+} from 'wechaty-puppet'
 import { packageJson } from './package-json.js'
 
 const VERSION = packageJson.version || '0.0.0'
