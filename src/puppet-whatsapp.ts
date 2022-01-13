@@ -477,7 +477,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       log.error('Message %s not found', messageId)
       throw new Error('Message Not Found')
     }
-    if (msg.type !== MessageTypes.IMAGE || !msg.hasMedia) {
+    if (msg.type !== WAWebJS.MessageTypes.IMAGE || !msg.hasMedia) {
       log.error('Message %s does not contain any media', messageId)
       throw new Error('Message does not contain any media')
     }
