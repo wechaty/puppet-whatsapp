@@ -33,6 +33,7 @@ import {
   WhatsappMessage,
 }                   from './whatsapp.js'
 import WAWebJS, { ClientOptions, GroupChat  } from 'whatsapp-web.js'
+import { Manager } from './work/manager.js'
 // @ts-ignore
 // import { MessageTypes } from 'whatsapp-web.js'
 // import { Attachment } from './mock/user/types'
@@ -52,6 +53,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   private roomStore: { [id: string]: WhatsappContact }
   private roomInvitationStore: { [id: string]: Partial<WAWebJS.InviteV4Data>}
   private whatsapp: undefined | WhatsApp
+  private manager: undefined | Manager
 
   constructor (
     override options: PuppetWhatsAppOptions = {},
@@ -63,15 +65,19 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     this.contactStore = {}
     this.roomStore = {}
     this.roomInvitationStore = {}
+
   }
 
   override async start (): Promise<void> {
     log.verbose('PuppetWhatsApp', 'onStart()')
-
+    if (this.state.on()) {
+      await this.state.ready('on')
+      return
+    }
     const session = await this.memory.get(MEMORY_SLOT)
     const whatsapp = await getWhatsApp(this.options['puppeteerOptions'] as ClientOptions, session)
-    this.whatsapp = whatsapp
-
+    this.manager = new Manager(whatsapp)
+    this.state.on('pending')
     this.initWhatsAppEvents(whatsapp)
 
     /**
@@ -92,10 +98,11 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     /**
      * Huan(202102): Wait for Puppeteer to be inited before resolve start() for robust state management
      */
+    const { state } = this
     const future = new Promise<void>(resolve => {
       function check () {
         if (whatsapp.pupBrowser) {
-          resolve()
+          resolve(state.on(true))
         } else {
           // process.stdout.write('.')
           setTimeout(check, 100)
@@ -105,7 +112,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       check()
     })
 
-    await Promise.race([
+    return Promise.race([
       future,
       this.state.ready('off'),
     ])
@@ -113,15 +120,19 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   override async stop (): Promise<void> {
     log.verbose('PuppetWhatsApp', 'onStop()')
-
+    if (this.state.off()) {
+      await this.state.ready('off')
+      return
+    }
     if (!this.whatsapp) {
       log.error('PuppetWhatsApp', 'stop() this.whatsapp is undefined!')
       return
     }
-
+    this.state.off('pending')
     const whatsapp = this.whatsapp
     this.whatsapp = undefined
     await whatsapp.destroy()
+    this.state.off(true)
   }
 
   private initWhatsAppEvents (
@@ -145,7 +156,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     whatsapp.on('ready', () => {
       (async () => {
         // this.id = whatsapp.info.wid.user
-        // this.state.active(true)
+        // await this.state.on(true)
         const contacts: WhatsappContact[] = await whatsapp.getContacts()
         const nonBroadcast = contacts.filter(c => c.id.server !== 'broadcast')
         for (const contact of nonBroadcast) {
@@ -291,7 +302,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   override async contactSelfName (name: string): Promise<void> {
     log.verbose('PuppetWhatsApp', 'contactSelfName(%s)', name)
-    await this.whatsapp!.setDisplayName(name)
+    await this.manager!.setNickname(name)
   }
 
   override async contactSelfSignature (signature: string): Promise<void> {
