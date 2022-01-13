@@ -65,7 +65,9 @@
   "dependencies": {
     "flash-store": "^0.12.7",
     "fs-extra": "^8.1.0",
+    "memory-card": "^1.0.3",
     "rxjs": "^7.5.1",
+    "wechaty-puppet": "^0.41.9",
     "whatsapp-web.js": "^1.15.3"
   },
   "tap": {
