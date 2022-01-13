@@ -9,7 +9,6 @@ export class Manager {
   constructor (whatsapp: WhatsApp) {
 
     this.whatsapp = whatsapp
-    void this.whatsapp.initialize()
     this.requestManager = new RequestManager(this.whatsapp)
   }
 

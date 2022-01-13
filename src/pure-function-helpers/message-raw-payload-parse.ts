@@ -1,13 +1,12 @@
 import { log } from 'flash-store'
-
-import type { WhatsAppMessagePayload } from '../schema/message'
+import type WhatsAppRaw from '../schema/index'
 
 interface MessagePayload {
   id: string
 } // FIXME: need import MessagePayload from wechaty-puppet
 
 export async function messageRawPayloadParser (
-  rawPayload: WhatsAppMessagePayload,
+  rawPayload: WhatsAppRaw.Message,
 ): Promise<MessagePayload> {
   log.silly(`messageRawPayloadParser(${rawPayload.id})`)
 

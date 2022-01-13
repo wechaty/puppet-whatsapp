@@ -17,14 +17,20 @@
  *
  */
 import * as PUPPET from 'wechaty-puppet'
-import { log, FileBox } from 'wechaty-puppet'
 import type { MemoryCard } from 'memory-card'
-import { distinctUntilKeyChanged, fromEvent, map, merge } from 'rxjs'
+import {
+  distinctUntilKeyChanged,
+  fromEvent,
+  map,
+  merge,
+} from 'rxjs'
 import {
   avatarForGroup,
+  log,
+  FileBox,
   MEMORY_SLOT,
   VERSION,
-}                                     from './config.js'
+} from './config.js'
 
 import {
   getWhatsApp,
@@ -32,13 +38,12 @@ import {
   WhatsappContact,
   WhatsappMessage,
 }                   from './whatsapp.js'
-import WAWebJS, { ClientOptions, GroupChat, MessageContent, MessageMedia, MessageTypes  } from 'whatsapp-web.js'
+import WAWebJS, { ClientOptions, GroupChat, MessageContent, MessageMedia } from 'whatsapp-web.js'
 import { parseVcard } from './pure-function-helpers/vcard-parser.js'
 import { Manager } from './work/manager.js'
+import WAError from './pure-function-helpers/error-type.js'
+import { WXWORK_ERROR_TYPE } from './schema/error-type.js'
 import { CacheManager } from './data-manager/cache-manager.js'
-// @ts-ignore
-// import { MessageTypes } from 'whatsapp-web.js'
-// import { Attachment } from './mock/user/types'
 
 export type PuppetWhatsAppOptions = PUPPET.PuppetOptions & {
   memory?: MemoryCard
@@ -78,6 +83,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     }
     const session = await this.memory.get(MEMORY_SLOT)
     const whatsapp = await getWhatsApp(this.options['puppeteerOptions'] as ClientOptions, session)
+    this.whatsapp = whatsapp
     this.manager = new Manager(whatsapp)
     this.state.on('pending')
     this.initWhatsAppEvents(whatsapp)
@@ -92,7 +98,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
         if (this.state.on()) {
           log.error('PuppetWhatsApp', 'start() whatsapp.initialize() rejection: %s', e)
         } else {
-          // Puppet is stoping...
           log.error('PuppetWhatsApp', 'start() whatsapp.initialize() rejected on a stopped puppet. %s', e)
         }
       })
@@ -106,7 +111,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
         if (whatsapp.pupBrowser) {
           resolve(state.on(true))
         } else {
-          // process.stdout.write('.')
           setTimeout(check, 100)
         }
       }
@@ -157,7 +161,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
     whatsapp.on('ready', () => {
       (async () => {
-        // this.id = whatsapp.info.wid.user
         // await this.state.on(true)
         const contacts: WhatsappContact[] = await whatsapp.getContacts()
         const nonBroadcast = contacts.filter(c => c.id.server !== 'broadcast')
@@ -169,7 +172,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
           }
         }
         await this.login(whatsapp.info.wid._serialized)
-        // this.emit('login', { contactId: whatsapp.info.wid._serialized })
       })().catch(console.error)
     })
 
@@ -226,7 +228,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
     whatsapp.on('qr', (qr) => {
       // NOTE: This event will not be fired if a session is specified.
-      // console.log('QR RECEIVED', qr);
       this.emit('scan', { qrcode : qr, status : PUPPET.ScanStatus.Waiting })
     })
 
@@ -295,7 +296,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
    *
    * ContactSelf
    *
-   *
    */
   override async contactSelfQRCode (): Promise<string> {
     log.verbose('PuppetWhatsApp', 'contactSelfQRCode()')
@@ -361,16 +361,10 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   override async contactAvatar (contactId: string, file?: FileBox): Promise<void | FileBox> {
     log.verbose('PuppetWhatsApp', 'contactAvatar(%s)', contactId)
 
-    /**
-     * 1. set
-     */
     if (file) {
       return
     }
 
-    /**
-     * 2. get
-     */
     const con = await this.whatsapp!.getContactById(contactId)
     const avatar = await con.getProfilePicUrl()
     return FileBox.fromUrl(avatar)
@@ -434,16 +428,12 @@ class PuppetWhatsapp extends PUPPET.Puppet {
    */
   override async messageContact (messageId: string): Promise<string> {
     log.verbose('PuppetWhatsApp', 'messageContact(%s)', messageId)
-    // const attachment = this.mocker.MockMessage.loadAttachment(messageId)
-    // if (attachment instanceof ContactMock) {
-    //   return attachment.id
-    // }
     const msg = this.messageStore[messageId]
     if (!msg) {
       log.error('Message %s not found', messageId)
       throw new Error(`Message ${messageId} not found`)
     }
-    if (msg.type !== MessageTypes.CONTACT_CARD) {
+    if (msg.type !== WAWebJS.MessageTypes.CONTACT_CARD) {
       log.error('Message %s is not contact type', messageId)
       throw new Error(`Message ${messageId} is not contact type`)
     }
@@ -469,7 +459,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       log.error('Message %s not found', messageId)
       throw new Error(`Message ${messageId} Not Found`)
     }
-    if (msg.type !== MessageTypes.IMAGE || !msg.hasMedia) {
+    if (msg.type !== WAWebJS.MessageTypes.IMAGE || !msg.hasMedia) {
       log.error('Message %s does not contain any media', messageId)
       throw new Error(`Message ${messageId} does not contain any media`)
     }
@@ -574,7 +564,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   override async messageSendFile (conversationId: string, file: FileBox): Promise<void> {
     log.verbose('PuppetWhatsApp', 'messageSendFile(%s, %s)', conversationId, file.name)
-    const msgContent = new MessageMedia(file.mimeType!, await file.toBase64(), file.name)
+    const msgContent = new WAWebJS.MessageMedia(file.mimeType!, await file.toBase64(), file.name)
     return this.messageSend(conversationId, msgContent)
   }
 
@@ -752,7 +742,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     if (group) {
       return group.gid
     } else {
-      throw new Error('An error occurred while creating the group!')
+      throw new WAError(WXWORK_ERROR_TYPE.ERR_CREATE_ROOM, 'An error occurred while creating the group!')
     }
   }
 
@@ -797,10 +787,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   override async roomAnnounce (roomId: string, text: string)  : Promise<void>
 
   override async roomAnnounce (roomId: string, text?: string) : Promise<void | string> {
-    if (text) {
-      return
-    }
-    return 'mock announcement for ' + roomId
+    return PUPPET.throwUnsupportedError()
   }
 
   /**

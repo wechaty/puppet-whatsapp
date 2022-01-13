@@ -67,3 +67,7 @@ typings/
 .DS_Store
 t/
 t.*
+
+# cache and session
+WWebJS
+tmp.*
