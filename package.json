@@ -20,15 +20,13 @@
     "build": "tsc && tsc -p tsconfig.cjs.json",
     "fixup": "shx echo '{\"type\": \"commonjs\"}' > dist/cjs/package.json",
     "start": "cross-env NODE_OPTIONS='--no-warnings --loader=ts-node/esm' node examples/ding-dong-bot.ts",
-    "start:win": "node --loader ts-node/esm examples/ding-dong-bot.ts",
     "lint": "npm-run-all lint:es lint:ts lint:md",
     "lint:md": "markdownlint README.md",
     "lint:ts": "tsc --isolatedModules --noEmit",
     "lint:es": "eslint \"src/**/*.ts\" \"tests/**/*.spec.ts\" --ignore-pattern tests/fixtures/",
     "test": "npm-run-all lint test:unit",
     "test:pack": "bash -x scripts/npm-pack-testing.sh",
-    "install-brower": "cd node_modules/puppeteer & npm run install & cd ../../",
-    "test:unit": "tap --node-arg=--loader=ts-node/esm --node-arg=--no-warnings src/**/*.spec.ts tests/**/*.spec.ts",
+    "test:unit": "tap --node-arg=--loader=ts-node/esm --node-arg=--no-warnings 'src/**/*.spec.ts' 'tests/**/*.spec.ts'",
     "prepublishOnly": "npm run dist"
   },
   "repository": {
