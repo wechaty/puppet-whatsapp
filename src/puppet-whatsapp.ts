@@ -17,14 +17,20 @@
  *
  */
 import * as PUPPET from 'wechaty-puppet'
-import { log, FileBox } from 'wechaty-puppet'
 import type { MemoryCard } from 'memory-card'
-import { distinctUntilKeyChanged, fromEvent, map, merge } from 'rxjs'
+import {
+  distinctUntilKeyChanged,
+  fromEvent,
+  map,
+  merge,
+} from 'rxjs'
 import {
   avatarForGroup,
+  log,
+  FileBox,
   MEMORY_SLOT,
   VERSION,
-}                                     from './config.js'
+} from './config.js'
 
 import {
   getWhatsApp,
@@ -32,7 +38,12 @@ import {
   WhatsappContact,
   WhatsappMessage,
 }                   from './whatsapp.js'
-import WAWebJS, { ClientOptions, ClientSession, GroupChat  } from 'whatsapp-web.js'
+import WAWebJS, { ClientOptions, GroupChat, MessageContent } from 'whatsapp-web.js'
+import { parseVcard } from './pure-function-helpers/vcard-parser.js'
+import { Manager } from './work/manager.js'
+import WAError from './pure-function-helpers/error-type.js'
+import { WXWORK_ERROR_TYPE } from './schema/error-type.js'
+import WhatsAppRaw from './schema/index.js'
 // @ts-ignore
 // import { MessageTypes } from 'whatsapp-web.js'
 // import { Attachment } from './mock/user/types'
@@ -52,6 +63,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   private roomStore: { [id: string]: WhatsappContact }
   private roomInvitationStore: { [id: string]: Partial<WAWebJS.InviteV4Data>}
   private whatsapp: undefined | WhatsApp
+  private manager: undefined | Manager
 
   constructor (
     override options: PuppetWhatsAppOptions = {},
@@ -63,16 +75,17 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     this.contactStore = {}
     this.roomStore = {}
     this.roomInvitationStore = {}
+
   }
 
-  override async start(useSession: boolean = true, session?: ClientSession): Promise<void> {
+  override async start (useSession: boolean = true, session?: WhatsAppRaw.ClientSession): Promise<void> {
     log.verbose('PuppetWhatsApp', 'onStart()')
     let whatsapp: WhatsApp
     const clientOptions: ClientOptions = {
       ...this.options['puppeteerOptions'],
       authTimeoutMs: 10000,
     }
-    if (useSession && session == undefined) {
+    if (useSession && session === undefined) {
       const _session = await this.memory.get(MEMORY_SLOT)
       whatsapp = await getWhatsApp(clientOptions, _session)
     } else if (useSession && session) {
@@ -80,8 +93,13 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     } else {
       whatsapp = await getWhatsApp(clientOptions)
     }
+    if (this.state.on()) {
+      await this.state.ready('on')
+      return
+    }
     this.whatsapp = whatsapp
-
+    this.manager = new Manager(whatsapp)
+    this.state.on('pending')
     this.initWhatsAppEvents(whatsapp)
 
     /**
@@ -102,10 +120,11 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     /**
      * Huan(202102): Wait for Puppeteer to be inited before resolve start() for robust state management
      */
+    const { state } = this
     const future = new Promise<void>(resolve => {
       function check () {
         if (whatsapp.pupBrowser) {
-          resolve()
+          resolve(state.on(true))
         } else {
           // process.stdout.write('.')
           setTimeout(check, 100)
@@ -115,7 +134,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       check()
     })
 
-    await Promise.race([
+    return Promise.race([
       future,
       this.state.ready('off'),
     ])
@@ -123,15 +142,19 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   override async stop (): Promise<void> {
     log.verbose('PuppetWhatsApp', 'onStop()')
-
+    if (this.state.off()) {
+      await this.state.ready('off')
+      return
+    }
     if (!this.whatsapp) {
       log.error('PuppetWhatsApp', 'stop() this.whatsapp is undefined!')
       return
     }
-
+    this.state.off('pending')
     const whatsapp = this.whatsapp
     this.whatsapp = undefined
     await whatsapp.destroy()
+    this.state.off(true)
   }
 
   private initWhatsAppEvents (
@@ -168,7 +191,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     whatsapp.on('ready', () => {
       (async () => {
         // this.id = whatsapp.info.wid.user
-        // this.state.active(true)
+        // await this.state.on(true)
         const contacts: WhatsappContact[] = await whatsapp.getContacts()
         const nonBroadcast = contacts.filter(c => c.id.server !== 'broadcast')
         for (const contact of nonBroadcast) {
@@ -313,7 +336,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   override async contactSelfName (name: string): Promise<void> {
     log.verbose('PuppetWhatsApp', 'contactSelfName(%s)', name)
-    await this.whatsapp!.setDisplayName(name)
+    await this.manager!.setNickname(name)
   }
 
   override async contactSelfSignature (signature: string): Promise<void> {
@@ -436,71 +459,181 @@ class PuppetWhatsapp extends PUPPET.Puppet {
    * Message
    *
    */
-  override async messageContact (
-    messageId: string,
-  ): Promise<string> {
+  /**
+   * Get contact message
+   * @param messageId message Id
+   * @returns contact name
+   */
+  override async messageContact (messageId: string): Promise<string> {
     log.verbose('PuppetWhatsApp', 'messageContact(%s)', messageId)
     // const attachment = this.mocker.MockMessage.loadAttachment(messageId)
     // if (attachment instanceof ContactMock) {
     //   return attachment.id
     // }
-    return ''
+    const msg = this.messageStore[messageId]
+    if (!msg) {
+      log.error('Message %s not found', messageId)
+      throw new Error('Message not found')
+    }
+    if (msg.type !== WAWebJS.MessageTypes.CONTACT_CARD) {
+      log.error('Message %s is not contact type', messageId)
+      throw new Error('Message is not contact type')
+    }
+    const vcard = parseVcard(msg.vCards[0]!)
+    // FIXME: Under current typing configuration, it is not possible to return multiple vcards that WhatsApp allows
+    // Therefore sending the first vcard only (for now?)
+    if (!vcard.TEL) {
+      log.warn('vcard has not TEL field')
+    }
+    return vcard.TEL ? vcard.TEL.waid : ''
   }
 
-  override async messageImage (
-    messageId: string,
-    imageType: PUPPET.ImageType,
-  ) : Promise<FileBox> {
-    log.verbose('PuppetWhatsApp', 'messageImage(%s, %s[%s])',
-      messageId,
-      imageType,
-      PUPPET.ImageType[imageType],
-    )
-    // const attachment = this.mocker.MockMessage.loadAttachment(messageId)
-    // if (attachment instanceof FileBox) {
-    //   return attachment
-    // }
-    return FileBox.fromQRCode('fake-qrcode')
+  /**
+   * get image from message
+   * @param messageId message id
+   * @param imageType image size to get (may not apply to WhatsApp)
+   * @returns the image
+   */
+  override async messageImage (messageId: string, imageType: PUPPET.ImageType): Promise<FileBox> {
+    log.verbose('PuppetWhatsApp', 'messageImage(%s, %s[%s])', messageId, imageType, PUPPET.ImageType[imageType])
+    const msg = this.messageStore[messageId]
+    if (!msg) {
+      log.error('Message %s not found', messageId)
+      throw new Error('Message Not Found')
+    }
+    if (msg.type !== WhatsAppRaw.MessageTypes.IMAGE || !msg.hasMedia) {
+      log.error('Message %s does not contain any media', messageId)
+      throw new Error('Message does not contain any media')
+    }
+    const media = await msg.downloadMedia()
+    return FileBox.fromBase64(media.data, media.filename ?? '')
   }
 
-  override async messageRecall (
-    messageId: string,
-  ): Promise<boolean> {
+  /**
+   * recall the message
+   * @param messageId message id
+   * @returns success
+   */
+  override async messageRecall (messageId: string): Promise<boolean> {
     log.verbose('PuppetWhatsApp', 'messageRecall(%s)', messageId)
-    return false
+    const msg = this.messageStore[messageId]
+    if (!msg) {
+      log.error('Message %s not found', messageId)
+      return false
+    }
+    return true
   }
 
+  /**
+   * get the file attached to the message
+   * @param id message id
+   * @returns the file that attached to the message
+   */
   override async messageFile (id: string): Promise<FileBox> {
-    // const attachment = this.mocker.MockMessage.loadAttachment(id)
-    // if (attachment instanceof FileBox) {
-    //   return attachment
-    // }
-    return FileBox.fromBase64(
-      'cRH9qeL3XyVnaXJkppBuH20tf5JlcG9uFX1lL2IvdHRRRS9kMMQxOPLKNYIzQQ==',
-      'mock-file' + id + '.txt',
-    )
+    log.verbose('PuppetWhatsApp', 'messageFile(%s)', id)
+    const msg = this.messageStore[id]
+    if (!msg) {
+      log.error('Message %s not found', id)
+      throw new Error('Message not found')
+    }
+    if (!msg.hasMedia) {
+      log.error('Message %s does not contain any media', id)
+      throw new Error('Message does not contain any media')
+    }
+    const media = await msg.downloadMedia()
+    // FIXME: What to do when there is no filename
+    return FileBox.fromBase64(media.data, media.filename ?? '')
   }
 
-  override async messageUrl (messageId: string)  : Promise<PUPPET.UrlLinkPayload> {
+  /**
+   * get url in the message
+   * @param messageId message id
+   * @returns url in the message
+   */
+  override async messageUrl (messageId: string): Promise<PUPPET.UrlLinkPayload> {
     log.verbose('PuppetWhatsApp', 'messageUrl(%s)', messageId)
-    // const attachment = this.mocker.MockMessage.loadAttachment(messageId)
-    // if (attachment instanceof UrlLink) {
-    //   return attachment.payload
-    // }
+    const msg = this.messageStore[messageId]
+    if (!msg) {
+      log.error('Message %s not found', messageId)
+      throw new Error('Message not found')
+    }
+    if (msg.links.length === 0) {
+      log.error('Message %s is does not contain links', messageId)
+      throw new Error('Message does not contain links')
+    }
     return {
-      title : 'mock title for ' + messageId,
-      url   : 'https://mock.url',
+      // FIXME: Link title not available in WhatsApp
+      title: 'N/A',
+      url: msg.links[0]!.link,
     }
   }
 
+  /**
+   * Not supported for WhatsApp
+   * @param messageId message id
+   */
   override async messageMiniProgram (messageId: string): Promise<PUPPET.MiniProgramPayload> {
     log.verbose('PuppetWhatsApp', 'messageMiniProgram(%s)', messageId)
-    // const attachment = this.mocker.MockMessage.loadAttachment(messageId)
-    // if (attachment instanceof MiniProgram) {
-    //   return attachment.payload
-    // }
-    return {
-      title : 'mock title for ' + messageId,
+    return PUPPET.throwUnsupportedError()
+  }
+
+  private async messageSend (conversationId: string, content: MessageContent): Promise<void> {
+    log.verbose('PuppetWhatsApp', 'messageSend(%s, %s)', conversationId, typeof content)
+
+    if (!this.whatsapp) {
+      log.warn('PuppetWhatsApp', 'messageSend() this.client not found')
+      return
+    }
+
+    const msg = await this.whatsapp.sendMessage(conversationId, content)
+    this.messageStore[msg.id.id] = msg
+  }
+
+  override async messageSendText (conversationId: string, text: string): Promise<void> {
+    log.verbose('PuppetWhatsApp', 'messageSendText(%s, %s)', conversationId, text)
+    return this.messageSend(conversationId, text)
+  }
+
+  override async messageSendFile (conversationId: string, file: FileBox): Promise<void> {
+    log.verbose('PuppetWhatsApp', 'messageSendFile(%s, %s)', conversationId, file.name)
+    const msgContent = new WAWebJS.MessageMedia(file.mimeType!, await file.toBase64(), file.name)
+    return this.messageSend(conversationId, msgContent)
+  }
+
+  override async messageSendContact (conversationId: string, contactId: string): Promise<void> {
+    log.verbose('PuppetWhatsApp', 'messageSendContact(%s, %s)', conversationId, contactId)
+    if (!this.whatsapp) {
+      log.error('WhatsApp instance is undefined')
+      return
+    }
+    const contact = await this.whatsapp.getContactById(contactId)
+    await this.messageSend(conversationId, contact)
+  }
+
+  override async messageSendUrl (
+    conversationId: string,
+    urlLinkPayload: PUPPET.UrlLinkPayload,
+  ): Promise<void> {
+    log.verbose('PuppetWhatsApp', 'messageSendUrl(%s, %s)', conversationId, JSON.stringify(urlLinkPayload))
+    // FIXME: Does WhatsApp really support link messages like wechat? Find out and fix this!
+    await this.messageSend(conversationId, urlLinkPayload.url)
+  }
+
+  override async messageSendMiniProgram (conversationId: string, miniProgramPayload: PUPPET.MiniProgramPayload): Promise<void> {
+    log.verbose(
+      'PuppetWhatsApp',
+      'messageSendMiniProgram(%s, %s)',
+      conversationId,
+      JSON.stringify(miniProgramPayload),
+    )
+    return PUPPET.throwUnsupportedError()
+  }
+
+  override async messageForward (conversationId: string, messageId: string): Promise<void> {
+    log.verbose('PuppetWhatsApp', 'messageForward(%s, %s)', conversationId, messageId)
+    const msg = this.messageStore[messageId]
+    if (!msg) {
+      log.error('')
     }
   }
 
@@ -544,78 +677,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   override async messageRawPayload (id: string): Promise<WhatsappMessage> {
     log.verbose('PuppetWhatsApp', 'messageRawPayload(%s)', id)
     return this.messageStore[id]!
-  }
-
-  private async messageSend (
-    conversationId: string,
-    something: string | FileBox, // | Attachment
-  ): Promise<string | void> {
-    log.verbose('PuppetWhatsApp', 'messageSend(%s, %s)', conversationId, something)
-
-    if (typeof something !== 'string') {
-      return
-    }
-
-    if (!this.whatsapp) {
-      log.warn('PuppetWhatsApp', 'messageSend() this.client not found')
-      return
-    }
-
-    const msgSent = await this.whatsapp.sendMessage(conversationId, something)
-    return msgSent.id._serialized
-  }
-
-  override async messageSendText (
-    conversationId: string,
-    text     : string,
-  ): Promise<string | void> {
-    return this.messageSend(conversationId, text)
-  }
-
-  override async messageSendFile (
-    conversationId: string,
-    file     : FileBox,
-  ): Promise<string | void> {
-    return this.messageSend(conversationId, file)
-  }
-
-  override async messageSendContact (
-    conversationId: string,
-    contactId : string,
-  ): Promise<void> {
-    log.verbose('PuppetWhatsApp', 'messageSendUrl(%s, %s)', conversationId, contactId)
-
-    // const contact = this.mocker.MockContact.load(contactId)
-    // return this.messageSend(conversationId, contact)
-  }
-
-  override async messageSendUrl (
-    conversationId: string,
-    urlLinkPayload: PUPPET.UrlLinkPayload,
-  ) : Promise<void> {
-    log.verbose('PuppetWhatsApp', 'messageSendUrl(%s, %s)', conversationId, JSON.stringify(urlLinkPayload))
-
-    // const url = new UrlLink(urlLinkPayload)
-    // return this.messageSend(conversationId, url)
-  }
-
-  override async messageSendMiniProgram (
-    conversationId: string,
-    miniProgramPayload: PUPPET.MiniProgramPayload,
-  ): Promise<void> {
-    log.verbose('PuppetWhatsApp', 'messageSendMiniProgram(%s, %s)', conversationId, JSON.stringify(miniProgramPayload))
-    // const miniProgram = new MiniProgram(miniProgramPayload)
-    // return this.messageSend(conversationId, miniProgram)
-  }
-
-  override async messageForward (
-    conversationId: string,
-    messageId : string,
-  ): Promise<void> {
-    log.verbose('PuppetWhatsApp', 'messageForward(%s, %s)',
-      conversationId,
-      messageId,
-    )
   }
 
   /**
@@ -708,7 +769,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     if (group) {
       return group.gid
     } else {
-      throw new Error('An error occurred while creating the group!')
+      throw new WAError(WXWORK_ERROR_TYPE.ERR_CREATE_ROOM, 'An error occurred while creating the group!')
     }
   }
 

@@ -3,8 +3,10 @@ import * as fs from 'fs-extra'
 import * as os from 'os'
 
 import { FlashStore } from 'flash-store'
-import type { WhatsAppMessagePayload } from '../schema/message'
+import type WhatsAppRaw from '../schema/index'
 import { log } from '../config.js'
+import WAError from '../pure-function-helpers/error-type.js'
+import { WXWORK_ERROR_TYPE } from '../schema/error-type.js'
 
 const PRE = 'CacheManager'
 
@@ -19,7 +21,7 @@ export class CacheManager {
 
   public static get Instance () {
     if (!this._instance) {
-      throw new Error('no instance')
+      throw new WAError(WXWORK_ERROR_TYPE.ERR_NO_CACHE, 'no instance')
     }
     return this._instance
   }
@@ -46,7 +48,7 @@ export class CacheManager {
    * ************************************************************************
    */
   // Static cache, won't change over time
-  private cacheMessageRawPayload?            : FlashStore<string, WhatsAppMessagePayload>
+  private cacheMessageRawPayload?            : FlashStore<string, WhatsAppRaw.Message>
 
   /**
    * -------------------------------
@@ -58,7 +60,7 @@ export class CacheManager {
     return cache.get(id)
   }
 
-  public async setMessageRawPayload (id: string, payload: WhatsAppMessagePayload): Promise<void> {
+  public async setMessageRawPayload (id: string, payload: WhatsAppRaw.Message): Promise<void> {
     const cache = this.getMessageCache()
     await cache.set(id, payload)
   }
@@ -70,7 +72,7 @@ export class CacheManager {
 
   private getMessageCache () {
     if (!this.cacheMessageRawPayload) {
-      throw new Error('getMessageCache() has no cache')
+      throw new WAError(WXWORK_ERROR_TYPE.ERR_NO_CACHE, 'getMessageCache() has no cache')
     }
     return this.cacheMessageRawPayload
   }
@@ -86,7 +88,7 @@ export class CacheManager {
   ): Promise<void> {
 
     if (this.cacheMessageRawPayload) {
-      throw new Error('cacheMessageRawPayload does not exist.')
+      throw new WAError(WXWORK_ERROR_TYPE.ERR_INIT, 'cacheMessageRawPayload does not exist.')
     }
 
     const baseDir = path.join(
