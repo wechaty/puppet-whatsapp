@@ -79,25 +79,14 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   }
 
-  override async start (useSession: boolean = true, session?: WhatsAppRaw.ClientSession): Promise<void> {
+  override async start (): Promise<void> {
     log.verbose('PuppetWhatsApp', 'onStart()')
-    let whatsapp: WhatsApp
-    const clientOptions: ClientOptions = {
-      ...this.options['puppeteerOptions'],
-      authTimeoutMs: 10000,
-    }
-    if (useSession && session === undefined) {
-      const _session = await this.memory.get(MEMORY_SLOT)
-      whatsapp = await getWhatsApp(clientOptions, _session)
-    } else if (useSession && session) {
-      whatsapp = await getWhatsApp(clientOptions, session)
-    } else {
-      whatsapp = await getWhatsApp(clientOptions)
-    }
     if (this.state.on()) {
       await this.state.ready('on')
       return
     }
+    const session = await this.memory.get(MEMORY_SLOT)
+    const whatsapp = await getWhatsApp(this.options['puppeteerOptions'] as ClientOptions, session)
     this.whatsapp = whatsapp
     this.manager = new Manager(whatsapp)
     this.state.on('pending')
@@ -184,7 +173,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       // auth_failure due to session invalidation
       // clear sessionData -> reinit
       await this.memory.delete(MEMORY_SLOT)
-      await this.start(false)
+      await this.start()
     })
 
     whatsapp.on('ready', () => {
