@@ -13,8 +13,7 @@ test('PuppetWhatsapp perfect restart testing', async t => {
 
     for (let i = 0; i < 3; i++) {
       await puppet.start()
-      // TODO: src\puppet-whatsapp.ts miss this.state.ready('on') -> puppet.state.on() === false
-      // t.ok(puppet.state.on(), 'should be turned active after start()')
+      t.ok(puppet.state.on(), 'should be turned active after start()')
 
       await new Promise((resolve) => {
         setTimeout(() => resolve(null), 3000)
@@ -29,6 +28,6 @@ test('PuppetWhatsapp perfect restart testing', async t => {
     t.pass('PuppetWhatsapp() perfect restart pass.')
   } catch (e) {
     console.error(e)
-    // t.fail(e as any)
+    t.fail(e as any)
   }
 })
