@@ -477,7 +477,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   /**
-   * recall the message
+   * check if the message is recalled
    * @param messageId message id
    * @returns success
    */
@@ -486,9 +486,11 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     const msg = this.messageStore[messageId]
     if (!msg) {
       log.error('Message %s not found', messageId)
-      return false
+      throw new Error('Message not found')
     }
-    return true
+
+    // body is empty when recalled
+    return msg.body === ''
   }
 
   /**
@@ -600,8 +602,10 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     log.verbose('PuppetWhatsApp', 'messageForward(%s, %s)', conversationId, messageId)
     const msg = this.messageStore[messageId]
     if (!msg) {
-      log.error('')
+      log.error('Message %s not found', messageId)
+      throw new Error('Message not found')
     }
+    await msg.forward(conversationId)
   }
 
   override async messageRawPayloadParser (whatsAppPayload: WhatsappMessage): Promise<PUPPET.MessagePayload> {
