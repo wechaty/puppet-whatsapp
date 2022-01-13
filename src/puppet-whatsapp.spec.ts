@@ -2,7 +2,7 @@
 
 import { test } from 'tstest'
 
-import { PuppetWhatsapp } from './mod.js'
+import { PuppetWhatsapp } from './puppet-whatsapp.js'
 
 class PuppetWhatsAppTest extends PuppetWhatsapp {
 }
@@ -15,10 +15,6 @@ test('PuppetWhatsapp perfect restart testing', async t => {
       await puppet.start()
       t.ok(puppet.state.on(), 'should be turned active after start()')
 
-      await new Promise((resolve) => {
-        setTimeout(() => resolve(null), 3000)
-      })
-
       await puppet.stop()
       t.ok(puppet.state.off(), 'should be turned inactive after stop()')
 
@@ -26,7 +22,9 @@ test('PuppetWhatsapp perfect restart testing', async t => {
     }
 
     t.pass('PuppetWhatsapp() perfect restart pass.')
+
   } catch (e) {
+    console.log(JSON.stringify(e))
     console.error(e)
     t.fail(e as any)
   }

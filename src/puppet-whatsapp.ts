@@ -76,6 +76,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     }
     const session = await this.memory.get(MEMORY_SLOT)
     const whatsapp = await getWhatsApp(this.options['puppeteerOptions'] as ClientOptions, session)
+    this.whatsapp = whatsapp
     this.manager = new Manager(whatsapp)
     this.state.on('pending')
     this.initWhatsAppEvents(whatsapp)
