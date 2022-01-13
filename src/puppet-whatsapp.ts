@@ -43,6 +43,7 @@ import { parseVcard } from './pure-function-helpers/vcard-parser.js'
 import { Manager } from './work/manager.js'
 import WAError from './pure-function-helpers/error-type.js'
 import { WXWORK_ERROR_TYPE } from './schema/error-type.js'
+import type WhatsAppRaw from './schema/index.js'
 
 process.on('uncaughtException', (e) => {
   console.error('process error is:', e.message)
@@ -255,6 +256,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
     whatsapp.on('qr', (qr) => {
       // NOTE: This event will not be fired if a session is specified.
+      console.info(`------- ${qr}`)
       this.emit('scan', { qrcode : qr, status : PUPPET.ScanStatus.Waiting })
     })
 
