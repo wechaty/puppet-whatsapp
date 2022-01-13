@@ -489,8 +489,12 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       throw new Error('Message not found')
     }
 
-    await msg.delete(true)
-    return true
+    try {
+      await msg.delete(true)
+      return true
+    } catch (error) {
+      return false
+    }
   }
 
   /**
