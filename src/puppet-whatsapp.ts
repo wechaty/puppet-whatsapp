@@ -256,7 +256,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
     whatsapp.on('qr', (qr) => {
       // NOTE: This event will not be fired if a session is specified.
-      console.info(`------- ${qr}`)
       this.emit('scan', { qrcode : qr, status : PUPPET.ScanStatus.Waiting })
     })
 
