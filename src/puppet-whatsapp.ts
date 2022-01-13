@@ -43,10 +43,6 @@ import { parseVcard } from './pure-function-helpers/vcard-parser.js'
 import { Manager } from './work/manager.js'
 import WAError from './pure-function-helpers/error-type.js'
 import { WXWORK_ERROR_TYPE } from './schema/error-type.js'
-import type WhatsAppRaw from './schema/index.js'
-// @ts-ignore
-// import { MessageTypes } from 'whatsapp-web.js'
-// import { Attachment } from './mock/user/types'
 
 process.on('uncaughtException', (e) => {
   console.error('process error is:', e.message)
@@ -116,7 +112,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
         if (this.state.on()) {
           log.error('PuppetWhatsApp', 'start() whatsapp.initialize() rejection: %s', e)
         } else {
-          // Puppet is stoping...
           log.error('PuppetWhatsApp', 'start() whatsapp.initialize() rejected on a stopped puppet. %s', e)
         }
       })
@@ -130,7 +125,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
         if (whatsapp.pupBrowser) {
           resolve(state.on(true))
         } else {
-          // process.stdout.write('.')
           setTimeout(check, 100)
         }
       }
@@ -194,7 +188,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
     whatsapp.on('ready', () => {
       (async () => {
-        // this.id = whatsapp.info.wid.user
         // await this.state.on(true)
         const contacts: WhatsappContact[] = await whatsapp.getContacts()
         const nonBroadcast = contacts.filter(c => c.id.server !== 'broadcast')
@@ -206,7 +199,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
           }
         }
         await this.login(whatsapp.info.wid._serialized)
-        // this.emit('ready', { data: '' })
       })().catch(console.error)
     })
 
@@ -263,7 +255,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
     whatsapp.on('qr', (qr) => {
       // NOTE: This event will not be fired if a session is specified.
-      this.emit('scan', { qrcode: qr, status: PUPPET.ScanStatus.Waiting })
+      this.emit('scan', { qrcode : qr, status : PUPPET.ScanStatus.Waiting })
     })
 
     whatsapp.on('group_join', noti => {
@@ -331,7 +323,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
    *
    * ContactSelf
    *
-   *
    */
   override async contactSelfQRCode (): Promise<string> {
     log.verbose('PuppetWhatsApp', 'contactSelfQRCode()')
@@ -397,16 +388,10 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   override async contactAvatar (contactId: string, file?: FileBox): Promise<void | FileBox> {
     log.verbose('PuppetWhatsApp', 'contactAvatar(%s)', contactId)
 
-    /**
-     * 1. set
-     */
     if (file) {
       return
     }
 
-    /**
-     * 2. get
-     */
     const con = await this.whatsapp!.getContactById(contactId)
     const avatar = await con.getProfilePicUrl()
     return FileBox.fromUrl(avatar)
@@ -470,10 +455,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
    */
   override async messageContact (messageId: string): Promise<string> {
     log.verbose('PuppetWhatsApp', 'messageContact(%s)', messageId)
-    // const attachment = this.mocker.MockMessage.loadAttachment(messageId)
-    // if (attachment instanceof ContactMock) {
-    //   return attachment.id
-    // }
     const msg = this.messageStore[messageId]
     if (!msg) {
       log.error('Message %s not found', messageId)
@@ -818,10 +799,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   override async roomAnnounce (roomId: string, text: string)  : Promise<void>
 
   override async roomAnnounce (roomId: string, text?: string) : Promise<void | string> {
-    if (text) {
-      return
-    }
-    return 'mock announcement for ' + roomId
+    return PUPPET.throwUnsupportedError()
   }
 
   /**
