@@ -477,7 +477,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   /**
-   * check if the message is recalled
+   * recall message
    * @param messageId message id
    * @returns success
    */
@@ -489,8 +489,8 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       throw new Error('Message not found')
     }
 
-    // body is empty when recalled
-    return msg.body === ''
+    await msg.delete(true)
+    return true
   }
 
   /**
