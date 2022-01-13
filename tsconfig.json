@@ -4,6 +4,7 @@
     "transpileOnly": true
   },
   "compilerOptions": {
+    "noUnusedParameters": false,
     "outDir": "dist/esm",
   },
   "exclude": [
