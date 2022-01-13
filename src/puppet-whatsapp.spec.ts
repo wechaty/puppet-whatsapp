@@ -9,27 +9,27 @@ import { PuppetWhatsapp } from './puppet-whatsapp.js'
 class PuppetWhatsAppTest extends PuppetWhatsapp {
 }
 
-// test('PuppetWhatsapp perfect restart testing', async t => {
-// const puppet = new PuppetWhatsAppTest()
-// try {
+test('PuppetWhatsapp perfect restart testing', async t => {
+  const puppet = new PuppetWhatsAppTest()
+  try {
 
-//   for (let i = 0; i < 3; i++) {
-//     await puppet.start()
-//     // t.ok(puppet.state.on(), 'should be turned active after start()')
+    for (let i = 0; i < 3; i++) {
+      await puppet.start()
+      t.ok(puppet.state.on(), 'should be turned active after start()')
 
-//     await puppet.stop()
-//     t.ok(puppet.state.off(), 'should be turned inactive after stop()')
+      await puppet.stop()
+      t.ok(puppet.state.off(), 'should be turned inactive after stop()')
 
-//     t.pass('start/stop-ed at #' + i)
-//   }
+      t.pass('start/stop-ed at #' + i)
+    }
 
-//   t.pass('PuppetWhatsapp() perfect restart pass.')
+    t.pass('PuppetWhatsapp() perfect restart pass.')
 
-// } catch (e) {
-//   console.error(e)
-//   // t.fail(e as any)
-// }
-// })
+  } catch (e) {
+    console.error(e)
+    t.fail(e as any)
+  }
+})
 
 test('PuppetWhatsapp start no use session', async t => {
   const puppet = new PuppetWhatsAppTest()
@@ -103,6 +103,3 @@ test('PuppetWhatsapp start no use session', async t => {
 //     }, 1000)
 //   })
 // })
-
-
-
