@@ -43,10 +43,14 @@ import { parseVcard } from './pure-function-helpers/vcard-parser.js'
 import { Manager } from './work/manager.js'
 import WAError from './pure-function-helpers/error-type.js'
 import { WXWORK_ERROR_TYPE } from './schema/error-type.js'
-import WhatsAppRaw from './schema/index.js'
+import type WhatsAppRaw from './schema/index.js'
 // @ts-ignore
 // import { MessageTypes } from 'whatsapp-web.js'
 // import { Attachment } from './mock/user/types'
+
+process.on('uncaughtException', (e) => {
+  console.error('process error is:', e.message)
+})
 
 export type PuppetWhatsAppOptions = PUPPET.PuppetOptions & {
   memory?: MemoryCard
@@ -501,7 +505,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       log.error('Message %s not found', messageId)
       throw new Error('Message Not Found')
     }
-    if (msg.type !== WhatsAppRaw.MessageTypes.IMAGE || !msg.hasMedia) {
+    if (msg.type !== WAWebJS.MessageTypes.IMAGE || !msg.hasMedia) {
       log.error('Message %s does not contain any media', messageId)
       throw new Error('Message does not contain any media')
     }
