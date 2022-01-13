@@ -44,6 +44,10 @@ import { Manager } from './work/manager.js'
 import WAError from './pure-function-helpers/error-type.js'
 import { WXWORK_ERROR_TYPE } from './schema/error-type.js'
 
+process.on('uncaughtException', (e) => {
+  console.error('process error is:', e.message)
+})
+
 export type PuppetWhatsAppOptions = PUPPET.PuppetOptions & {
   memory?: MemoryCard
   puppeteerOptions?: ClientOptions
@@ -156,6 +160,20 @@ class PuppetWhatsapp extends PUPPET.Puppet {
           log.error('PuppetWhatsApp', 'getClient() whatsapp.on(authenticated) rejection: %s', e)
         }
       })().catch(console.error)
+    })
+
+    /**
+     * There is only one situation that will cause this event, invalid session causing timeout
+     * https://github.com/pedroslopez/whatsapp-web.js/blob/d86c39de3ca5699a50db98ee93e264ab8c4f25a3/src/Client.js#L116-L129
+     */
+    whatsapp.on('auth_failure', async (msg) => {
+      log.warn('PuppetWhatsApp', 'auth_failure: %s, then restart no use exist session', msg)
+      // msg -> auth_failure message
+      // auth_failure due to session invalidation
+      // clear sessionData -> reinit
+      this.state.off(true)
+      await this.memory.delete(MEMORY_SLOT)
+      await this.start()
     })
 
     whatsapp.on('ready', () => {

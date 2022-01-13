@@ -49,7 +49,6 @@ puppet
   .on('login',  onLogin)
   .on('scan',   onScan)
   .on('error',  onError)
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   .on('message', onMessage)
 
 /**
