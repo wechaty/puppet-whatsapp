@@ -448,11 +448,11 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     const msg = this.messageStore[messageId]
     if (!msg) {
       log.error('Message %s not found', messageId)
-      throw new Error('Message not found')
+      throw new Error(`Message ${messageId} not found`)
     }
     if (msg.type !== WAWebJS.MessageTypes.CONTACT_CARD) {
       log.error('Message %s is not contact type', messageId)
-      throw new Error('Message is not contact type')
+      throw new Error(`Message ${messageId} is not contact type`)
     }
     const vcard = parseVcard(msg.vCards[0]!)
     // FIXME: Under current typing configuration, it is not possible to return multiple vcards that WhatsApp allows
@@ -474,18 +474,18 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     const msg = this.messageStore[messageId]
     if (!msg) {
       log.error('Message %s not found', messageId)
-      throw new Error('Message Not Found')
+      throw new Error(`Message ${messageId} Not Found`)
     }
     if (msg.type !== WAWebJS.MessageTypes.IMAGE || !msg.hasMedia) {
       log.error('Message %s does not contain any media', messageId)
-      throw new Error('Message does not contain any media')
+      throw new Error(`Message ${messageId} does not contain any media`)
     }
     const media = await msg.downloadMedia()
     return FileBox.fromBase64(media.data, media.filename ?? '')
   }
 
   /**
-   * recall the message
+   * recall message
    * @param messageId message id
    * @returns success
    */
@@ -494,9 +494,15 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     const msg = this.messageStore[messageId]
     if (!msg) {
       log.error('Message %s not found', messageId)
+      throw new Error(`Message ${messageId} not found`)
+    }
+
+    try {
+      await msg.delete(true)
+      return true
+    } catch (error) {
       return false
     }
-    return true
   }
 
   /**
@@ -509,11 +515,11 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     const msg = this.messageStore[id]
     if (!msg) {
       log.error('Message %s not found', id)
-      throw new Error('Message not found')
+      throw new Error(`Message ${id} not found`)
     }
     if (!msg.hasMedia) {
       log.error('Message %s does not contain any media', id)
-      throw new Error('Message does not contain any media')
+      throw new Error(`Message ${id} does not contain any media`)
     }
     const media = await msg.downloadMedia()
     // FIXME: What to do when there is no filename
@@ -530,11 +536,11 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     const msg = this.messageStore[messageId]
     if (!msg) {
       log.error('Message %s not found', messageId)
-      throw new Error('Message not found')
+      throw new Error(`Message ${messageId} not found`)
     }
     if (msg.links.length === 0) {
       log.error('Message %s is does not contain links', messageId)
-      throw new Error('Message does not contain links')
+      throw new Error(`Message ${messageId} does not contain links`)
     }
     return {
       // FIXME: Link title not available in WhatsApp
@@ -604,11 +610,32 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     return PUPPET.throwUnsupportedError()
   }
 
-  override async messageForward (conversationId: string, messageId: string): Promise<void> {
+  override async messageForward (conversationId: string, messageId: string): Promise<void | string> {
     log.verbose('PuppetWhatsApp', 'messageForward(%s, %s)', conversationId, messageId)
     const msg = this.messageStore[messageId]
     if (!msg) {
-      log.error('')
+      log.error('Message %s not found', messageId)
+      throw new Error(`Message ${messageId} not found`)
+    }
+    await msg.forward(conversationId)
+    if (!this.whatsapp) {
+      throw new Error('WhatsApp instance not found')
+    }
+    const chat = await this.whatsapp.getChatById(conversationId)
+
+    // NOTE: Change this if necessary
+    const MESSAGE_MAX_FETCH_LIMIT = 50
+    const MESSAGE_FETCH_LIMIT = 10
+
+    let fetchCounter = 0
+    while (fetchCounter < MESSAGE_MAX_FETCH_LIMIT) {
+      const messages = await chat.fetchMessages({ limit: MESSAGE_FETCH_LIMIT })
+      for (const message of messages) {
+        if (message.isForwarded) {
+          return message.id.id
+        }
+      }
+      fetchCounter += MESSAGE_FETCH_LIMIT
     }
   }
 
