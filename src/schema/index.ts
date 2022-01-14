@@ -42,7 +42,10 @@ export type {
   Product,
   Order,
   Payment,
-  Call
+  Call,
+  Buttons,
+  Row,
+  List,
 } from 'whatsapp-web.js'
 
 export default WAWebJS
