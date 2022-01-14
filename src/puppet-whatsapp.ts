@@ -38,11 +38,12 @@ import {
   WhatsappContact,
   WhatsappMessage,
 }                   from './whatsapp.js'
-import WAWebJS, { ClientOptions, GroupChat, MessageContent } from 'whatsapp-web.js'
+import WAWebJS, { ClientOptions, GroupChat, MessageContent, MessageMedia } from 'whatsapp-web.js'
 import { parseVcard } from './pure-function-helpers/vcard-parser.js'
 import { Manager } from './work/manager.js'
 import WAError from './pure-function-helpers/error-type.js'
 import { WXWORK_ERROR_TYPE } from './schema/error-type.js'
+import { CacheManager } from './data-manager/cache-manager.js'
 
 process.on('uncaughtException', (e) => {
   console.error('process error is:', e.message)
@@ -567,6 +568,10 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     }
 
     const msg = await this.whatsapp.sendMessage(conversationId, content)
+    if (content instanceof MessageMedia) {
+      // FIXME: fix `WhatsAppMessagePayload` typing
+      await CacheManager.Instance.setMessageRawPayload(msg.id.id, msg as any)
+    }
     this.messageStore[msg.id.id] = msg
   }
 
@@ -610,7 +615,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     return PUPPET.throwUnsupportedError()
   }
 
-  override async messageForward (conversationId: string, messageId: string): Promise<void | string> {
+  override async messageForward (conversationId: string, messageId: string): Promise<void> {
     log.verbose('PuppetWhatsApp', 'messageForward(%s, %s)', conversationId, messageId)
     const msg = this.messageStore[messageId]
     if (!msg) {
@@ -620,22 +625,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     await msg.forward(conversationId)
     if (!this.whatsapp) {
       throw new Error('WhatsApp instance not found')
-    }
-    const chat = await this.whatsapp.getChatById(conversationId)
-
-    // NOTE: Change this if necessary
-    const MESSAGE_MAX_FETCH_LIMIT = 50
-    const MESSAGE_FETCH_LIMIT = 10
-
-    let fetchCounter = 0
-    while (fetchCounter < MESSAGE_MAX_FETCH_LIMIT) {
-      const messages = await chat.fetchMessages({ limit: MESSAGE_FETCH_LIMIT })
-      for (const message of messages) {
-        if (message.isForwarded) {
-          return message.id.id
-        }
-      }
-      fetchCounter += MESSAGE_FETCH_LIMIT
     }
   }
 
