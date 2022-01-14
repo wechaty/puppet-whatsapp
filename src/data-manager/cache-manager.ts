@@ -3,7 +3,8 @@ import * as fs from 'fs-extra'
 import * as os from 'os'
 
 import { FlashStore } from 'flash-store'
-import type WhatsAppRaw from '../schema/index'
+import type { Message } from 'whatsapp-web.js'
+
 import { log } from '../config.js'
 import WAError from '../pure-function-helpers/error-type.js'
 import { WXWORK_ERROR_TYPE } from '../schema/error-type.js'
@@ -48,7 +49,7 @@ export class CacheManager {
    * ************************************************************************
    */
   // Static cache, won't change over time
-  private cacheMessageRawPayload?            : FlashStore<string, WhatsAppRaw.Message>
+  private cacheMessageRawPayload?            : FlashStore<string, Message>
 
   /**
    * -------------------------------
@@ -60,7 +61,7 @@ export class CacheManager {
     return cache.get(id)
   }
 
-  public async setMessageRawPayload (id: string, payload: WhatsAppRaw.Message): Promise<void> {
+  public async setMessageRawPayload (id: string, payload: Message): Promise<void> {
     const cache = this.getMessageCache()
     await cache.set(id, payload)
   }
