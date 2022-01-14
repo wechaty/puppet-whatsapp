@@ -1,5 +1,6 @@
 import WAWebJS from 'whatsapp-web.js'
-export { WhatsWebURL, DefaultOptions } from 'whatsapp-web.js'
+export const WhatsWebURL = WAWebJS.WhatsWebURL
+export const DefaultOptions = WAWebJS.DefaultOptions
 export type {
   Client,
   ClientInfo,
