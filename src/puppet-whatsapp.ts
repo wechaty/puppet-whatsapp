@@ -38,7 +38,7 @@ import {
   WhatsappContact,
   WhatsappMessage,
 }                   from './whatsapp.js'
-import WAWebJS, { ClientOptions, GroupChat, MessageContent } from 'whatsapp-web.js'
+import WAWebJS, { ClientOptions, GroupChat, MessageContent } from './schema/index.js'
 import { parseVcard } from './pure-function-helpers/vcard-parser.js'
 import { Manager } from './work/manager.js'
 import WAError from './pure-function-helpers/error-type.js'
