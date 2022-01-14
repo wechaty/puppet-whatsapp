@@ -38,7 +38,7 @@ import {
   WhatsappContact,
   WhatsappMessage,
 }                   from './whatsapp.js'
-import WAWebJS, { ClientOptions, GroupChat, MessageContent, MessageMedia } from 'whatsapp-web.js'
+import WAWebJS, { ClientOptions, GroupChat, MessageContent } from 'whatsapp-web.js'
 import { parseVcard } from './pure-function-helpers/vcard-parser.js'
 import { Manager } from './work/manager.js'
 import WAError from './pure-function-helpers/error-type.js'
@@ -568,7 +568,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     }
 
     const msg = await this.whatsapp.sendMessage(conversationId, content)
-    if (content instanceof MessageMedia) {
+    if (content instanceof WAWebJS.MessageMedia) {
       // FIXME: fix `WhatsAppMessagePayload` typing
       await CacheManager.Instance.setMessageRawPayload(msg.id.id, msg as any)
     }
