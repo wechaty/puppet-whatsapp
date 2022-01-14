@@ -3,7 +3,7 @@ import * as fs from 'fs-extra'
 import * as os from 'os'
 
 import { FlashStore } from 'flash-store'
-import type { Message } from 'whatsapp-web.js'
+import type { Message } from '../schema/index.js'
 
 import { log } from '../config.js'
 import WAError from '../pure-function-helpers/error-type.js'
