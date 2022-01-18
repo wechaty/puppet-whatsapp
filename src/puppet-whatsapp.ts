@@ -60,9 +60,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   static override readonly VERSION = VERSION
 
-  private contactStore: { [id: string]: WhatsappContact }
-  private roomStore: { [id: string]: WhatsappContact }
-  private roomInvitationStore: { [id: string]: Partial<WAWebJS.InviteV4Data>}
   private whatsapp: undefined | WhatsApp
   private manager?: Manager
 
@@ -70,12 +67,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     override options: PuppetWhatsAppOptions = {},
   ) {
     super(options)
-    log.verbose(PRE, 'constructor()')
-
-    this.contactStore = {}
-    this.roomStore = {}
-    this.roomInvitationStore = {}
-
   }
 
   override async start (): Promise<void> {
@@ -193,11 +184,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
         const contacts: WhatsappContact[] = await whatsapp.getContacts()
         const nonBroadcast = contacts.filter(c => c.id.server !== 'broadcast')
         for (const contact of nonBroadcast) {
-          if (!contact.isGroup) {
-            this.contactStore[contact.id._serialized] = contact
-          } else {
-            this.roomStore[contact.id._serialized] = contact
-          }
+          await cacheManager.setContactOrRoomRawPayload(contact.id._serialized, contact)
         }
         await this.login(whatsapp.info.wid._serialized)
       })().catch(console.error)
@@ -225,7 +212,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
               const rawData: Partial<WAWebJS.InviteV4Data> = {
                 inviteCode,
               }
-              this.roomInvitationStore[inviteCode] = rawData
+              await cacheManager.setRoomInvitationRawPayload(inviteCode, rawData)
               this.emit('room-invite', roomInvitationPayload)
             } else {
               // TODO:
@@ -244,7 +231,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
             const roomInvitationPayload: PUPPET.EventRoomInvitePayload = {
               roomInvitationId: info.inviteCode,
             }
-            this.roomInvitationStore[info.inviteCode] = info
+            await cacheManager.setRoomInvitationRawPayload(info.inviteCode, info)
             this.emit('room-invite', roomInvitationPayload)
           } else {
             // TODO:
@@ -286,11 +273,11 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     whatsapp.on('group_update', noti => {
       (async () => {
         if (noti.type === WAWebJS.GroupNotificationTypes.SUBJECT) {
-          const oldRoom = this.roomStore[noti.chatId]
+          const roomInCache = await cacheManager.getContactOrRoomRawPayload(noti.chatId)
           const roomJoinPayload: PUPPET.EventRoomTopicPayload = {
             changerId : noti.author,
             newTopic  : noti.body,
-            oldTopic  : oldRoom?.name || '',
+            oldTopic  : roomInCache?.name || '',
             roomId    : noti.chatId,
             timestamp : noti.timestamp,
           }
@@ -362,8 +349,10 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   override async contactPhone (contactId: string, phoneList?: string[]): Promise<string[] | void> {
     log.verbose(PRE, 'contactPhone(%s, %s)', contactId, phoneList)
     if (typeof phoneList === 'undefined') {
-      if (this.contactStore[contactId]) {
-        return [this.contactStore[contactId]!.number]
+      const cacheManager = await this.getCacheManager()
+      const contact = await cacheManager.getContactOrRoomRawPayload(contactId)
+      if (contact) {
+        return [contact!.number]
       } else {
         return []
       }
@@ -380,7 +369,9 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   override async contactList (): Promise<string[]> {
     log.verbose(PRE, 'contactList()')
-    return Object.keys(this.contactStore)
+    const cacheManager = await this.getCacheManager()
+    const contactIdList = await cacheManager.getContactIdList()
+    return contactIdList
   }
 
   override async contactAvatar (contactId: string)                : Promise<FileBox>
@@ -422,11 +413,13 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   override async contactRawPayload (id: string): Promise<WhatsappContact> {
     log.verbose(PRE, 'contactRawPayload(%s)', id)
-    if (this.contactStore[id]) {
-      return this.contactStore[id]!
+    const cacheManager = await this.getCacheManager()
+    const contact = await cacheManager.getContactOrRoomRawPayload(id)
+    if (contact) {
+      return contact
     } else {
       const rawContact = await this.whatsapp!.getContactById(id)
-      this.contactStore[id] = rawContact
+      await cacheManager.setContactOrRoomRawPayload(id, rawContact)
       return rawContact
     }
   }
@@ -724,18 +717,22 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   override async roomRawPayload (id: string): Promise<WhatsappContact> {
     log.verbose(PRE, 'roomRawPayload(%s)', id)
-    if (this.roomStore[id]) {
-      return this.roomStore[id]!
+    const cacheManager = await this.getCacheManager()
+    const room = await cacheManager.getContactOrRoomRawPayload(id)
+    if (room) {
+      return room
     } else {
       const rawRoom = await this.whatsapp!.getContactById(id)
-      this.roomStore[id] = rawRoom
+      await cacheManager.setContactOrRoomRawPayload(id, rawRoom)
       return rawRoom
     }
   }
 
   override async roomList (): Promise<string[]> {
     log.verbose(PRE, 'roomList()')
-    return Object.keys(this.roomStore)
+    const cacheManager = await this.getCacheManager()
+    const roomIdList = await cacheManager.getRoomIdList()
+    return roomIdList
   }
 
   override async roomDel (
@@ -778,7 +775,12 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     log.verbose(PRE, 'roomTopic(%s, %s)', roomId, topic)
 
     if (typeof topic === 'undefined') {
-      return this.roomStore[roomId]?.name
+      const cacheManager = await this.getCacheManager()
+      const room = await cacheManager.getContactOrRoomRawPayload(roomId)
+      if (!room) {
+        throw new WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `Can not find this room: ${roomId}`)
+      }
+      return room.name
     }
     const chat = await this.whatsapp?.getChatById(roomId) as GroupChat
     if (chat.isGroup) {
@@ -851,7 +853,9 @@ class PuppetWhatsapp extends PUPPET.Puppet {
    */
   override async roomInvitationAccept (roomInvitationId: string): Promise<void> {
     log.verbose(PRE, 'roomInvitationAccept(%s)', roomInvitationId)
-    const info = this.roomInvitationStore[roomInvitationId]
+    const cacheManager = await this.getCacheManager()
+
+    const info = await cacheManager.getRoomInvitationRawPayload(roomInvitationId)
     if (info) {
       if (Object.keys(info).length === 1) {
         this.whatsapp?.acceptInvite(info.inviteCode!)

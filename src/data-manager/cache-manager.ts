@@ -3,7 +3,7 @@ import * as fs from 'fs-extra'
 import * as os from 'os'
 
 import { FlashStore } from 'flash-store'
-import type { Message } from '../schema/index.js'
+import type { Contact, InviteV4Data, Message } from '../schema/index.js'
 
 import { log } from '../config.js'
 import WAError from '../pure-function-helpers/error-type.js'
@@ -49,7 +49,9 @@ export class CacheManager {
    * ************************************************************************
    */
   // Static cache, won't change over time
-  private cacheMessageRawPayload?            : FlashStore<string, Message>
+  private cacheMessageRawPayload?: FlashStore<string, Message>
+  private cacheContactOrRoomRawPayload?: FlashStore<string, Contact>
+  private cacheRoomInvitationRawPayload?: FlashStore<string, Partial<InviteV4Data>>
 
   /**
    * -------------------------------
@@ -76,6 +78,90 @@ export class CacheManager {
       throw new WAError(WA_ERROR_TYPE.ERR_NO_CACHE, 'getMessageCache() has no cache')
     }
     return this.cacheMessageRawPayload
+  }
+
+  /**
+   * -------------------------------
+   * Contact Cache Section
+   * --------------------------------
+   */
+  public async getContactOrRoomRawPayload (id: string) {
+    const cache = this.getContactOrRoomCache()
+    return cache.get(id)
+  }
+
+  public async setContactOrRoomRawPayload (id: string, payload: Contact): Promise<void> {
+    const cache = this.getContactOrRoomCache()
+    await cache.set(id, payload)
+  }
+
+  public deleteContactOrRoom (id: string) {
+    const cache = this.getContactOrRoomCache()
+    return cache.delete(id)
+  }
+
+  private getContactOrRoomCache () {
+    if (!this.cacheContactOrRoomRawPayload) {
+      throw new WAError(WA_ERROR_TYPE.ERR_NO_CACHE, 'getContactOrRoomCache() has no cache')
+    }
+    return this.cacheContactOrRoomRawPayload
+  }
+
+  public async getContactIdList () {
+    const cache = this.getContactOrRoomCache()
+    const list = []
+    for await (const key of cache.keys()) {
+      const value = await cache.get(key)
+      if (!value) {
+        continue
+      }
+      if (!value.isGroup) {
+        list.push(value.id._serialized)
+      }
+    }
+    return list
+  }
+
+  public async getRoomIdList () {
+    const cache = this.getContactOrRoomCache()
+    const list = []
+    for await (const key of cache.keys()) {
+      const value = await cache.get(key)
+      if (!value) {
+        continue
+      }
+      if (value.isGroup) {
+        list.push(value.id._serialized)
+      }
+    }
+    return list
+  }
+
+  /**
+   * -------------------------------
+   * Room Invitation Cache Section
+   * --------------------------------
+   */
+  public async getRoomInvitationRawPayload (id: string) {
+    const cache = this.getRoomInvitationCache()
+    return cache.get(id)
+  }
+
+  public async setRoomInvitationRawPayload (id: string, payload: Partial<InviteV4Data>): Promise<void> {
+    const cache = this.getRoomInvitationCache()
+    await cache.set(id, payload)
+  }
+
+  public deleteRoomInvitation (id: string) {
+    const cache = this.getRoomInvitationCache()
+    return cache.delete(id)
+  }
+
+  private getRoomInvitationCache () {
+    if (!this.cacheRoomInvitationRawPayload) {
+      throw new WAError(WA_ERROR_TYPE.ERR_NO_CACHE, 'getRoomInvitationCache() has no cache')
+    }
+    return this.cacheRoomInvitationRawPayload
   }
 
   /**
@@ -109,9 +195,11 @@ export class CacheManager {
       await fs.mkdirp(baseDir)
     }
 
-    this.cacheMessageRawPayload            = new FlashStore(path.join(baseDir, 'message'))
+    this.cacheMessageRawPayload = new FlashStore(path.join(baseDir, 'message'))
+    this.cacheContactOrRoomRawPayload = new FlashStore(path.join(baseDir, 'contact-or-room'))
+    this.cacheRoomInvitationRawPayload = new FlashStore(path.join(baseDir, 'room-invitation'))
 
-    const messageTotal             = await this.cacheMessageRawPayload.size
+    const messageTotal = await this.cacheMessageRawPayload.size
 
     log.info(PRE, `initCache() inited Messages: ${messageTotal} cacheDir="${baseDir}"`)
   }
@@ -119,14 +207,21 @@ export class CacheManager {
   private async releaseCache () {
     log.verbose(PRE, 'releaseCache()')
 
-    if (this.cacheMessageRawPayload) {
+    if (this.cacheMessageRawPayload
+        && this.cacheContactOrRoomRawPayload
+        && this.cacheRoomInvitationRawPayload
+    ) {
       log.silly(PRE, 'releaseCache() closing caches ...')
 
       await Promise.all([
         this.cacheMessageRawPayload.close(),
+        this.cacheContactOrRoomRawPayload.close(),
+        this.cacheRoomInvitationRawPayload.close(),
       ])
 
-      this.cacheMessageRawPayload            = undefined
+      this.cacheMessageRawPayload = undefined
+      this.cacheContactOrRoomRawPayload = undefined
+      this.cacheRoomInvitationRawPayload = undefined
 
       log.silly(PRE, 'releaseCache() cache closed.')
     } else {
