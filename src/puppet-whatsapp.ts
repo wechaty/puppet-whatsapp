@@ -40,10 +40,9 @@ import {
 }                   from './whatsapp.js'
 import WAWebJS, { ClientOptions, GroupChat, MessageContent } from './schema/index.js'
 import { parseVcard } from './pure-function-helpers/vcard-parser.js'
-import { Manager } from './work/manager.js'
+import { Manager } from './manager.js'
 import WAError from './pure-function-helpers/error-type.js'
 import { WXWORK_ERROR_TYPE } from './schema/error-type.js'
-import { CacheManager } from './data-manager/cache-manager.js'
 
 process.on('uncaughtException', (e) => {
   console.error('process error is:', e.message)
@@ -59,12 +58,11 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   static override readonly VERSION = VERSION
 
-  private messageStore: { [id: string]: WhatsappMessage }
   private contactStore: { [id: string]: WhatsappContact }
   private roomStore: { [id: string]: WhatsappContact }
   private roomInvitationStore: { [id: string]: Partial<WAWebJS.InviteV4Data>}
   private whatsapp: undefined | WhatsApp
-  private manager: undefined | Manager
+  private manager: Manager
 
   constructor (
     override options: PuppetWhatsAppOptions = {},
@@ -72,7 +70,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     super(options)
     log.verbose('PuppetWhatsApp', 'constructor()')
 
-    this.messageStore = {}
     this.contactStore = {}
     this.roomStore = {}
     this.roomInvitationStore = {}
@@ -85,12 +82,13 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       await this.state.ready('on')
       return
     }
+    this.state.on('pending')
     const session = await this.memory.get(MEMORY_SLOT)
     const whatsapp = await getWhatsApp(this.options['puppeteerOptions'] as ClientOptions, session)
     this.whatsapp = whatsapp
     this.manager = new Manager(whatsapp)
-    this.state.on('pending')
-    this.initWhatsAppEvents(whatsapp)
+    await this.manager.start()
+    await this.initWhatsAppEvents(whatsapp)
 
     /**
      * Huan(202102): initialize() will rot be resolved not before bot log in
@@ -145,11 +143,16 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     this.state.off(true)
   }
 
-  private initWhatsAppEvents (
+  private async initWhatsAppEvents (
     whatsapp: WhatsApp,
-  ): void {
+  ): Promise<void> {
     log.verbose('PuppetwhatsApp', 'initWhatsAppEvents()')
 
+    if (!this.manager) {
+      throw new Error('no manager')
+    }
+
+    const cacheManager = await this.manager.getCacheManager()
     whatsapp.on('authenticated', session => {
       (async () => {
         try {
@@ -193,7 +196,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       })().catch(console.error)
     })
 
-    whatsapp.on('message', (msg: WhatsappMessage) => {
+    whatsapp.on('message', async (msg: WhatsappMessage) => {
       // @ts-ignore
       if (msg.type === 'e2e_notification') {
         if (msg.body === '' && msg.author === undefined) {
@@ -202,7 +205,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
         }
       }
       const id = msg.id.id
-      this.messageStore[id] = msg
+      await cacheManager.setMessageRawPayload(id, msg)
       if (msg.type !== WAWebJS.MessageTypes.GROUP_INVITE) {
         if (msg.links.length === 1 && InviteLinkRegex.test(msg.links[0]!.link)) {
           const matched = msg.links[0]!.link.match(InviteLinkRegex)
@@ -446,6 +449,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
    */
   override async messageContact (messageId: string): Promise<string> {
     log.verbose('PuppetWhatsApp', 'messageContact(%s)', messageId)
+    const cacheManager = await this.manager?.getCacheManager()
     const msg = this.messageStore[messageId]
     if (!msg) {
       log.error('Message %s not found', messageId)

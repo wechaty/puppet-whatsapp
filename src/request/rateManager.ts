@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { log } from '../../config.js'
+import { log } from '../config.js'
 import { sleep } from '../utils.js'
 
 interface FunctionObj {
