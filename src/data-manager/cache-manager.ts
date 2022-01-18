@@ -7,7 +7,7 @@ import type { Message } from '../schema/index.js'
 
 import { log } from '../config.js'
 import WAError from '../pure-function-helpers/error-type.js'
-import { WXWORK_ERROR_TYPE } from '../schema/error-type.js'
+import { WA_ERROR_TYPE } from '../schema/error-type.js'
 
 const PRE = 'CacheManager'
 
@@ -22,7 +22,7 @@ export class CacheManager {
 
   public static get Instance () {
     if (!this._instance) {
-      throw new WAError(WXWORK_ERROR_TYPE.ERR_NO_CACHE, 'no instance')
+      throw new WAError(WA_ERROR_TYPE.ERR_NO_CACHE, 'no instance')
     }
     return this._instance
   }
@@ -73,7 +73,7 @@ export class CacheManager {
 
   private getMessageCache () {
     if (!this.cacheMessageRawPayload) {
-      throw new WAError(WXWORK_ERROR_TYPE.ERR_NO_CACHE, 'getMessageCache() has no cache')
+      throw new WAError(WA_ERROR_TYPE.ERR_NO_CACHE, 'getMessageCache() has no cache')
     }
     return this.cacheMessageRawPayload
   }
@@ -89,7 +89,7 @@ export class CacheManager {
   ): Promise<void> {
 
     if (this.cacheMessageRawPayload) {
-      throw new WAError(WXWORK_ERROR_TYPE.ERR_INIT, 'cacheMessageRawPayload does not exist.')
+      throw new WAError(WA_ERROR_TYPE.ERR_INIT, 'cacheMessageRawPayload does not exist.')
     }
 
     const baseDir = path.join(
