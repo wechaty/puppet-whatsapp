@@ -1,3 +1,6 @@
+import { WA_ERROR_TYPE } from '../schema/error-type.js'
+import WAError from './error-type.js'
+
 export interface IVcard {
   /**
    * VERSION: X.X
@@ -39,33 +42,33 @@ export function parseVcard (body: string): IVcard {
   const lines = body.split('\n')
   // vcard body must be at least 3 lines, "begin", "VERSION" and "end"
   if (lines.length < 2) {
-    throw new Error('Invalid Vcard body: invalid length')
+    throw new WAError(WA_ERROR_TYPE.ERR_MSG_CONTACT, `Invalid Vcard body: invalid length, detail: ${body}`)
   }
   if (lines[0] !== 'BEGIN:VCARD') {
-    throw new Error('Invalid Vcard body: begin not found')
+    throw new WAError(WA_ERROR_TYPE.ERR_MSG_CONTACT, `Invalid Vcard body: begin not found, detail: ${body}`)
   }
 
   const versionPattern =  /VERSION:(\d+\.\d*)$/m
   const versionMatch = versionPattern.exec(lines[1]!)
   if (!versionMatch) {
-    throw new Error('Invalid Vcard body: version field not found')
+    throw new WAError(WA_ERROR_TYPE.ERR_MSG_CONTACT, `Invalid Vcard body: version field not found, detail: ${body}`)
   }
   const result: IVcard = {
     version: versionMatch[1]!,
   }
 
   for (let i = 2; i < lines.length; i++) {
-    const element = lines[i]
+    const element = lines[i]!
 
-    if (element!.startsWith('N:')) {
-      result.N = element!.replace('N:', '').split(';').filter(v => !!v)
+    if (element.startsWith('N:')) {
+      result.N = element.replace('N:', '').split(';').filter(v => !!v)
 
-    } else if (element!.startsWith('FN:')) {
-      result.FN = element!.replace('FN:', '')
+    } else if (element.startsWith('FN:')) {
+      result.FN = element.replace('FN:', '')
 
-    } else if (element!.startsWith('item1.TEL;')) {
+    } else if (element.startsWith('item1.TEL;')) {
       const TELPattern = /waid=(\d*):([+ \d]*)$/m
-      const match = TELPattern.exec(element!)
+      const match = TELPattern.exec(element)
       if (match) {
         result.TEL = {
           phone: match[2]!,

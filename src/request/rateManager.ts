@@ -1,5 +1,7 @@
 import { EventEmitter } from 'events'
 import { log } from '../config.js'
+import WAError from '../pure-function-helpers/error-type.js'
+import { WA_ERROR_TYPE } from '../schema/error-type.js'
 import { sleep } from '../utils.js'
 
 interface FunctionObj {
@@ -82,7 +84,7 @@ export class RateManager extends EventEmitter {
 
     const funcObj = queue.shift()
     if (!funcObj) {
-      throw new Error(`can not get funcObj from queue with id: ${queueId}.`)
+      throw new WAError(WA_ERROR_TYPE.ERR_RATE_FUNCTION_NOT_FOUND, `can not get funcObj from queue with id: ${queueId}.`)
     }
     const { delayAfter, delayBefore, func, resolve, reject, uniqueKey } = funcObj
     await sleep(delayBefore)

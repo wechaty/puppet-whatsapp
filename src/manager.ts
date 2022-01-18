@@ -3,7 +3,7 @@ import type { Client as WhatsApp } from 'whatsapp-web.js'
 import { CacheManager } from './data-manager/cache-manager.js'
 import { log } from './config.js'
 import WAError from './pure-function-helpers/error-type.js'
-import { WXWORK_ERROR_TYPE } from './schema/error-type.js'
+import { WA_ERROR_TYPE } from './schema/error-type.js'
 
 const PRE = 'WhatsAppManager'
 
@@ -25,7 +25,7 @@ export class Manager {
 
   public async getCacheManager () {
     if (!this.cacheManager) {
-      throw new WAError(WXWORK_ERROR_TYPE.ERR_INIT, 'no cache manager')
+      throw new WAError(WA_ERROR_TYPE.ERR_INIT, 'no cache manager')
     }
     return this.cacheManager
   }
