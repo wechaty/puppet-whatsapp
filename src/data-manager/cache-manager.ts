@@ -180,12 +180,9 @@ export class CacheManager {
 
     const baseDir = path.join(
       os.homedir(),
-      path.sep,
       '.wechaty',
       'puppet-whatsapp',
-      path.sep,
       'flash-store-v0.12',
-      path.sep,
       userId,
     )
 
