@@ -15,6 +15,13 @@ enum MESSAGE_ERROR_TYPE {
   ERR_SEND_MSG = 2001,  // 发送消息失败
   ERR_SEND_MSG_TIMEOUT = 2002,  // 发送消息超时
   ERR_UNKNOWN_SEND_STATUS = 2003,  // 未知消息发送结果
+  ERR_MSG_NOT_FOUND = 2004,  // 未查到消息内容
+  ERR_MSG_NOT_MATCH = 2005,  // 消息类型不匹配
+  ERR_MSG_CONTACT = 2006,  // 提取卡片消息异常
+  ERR_MSG_IMAGE = 2007,  // 提取图片消息异常
+  ERR_MSG_FILE = 2008,  // 提取文件消息异常
+  ERR_MSG_URL_LINK = 2009,  // 提取链接消息异常
+  ERR_MSG_FORWARD = 2010,  // 转发消息异常
 }
 
 enum ROOM_ERROR_TYPE {
@@ -33,12 +40,17 @@ enum CONTACT_ERROR_TYPE {
   ERR_CONTACT_CARD_ID = 4003,  // 名片id异常
 }
 
-export const WXWORK_ERROR_TYPE = {
+enum OTHER_ERROR_TYPE {
+  ERR_RATE_FUNCTION_NOT_FOUND = 5001, // 队列中对象不存在
+}
+
+export const WA_ERROR_TYPE = {
   ...BASE_ERROR_TYPE,  // 基础错误类型
   ...INIT_ERROR_TYPE,  // 初始化错误类型
   ...MESSAGE_ERROR_TYPE,  // 消息相关错误类型
   ...ROOM_ERROR_TYPE,  // 群相关错误类型
   ...CONTACT_ERROR_TYPE,  // 联系人相关错误类型
+  ...OTHER_ERROR_TYPE, // 其他错误类型
 }
 
-export type WAErrorType = BASE_ERROR_TYPE | INIT_ERROR_TYPE | MESSAGE_ERROR_TYPE | ROOM_ERROR_TYPE | CONTACT_ERROR_TYPE
+export type WAErrorType = BASE_ERROR_TYPE | INIT_ERROR_TYPE | MESSAGE_ERROR_TYPE | ROOM_ERROR_TYPE | CONTACT_ERROR_TYPE | OTHER_ERROR_TYPE
