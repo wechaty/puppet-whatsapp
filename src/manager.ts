@@ -9,7 +9,7 @@ const PRE = 'WhatsAppManager'
 
 export class Manager {
 
-  whatsapp: WhatsApp
+  whatsapp?: WhatsApp
   requestManager: RequestManager
   cacheManager?: CacheManager
 
@@ -20,7 +20,12 @@ export class Manager {
   }
 
   public async start () {
-    await this.initCache('fake_user_id') // FIXME: need to get the login user id
+    log.info('start()')
+  }
+
+  public async stop () {
+    await this.releaseCache()
+    this.whatsapp = undefined
   }
 
   public async getCacheManager () {
@@ -30,7 +35,7 @@ export class Manager {
     return this.cacheManager
   }
 
-  private async initCache (userId: string) {
+  public async initCache (userId: string) {
     log.info(PRE, `initCache(${userId})`)
     if (this.cacheManager) {
       log.warn(PRE, 'initCache() already initialized, skip the init...')
@@ -38,6 +43,15 @@ export class Manager {
     }
     await CacheManager.init(userId)
     this.cacheManager = CacheManager.Instance
+  }
+
+  public async releaseCache () {
+    log.verbose(PRE, 'releaseCache()')
+    if (this.cacheManager) {
+      log.warn(PRE, 'releaseCache() already initialized, skip the init...')
+      return
+    }
+    await CacheManager.release()
   }
 
   setNickname (nickname: string) {

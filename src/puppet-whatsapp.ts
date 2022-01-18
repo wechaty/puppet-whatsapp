@@ -76,47 +76,50 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       return
     }
     this.state.on('pending')
-    const session = await this.memory.get(MEMORY_SLOT)
-    const whatsapp = await getWhatsApp(this.options['puppeteerOptions'] as ClientOptions, session)
-    this.whatsapp = whatsapp
-    this.manager = new Manager(whatsapp)
-    await this.manager.start()
-    await this.initWhatsAppEvents(whatsapp)
+    try {
+      const session = await this.memory.get(MEMORY_SLOT)
+      const whatsapp = await getWhatsApp(this.options['puppeteerOptions'] as ClientOptions, session)
+      this.whatsapp = whatsapp
+      this.manager = new Manager(whatsapp) // FIXME: need move some logic to manager from puppet-whatsapp
+      await this.initWhatsAppEvents(whatsapp)
 
-    /**
-     * Huan(202102): initialize() will rot be resolved not before bot log in
-     */
-    whatsapp
-      .initialize()
-      .then(() => log.verbose(PRE, 'start() whatsapp.initialize() done'))
-      .catch(e => {
-        if (this.state.on()) {
-          log.error(PRE, 'start() whatsapp.initialize() rejection: %s', e)
-        } else {
-          log.error(PRE, 'start() whatsapp.initialize() rejected on a stopped puppet. %s', e)
+      /**
+       * Huan(202102): initialize() will rot be resolved not before bot log in
+       */
+      whatsapp
+        .initialize()
+        .then(() => log.verbose(PRE, 'start() whatsapp.initialize() done'))
+        .catch(e => {
+          if (this.state.on()) {
+            log.error(PRE, 'start() whatsapp.initialize() rejection: %s', e)
+          } else {
+            log.error(PRE, 'start() whatsapp.initialize() rejected on a stopped puppet. %s', e)
+          }
+        })
+
+      /**
+       * Huan(202102): Wait for Puppeteer to be inited before resolve start() for robust state management
+       */
+      const { state } = this
+      const future = new Promise<void>(resolve => {
+        function check () {
+          if (whatsapp.pupBrowser) {
+            resolve(state.on(true))
+          } else {
+            setTimeout(check, 100)
+          }
         }
+
+        check()
       })
 
-    /**
-     * Huan(202102): Wait for Puppeteer to be inited before resolve start() for robust state management
-     */
-    const { state } = this
-    const future = new Promise<void>(resolve => {
-      function check () {
-        if (whatsapp.pupBrowser) {
-          resolve(state.on(true))
-        } else {
-          setTimeout(check, 100)
-        }
-      }
-
-      check()
-    })
-
-    return Promise.race([
-      future,
-      this.state.ready('off'),
-    ])
+      return Promise.race([
+        future,
+        this.state.ready('off'),
+      ])
+    } catch (error) {
+      log.error(PRE, `Can not start whatsapp, error: ${(error as Error).message}`)
+    }
   }
 
   override async stop (): Promise<void> {
@@ -130,9 +133,13 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       return
     }
     this.state.off('pending')
-    const whatsapp = this.whatsapp
-    this.whatsapp = undefined
-    await whatsapp.destroy()
+    try {
+      await this.manager?.stop()
+      await this.whatsapp.destroy()
+      this.whatsapp = undefined
+    } catch (error) {
+      log.error(PRE, `Can not stop, error: ${(error as Error).message}`)
+    }
     this.state.off(true)
   }
 
@@ -157,6 +164,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
           // save session file
           await this.memory.set(MEMORY_SLOT, session)
           await this.memory.save()
+          await this.manager!.initCache(session.WABrowserId)
         } catch (e) {
           console.error(e)
           log.error(PRE, 'getClient() whatsapp.on(authenticated) rejection: %s', e)
