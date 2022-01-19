@@ -16,7 +16,7 @@ import { getWhatsApp } from './whatsapp.js'
 import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
 import type {  ClientOptions, Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification } from './schema/index.js'
 import { Client as WhatsApp, MessageType, GroupNotificationType } from './schema/index.js'
-import { verbose, info, warn, error } from './logger/index.js'
+import { logger } from './logger/index.js'
 
 const InviteLinkRegex = /^(https?:\/\/)?chat\.whatsapp\.com\/(?:invite\/)?([a-zA-Z0-9_-]{22})$/
 type ManagerEvents = 'message'
@@ -86,13 +86,13 @@ export class Manager extends EventEmitter {
   }
 
   public async start (session: any) {
-    info('start()')
+    logger.info('start()')
     const whatsapp = await getWhatsApp(this.options['puppeteerOptions'] as ClientOptions, session)
     whatsapp
       .initialize()
-      .then(() => verbose('start() whatsapp.initialize() done'))
+      .then(() => logger.verbose('start() whatsapp.initialize() done'))
       .catch(e => {
-        error('start() whatsapp.initialize() rejection: %s', e)
+        logger.error('start() whatsapp.initialize() rejection: %s', e)
       })
 
     this.whatsapp = whatsapp
@@ -102,7 +102,7 @@ export class Manager extends EventEmitter {
   }
 
   public async stop () {
-    info('stop()')
+    logger.info('stop()')
     if (this.whatsapp) {
       await this.whatsapp.destroy()
       await this.releaseCache()
@@ -117,12 +117,12 @@ export class Manager extends EventEmitter {
       await this.initCache(session.WABrowserId)
     } catch (e) {
       console.error(e)
-      error('getClient() whatsapp.on(authenticated) rejection: %s', e)
+      logger.error('getClient() whatsapp.on(authenticated) rejection: %s', e)
     }
   }
 
   private async onAuthFailure (message: string) {
-    warn('auth_failure: %s, then restart no use exist session', message)
+    logger.warn('auth_failure: %s, then restart no use exist session', message)
     // msg -> auth_failure message
     // auth_failure due to session invalidation
     // clear sessionData -> reinit
@@ -232,7 +232,7 @@ export class Manager extends EventEmitter {
   public async initWhatsAppEvents (
     whatsapp: WhatsApp,
   ): Promise<void> {
-    verbose('initWhatsAppEvents()')
+    logger.verbose('initWhatsAppEvents()')
 
     whatsapp.on('authenticated', this.onAuthenticated.bind(this))
     /**
@@ -275,9 +275,9 @@ export class Manager extends EventEmitter {
   }
 
   public async initCache (userId: string) {
-    info(`initCache(${userId})`)
+    logger.info(`initCache(${userId})`)
     if (this.cacheManager) {
-      warn('initCache() already initialized, skip the init...')
+      logger.warn('initCache() already initialized, skip the init...')
       return
     }
     await CacheManager.init(userId)
@@ -285,9 +285,9 @@ export class Manager extends EventEmitter {
   }
 
   public async releaseCache () {
-    info('releaseCache()')
+    logger.info('releaseCache()')
     if (this.cacheManager) {
-      warn('releaseCache() already initialized, skip the init...')
+      logger.warn('releaseCache() already initialized, skip the init...')
       return
     }
     await CacheManager.release()

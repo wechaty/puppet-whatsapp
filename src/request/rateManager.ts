@@ -2,7 +2,7 @@ import { EventEmitter } from 'events'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import { sleep } from '../utils.js'
-import { error } from '../logger/index.js'
+import { logger } from '../logger/index.js'
 
 interface FunctionObj {
   func: () => any,
@@ -61,7 +61,7 @@ export class RateManager extends EventEmitter {
 
     if (this.functionQueueMap[queueId]!.length > MAX_QUEUE_SIZE) {
       if (this.counter % MAX_QUEUE_SIZE === 0) {
-        error(`EXCEED_QUEUE_SIZE: Max queue size for id: ${queueId} reached: ${this.functionQueueMap[queueId]!.length} > ${MAX_QUEUE_SIZE}(max queue size). Drop these tasks.`)
+        logger.error(`EXCEED_QUEUE_SIZE: Max queue size for id: ${queueId} reached: ${this.functionQueueMap[queueId]!.length} > ${MAX_QUEUE_SIZE}(max queue size). Drop these tasks.`)
         this.counter = 0
       }
       this.counter++
