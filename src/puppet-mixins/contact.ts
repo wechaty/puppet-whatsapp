@@ -2,15 +2,16 @@
 import * as PUPPET from 'wechaty-puppet'
 
 import {
-  log, FileBox, PRE,
-} from '../config.js'
+  FileBox,
+} from '../compact/index.js'
+import { verbose } from '../logger/index.js'
 import type { PuppetWhatsapp } from '../puppet-whatsapp.js'
 import type { Contact } from '../schema'
 
 async function contactAlias (this: PuppetWhatsapp, contactId: string)                       : Promise<string>;
 async function contactAlias (this: PuppetWhatsapp, contactId: string, alias: string | null) : Promise<void>;
 async function contactAlias (this: PuppetWhatsapp, contactId: string, alias?: string | null): Promise<void | string> {
-  log.verbose(PRE, 'contactAlias(%s, %s)', contactId, alias)
+  verbose('contactAlias(%s, %s)', contactId, alias)
   return PUPPET.throwUnsupportedError()
 }
 
@@ -18,7 +19,7 @@ async function contactPhone (this: PuppetWhatsapp, contactId: string): Promise<s
 async function contactPhone (this: PuppetWhatsapp, contactId: string, phoneList: string[]): Promise<void>
 
 async function contactPhone (this: PuppetWhatsapp, contactId: string, phoneList?: string[]): Promise<string[] | void> {
-  log.verbose(PRE, 'contactPhone(%s, %s)', contactId, phoneList)
+  verbose('contactPhone(%s, %s)', contactId, phoneList)
   if (typeof phoneList === 'undefined') {
     const cacheManager = await this.manager.getCacheManager()
     const contact = await cacheManager.getContactOrRoomRawPayload(contactId)
@@ -32,17 +33,17 @@ async function contactPhone (this: PuppetWhatsapp, contactId: string, phoneList?
 }
 
 async function  contactCorporationRemark (this: PuppetWhatsapp, contactId: string, corporationRemark: string) {
-  log.verbose(PRE, 'contactCorporationRemark(%s, %s)', contactId, corporationRemark)
+  verbose('contactCorporationRemark(%s, %s)', contactId, corporationRemark)
   return PUPPET.throwUnsupportedError()
 }
 
 async function  contactDescription (this: PuppetWhatsapp, contactId: string, description: string) {
-  log.verbose(PRE, 'contactDescription(%s, %s)', contactId, description)
+  verbose('contactDescription(%s, %s)', contactId, description)
   return PUPPET.throwUnsupportedError()
 }
 
 async function  contactList (this: PuppetWhatsapp): Promise<string[]> {
-  log.verbose(PRE, 'contactList()')
+  verbose('contactList()')
   const cacheManager = await this.manager.getCacheManager()
   const contactIdList = await cacheManager.getContactIdList()
   return contactIdList
@@ -52,7 +53,7 @@ async function contactAvatar (this: PuppetWhatsapp, contactId: string)          
 async function contactAvatar (this: PuppetWhatsapp, contactId: string, file: FileBox) : Promise<void>
 
 async function contactAvatar (this: PuppetWhatsapp, contactId: string, file?: FileBox): Promise<void | FileBox> {
-  log.verbose(PRE, 'contactAvatar(%s)', contactId)
+  verbose('contactAvatar(%s)', contactId)
 
   if (file) {
     return PUPPET.throwUnsupportedError()
@@ -86,7 +87,7 @@ async function contactRawPayloadParser (this: PuppetWhatsapp, whatsAppPayload: C
 }
 
 async function contactRawPayload (this: PuppetWhatsapp, id: string): Promise<Contact> {
-  log.verbose(PRE, 'contactRawPayload(%s)', id)
+  verbose('contactRawPayload(%s)', id)
   const cacheManager = await this.manager.getCacheManager()
   const contact = await cacheManager.getContactOrRoomRawPayload(id)
   if (contact) {

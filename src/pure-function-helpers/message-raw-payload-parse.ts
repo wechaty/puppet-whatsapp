@@ -1,5 +1,5 @@
-import { log } from 'flash-store'
 import type { Message } from 'whatsapp-web.js'
+import { silly } from '../logger/index.js'
 
 interface MessagePayload {
   id: string
@@ -8,7 +8,7 @@ interface MessagePayload {
 export async function messageRawPayloadParser (
   rawPayload: Message,
 ): Promise<MessagePayload> {
-  log.silly(`messageRawPayloadParser(${rawPayload.id})`)
+  silly(`messageRawPayloadParser(${rawPayload.id})`)
 
   return {} as MessagePayload
 }
