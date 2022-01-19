@@ -56,14 +56,14 @@
     "@chatie/semver": "^0.4.7",
     "@chatie/tsconfig": "^4.6.2",
     "@types/cuid": "^2.0.1",
-    "@types/fs-extra": "^8.1.0",
+    "@types/fs-extra": "^9.0.13",
     "@types/qrcode-terminal": "^0.12.0",
     "qrcode-terminal": "^0.12.0"
   },
   "dependencies": {
     "file-box": "^1.4.14",
     "flash-store": "^0.12.7",
-    "fs-extra": "^8.1.0",
+    "fs-extra": "^10.0.0",
     "gerror": "^1.0.16",
     "rxjs": "^7.5.1",
     "wechaty-puppet": "^1.11.16",

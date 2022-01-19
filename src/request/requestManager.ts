@@ -99,7 +99,7 @@ export class RequestManager {
     return this.whatsapp.getState()
   }
 
-  public getwhatsappVersion () {
+  public getWhatsAppVersion () {
     return this.whatsapp.getWWebVersion()
   }
 
