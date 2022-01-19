@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events'
 import { log } from '../config.js'
-import WAError from '../pure-function-helpers/error-type.js'
-import { WA_ERROR_TYPE } from '../schema/error-type.js'
+import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
+import WAError from '../exceptions/whatsapp-error.js'
 import { sleep } from '../utils.js'
 
 interface FunctionObj {

@@ -1,4 +1,4 @@
-import { WAErrorType, WA_ERROR_TYPE } from '../schema/error-type.js'
+import { WAErrorType, WA_ERROR_TYPE } from './error-type.js'
 import { GError } from 'gerror'
 
 export default class WAError {

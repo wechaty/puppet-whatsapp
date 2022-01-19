@@ -18,28 +18,13 @@
  */
 import * as PUPPET from 'wechaty-puppet'
 import type { MemoryCard } from 'memory-card'
-import {
-  distinctUntilKeyChanged,
-  fromEvent,
-  map,
-  merge,
-} from 'rxjs'
+
 import {
   log,
   MEMORY_SLOT,
   VERSION,
 } from './config.js'
 
-import {
-  getWhatsApp,
-  WhatsApp,
-  WhatsappContact,
-  WhatsappMessage,
-} from './whatsapp.js'
-import WAWebJS, { ClientOptions } from './schema/index.js'
-import { Manager } from './manager.js'
-import WAError from './pure-function-helpers/error-type.js'
-import { WA_ERROR_TYPE } from './schema/error-type.js'
 import { contactSelfName, contactSelfQRCode, contactSelfSignature } from './puppet-mixins/contact-self.js'
 import { contactAlias, contactAvatar, contactCorporationRemark, contactDescription, contactList, contactPhone, contactRawPayload, contactRawPayloadParser } from './puppet-mixins/contact.js'
 import { conversationReadMark } from './puppet-mixins/conversation.js'
@@ -48,6 +33,12 @@ import { messageRawPayloadParser } from './pure-function-helpers/message-raw-pay
 import { roomRawPayloadParser, roomRawPayload, roomList, roomDel, roomAvatar, roomAdd, roomTopic, roomCreate, roomQuit, roomQRCode, roomMemberList, roomMemberRawPayload, roomMemberRawPayloadParser, roomAnnounce, roomInvitationAccept, roomInvitationRawPayload, roomInvitationRawPayloadParser } from './puppet-mixins/room.js'
 import { friendshipRawPayload, friendshipRawPayloadParser, friendshipSearchPhone, friendshipSearchWeixin, friendshipAdd, friendshipAccept } from './puppet-mixins/friendship.js'
 import { tagContactAdd, tagContactRemove, tagContactDelete, tagContactList } from './puppet-mixins/tag.js'
+
+import { Manager } from './manager.js'
+import { WA_ERROR_TYPE } from './exceptions/error-type.js'
+import WAError from './exceptions/whatsapp-error.js'
+import { ClientOptions, EventName } from './schema/index.js'
+import type { WhatsApp } from './whatsapp.js'
 
 process.on('uncaughtException', (e) => {
   console.error('process error is:', e.message)
@@ -59,23 +50,18 @@ export type PuppetWhatsAppOptions = PUPPET.PuppetOptions & {
 }
 
 const PRE = 'PuppetWhatsApp'
-
-const InviteLinkRegex = /^(https?:\/\/)?chat\.whatsapp\.com\/(?:invite\/)?([a-zA-Z0-9_-]{22})$/
+const EVENT_LOG_PRE = 'EVENT_LOG'
 class PuppetWhatsapp extends PUPPET.Puppet {
 
   static override readonly VERSION = VERSION
 
-  private whatsapp: undefined | WhatsApp
-  private manager?: Manager
+  public manager: Manager
 
   constructor (
     override options: PuppetWhatsAppOptions = {},
   ) {
     super(options)
-  }
-
-  getWhatsapp () {
-    return this.whatsapp
+    this.manager = new Manager(this.options)
   }
 
   override async start (): Promise<void> {
@@ -85,28 +71,14 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       return
     }
     this.state.on('pending')
-    const session = await this.memory.get(MEMORY_SLOT)
-    const whatsapp = await getWhatsApp(this.options['puppeteerOptions'] as ClientOptions, session)
-    this.whatsapp = whatsapp
+
+    let whatsapp: WhatsApp
     try {
-      this.manager = new Manager(whatsapp) // FIXME: need move some logic to manager from puppet-whatsapp
-      await this.initWhatsAppEvents(whatsapp)
+      whatsapp = await this.startManager(this.manager)
     } catch (error) {
       log.error(PRE, `Can not start whatsapp, error: ${(error as Error).message}`)
+      throw new WAError(WA_ERROR_TYPE.ERR_INIT, `Can not start whatsapp, error: ${(error as Error).message}`)
     }
-    /**
-     * Huan(202102): initialize() will rot be resolved not before bot log in
-     */
-    whatsapp
-      .initialize()
-      .then(() => log.verbose(PRE, 'start() whatsapp.initialize() done'))
-      .catch(e => {
-        if (this.state.on()) {
-          log.error(PRE, 'start() whatsapp.initialize() rejection: %s', e)
-        } else {
-          log.error(PRE, 'start() whatsapp.initialize() rejected on a stopped puppet. %s', e)
-        }
-      })
 
     /**
      * Huan(202102): Wait for Puppeteer to be inited before resolve start() for robust state management
@@ -130,192 +102,138 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     ])
   }
 
+  private async startManager (manager: Manager) {
+    manager
+      .on('heartbeat', data => this.emit('heartbeat', { data }))
+      .on('error',     this.onError.bind(this))
+      .on('scan',      this.onScan.bind(this))
+      .on('reset',     this.onReset.bind(this))
+      .on('login',     this.onLogin.bind(this))
+      .on('logout',    this.onLogout.bind(this))
+      .on('message',   this.onMessage.bind(this))
+      .on('friendship',  this.onFriendship.bind(this))
+      // .on('room-invite', id => this.emit('room-invite', id)) // 2020/10/05 windmemory: comment out since not supported yet
+      .on('room-join',  this.onRoomJoin.bind(this))
+      .on('room-leave', this.onRoomLeave.bind(this))
+      .on('room-topic', this.onRoomTopic.bind(this))
+      .on('room-invite', this.onRoomInvite.bind(this))
+      .on('ready',      this.onReady.bind(this))
+      .on('dirty', this.onDirty.bind(this))
+
+    const session = await this.memory.get(MEMORY_SLOT)
+    const whatsapp = await this.manager.start(session)
+    return whatsapp
+  }
+
   override async stop (): Promise<void> {
     log.verbose(PRE, 'onStop()')
     if (this.state.off()) {
       await this.state.ready('off')
       return
     }
-    if (!this.whatsapp) {
-      log.error(PRE, 'stop() this.whatsapp is undefined!')
-      return
-    }
     this.state.off('pending')
+    this.manager.removeAllListeners()
     try {
-      await this.manager?.stop()
-      await this.whatsapp.destroy()
-      this.whatsapp = undefined
+      await this.manager.stop()
     } catch (error) {
       log.error(PRE, `Can not stop, error: ${(error as Error).message}`)
     }
     this.state.off(true)
   }
 
-  async getCacheManager () {
-    if (!this.manager) {
-      throw new WAError(WA_ERROR_TYPE.ERR_INIT, 'No manager')
-    }
+  /**
+   *
+   * Event section: onXXX
+   *
+   */
+  private async onLogin (wxid: string): Promise<void> {
+    log.info(PRE, 'onLogin(%s)', wxid)
 
-    const cacheManager = await this.manager.getCacheManager()
-    return cacheManager
+    if (this.logonoff()) {
+      log.warn(PRE, 'onLogin(%s) already login? NOOP', wxid)
+      return
+    }
+    log.info(EVENT_LOG_PRE, `${EventName.LOGIN}, ${wxid}`)
+    this.id = wxid
+    if (!this.selfId()) {
+      await super.login(this.id)
+    } else {
+      this.emit('login', { contactId: this.id })
+    }
   }
 
-  private async initWhatsAppEvents (
-    whatsapp: WhatsApp,
-  ): Promise<void> {
-    log.verbose('PuppetwhatsApp', 'initWhatsAppEvents()')
+  private async onLogout (wxid: string, message: string): Promise<void> {
+    log.info(PRE, 'onLogout(%s, %s)', wxid, message)
 
-    const cacheManager = await this.getCacheManager()
-    whatsapp.on('authenticated', session => {
-      (async () => {
-        try {
-          // save session file
-          await this.memory.set(MEMORY_SLOT, session)
-          await this.memory.save()
-          await this.manager!.initCache(session.WABrowserId)
-        } catch (e) {
-          console.error(e)
-          log.error(PRE, 'getClient() whatsapp.on(authenticated) rejection: %s', e)
-        }
-      })().catch(console.error)
+    if (!this.logonoff()) {
+      log.warn(PRE, 'onLogout(%s) already logged out?', wxid)
+    }
+    log.info(EVENT_LOG_PRE, `${EventName.LOGOUT}, ${wxid}`)
+
+    this.id = undefined
+
+    this.emit('logout', { contactId: wxid, data: message })
+  }
+
+  private async onMessage (message: PUPPET.EventMessagePayload): Promise<void> {
+    log.verbose(PRE, 'onMessage(%s)', JSON.stringify(message))
+    this.emit('message', message)
+  }
+
+  private async onScan (status: PUPPET.ScanStatus, qrcode?: string): Promise<void> {
+    log.info(PRE, 'onScan(%s, %s)', status, qrcode)
+
+    log.info(EVENT_LOG_PRE, `${EventName.SCAN}`)
+    this.emit('scan', { qrcode, status })
+  }
+
+  private async onError (e: string) {
+    log.info(EVENT_LOG_PRE, `${EventName.ERROR}, ${e}`)
+    this.emit('error', {
+      data: e,
     })
+  }
 
-    /**
-     * There is only one situation that will cause this event, invalid session causing timeout
-     * https://github.com/pedroslopez/whatsapp-web.js/blob/d86c39de3ca5699a50db98ee93e264ab8c4f25a3/src/Client.js#L116-L129
-     */
-    whatsapp.on('auth_failure', async (msg) => {
-      log.warn(PRE, 'auth_failure: %s, then restart no use exist session', msg)
-      // msg -> auth_failure message
-      // auth_failure due to session invalidation
-      // clear sessionData -> reinit
-      this.state.off(true)
-      await this.memory.delete(MEMORY_SLOT)
-      await this.start()
-    })
+  private async onReset (reason: string) {
+    log.info(EVENT_LOG_PRE, `${EventName.RESET}, ${reason}`)
+    this.emit('reset', { data: reason } as PUPPET.EventResetPayload)
+  }
 
-    whatsapp.on('ready', () => {
-      (async () => {
-        // await this.state.on(true)
-        const contacts: WhatsappContact[] = await whatsapp.getContacts()
-        const nonBroadcast = contacts.filter(c => c.id.server !== 'broadcast')
-        for (const contact of nonBroadcast) {
-          await cacheManager.setContactOrRoomRawPayload(contact.id._serialized, contact)
-        }
-        await this.login(whatsapp.info.wid._serialized)
-      })().catch(console.error)
-    })
+  private async onFriendship (id: string): Promise<void> {
 
-    whatsapp.on('message', async (msg: WhatsappMessage) => {
-      // @ts-ignore
-      if (msg.type === 'e2e_notification') {
-        if (msg.body === '' && msg.author === undefined) {
-          // match group join message pattern
-          return
-        }
-      }
-      const id = msg.id.id
-      await cacheManager.setMessageRawPayload(id, msg)
-      if (msg.type !== WAWebJS.MessageTypes.GROUP_INVITE) {
-        if (msg.links.length === 1 && InviteLinkRegex.test(msg.links[0]!.link)) {
-          const matched = msg.links[0]!.link.match(InviteLinkRegex)
-          if (matched) {
-            if (matched.length === 3) {
-              const inviteCode = matched[2]!
-              const roomInvitationPayload: PUPPET.EventRoomInvitePayload = {
-                roomInvitationId: inviteCode,
-              }
-              const rawData: Partial<WAWebJS.InviteV4Data> = {
-                inviteCode,
-              }
-              await cacheManager.setRoomInvitationRawPayload(inviteCode, rawData)
-              this.emit('room-invite', roomInvitationPayload)
-            } else {
-              // TODO:
-            }
-          } else {
-            this.emit('message', { messageId: msg.id.id })
-          }
-        } else {
-          this.emit('message', { messageId: msg.id.id })
-        }
+  }
 
-      } else {
-        (async () => {
-          const info = msg.inviteV4
-          if (info) {
-            const roomInvitationPayload: PUPPET.EventRoomInvitePayload = {
-              roomInvitationId: info.inviteCode,
-            }
-            await cacheManager.setRoomInvitationRawPayload(info.inviteCode, info)
-            this.emit('room-invite', roomInvitationPayload)
-          } else {
-            // TODO:
-          }
-        })().catch(console.error)
-      }
+  private async onRoomJoin (payload: PUPPET.EventRoomJoinPayload) {
+    const roomId = payload.roomId
+    await this.dirtyPayload(PUPPET.PayloadType.Room, roomId)
+    this.emit('room-join', payload)
+  }
 
-    })
+  private async onRoomLeave (payload: PUPPET.EventRoomLeavePayload) {
+    const roomId = payload.roomId
+    await this.dirtyPayload(PUPPET.PayloadType.Room, roomId)
+    this.emit('room-leave', payload)
+  }
 
-    whatsapp.on('qr', (qr) => {
-      // NOTE: This event will not be fired if a session is specified.
-      this.emit('scan', { qrcode: qr, status: PUPPET.ScanStatus.Waiting })
-    })
+  private async onRoomTopic (payload: PUPPET.EventRoomTopicPayload) {
+    const roomId = payload.roomId
+    await this.dirtyPayload(PUPPET.PayloadType.Room, roomId)
+    this.emit('room-topic', payload)
+  }
 
-    whatsapp.on('group_join', noti => {
-      (async () => {
-        const roomJoinPayload: PUPPET.EventRoomJoinPayload = {
-          inviteeIdList: noti.recipientIds,
-          inviterId: noti.author,
-          roomId: noti.chatId,
-          timestamp: noti.timestamp,
-        }
-        this.emit('room-join', roomJoinPayload)
-      })().catch(console.error)
-    })
+  private async onRoomInvite (payload: PUPPET.EventRoomInvitePayload) {
+    this.emit('room-invite', payload)
+  }
 
-    whatsapp.on('group_leave', noti => {
-      (async () => {
-        const roomJoinPayload: PUPPET.EventRoomLeavePayload = {
-          removeeIdList: noti.recipientIds,
-          removerId: noti.author,
-          roomId: noti.chatId,
-          timestamp: noti.timestamp,
-        }
-        this.emit('room-leave', roomJoinPayload)
-      })().catch(console.error)
-    })
+  private async onReady () {
+    log.info(PRE, 'onReady()')
 
-    whatsapp.on('group_update', noti => {
-      (async () => {
-        if (noti.type === WAWebJS.GroupNotificationTypes.SUBJECT) {
-          const roomInCache = await cacheManager.getContactOrRoomRawPayload(noti.chatId)
-          const roomJoinPayload: PUPPET.EventRoomTopicPayload = {
-            changerId: noti.author,
-            newTopic: noti.body,
-            oldTopic: roomInCache?.name || '',
-            roomId: noti.chatId,
-            timestamp: noti.timestamp,
-          }
-          this.emit('room-topic', roomJoinPayload)
-        }
-      })().catch(console.error)
-    })
+    log.info(EVENT_LOG_PRE, `${EventName.READY}`)
+    this.emit('ready', { data: 'ready' })
+  }
 
-    const events = [
-      'authenticated',
-      'ready',
-      'disconnected',
-    ]
-
-    const eventStreams = events.map((event) => fromEvent(whatsapp, event).pipe(map((value: any) => ({ event, value }))))
-    const allEvents$ = merge(...eventStreams)
-
-    allEvents$.pipe(distinctUntilKeyChanged('event')).subscribe(({ event, value }: { event: string, value: any }) => {
-      if (event === 'disconnected' && value as string === 'NAVIGATION') {
-        void this.logout(value as string)
-      }
-    })
+  private async onDirty (payload: PUPPET.EventDirtyPayload) {
+    this.emit('dirty', payload)
   }
 
   override ding (data?: string): void {
@@ -323,23 +241,15 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     setTimeout(() => this.emit('dong', { data: data || '' }), 1000)
   }
 
-  public getManager () {
-    return this.manager
-  }
-
   /**
-   *
    * ContactSelf
-   *
    */
   contactSelfQRCode = contactSelfQRCode
   contactSelfName = contactSelfName
   contactSelfSignature = contactSelfSignature
 
   /**
-   *
    * Contact
-   *
    */
   contactAlias = contactAlias
   contactPhone = contactPhone
@@ -351,16 +261,12 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   contactRawPayload = contactRawPayload
 
   /**
-   *
    * Conversation
-   *
    */
   conversationReadMark = conversationReadMark
 
   /**
-   *
    * Message
-   *
    */
   messageContact = messageContact
   messageImage = messageImage
@@ -377,10 +283,9 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   // @ts-ignore
   messageRawPayloadParser = messageRawPayloadParser
   messageRawPayload = messageRawPayload
+
   /**
-    *
     * Room
-    *
     */
   roomRawPayloadParser = roomRawPayloadParser
   roomRawPayload = roomRawPayload
@@ -399,10 +304,9 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   roomInvitationAccept = roomInvitationAccept
   roomInvitationRawPayload =  roomInvitationRawPayload
   roomInvitationRawPayloadParser = roomInvitationRawPayloadParser
+
   /**
-    *
     * Friendship
-    *
     */
   friendshipRawPayload = friendshipRawPayload
   friendshipRawPayloadParser = friendshipRawPayloadParser
@@ -410,10 +314,9 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   friendshipSearchWeixin = friendshipSearchWeixin
   friendshipAdd = friendshipAdd
   friendshipAccept = friendshipAccept
+
   /**
-    *
     * Tag
-    *
     */
   tagContactAdd = tagContactAdd
   tagContactRemove = tagContactRemove

@@ -49,4 +49,6 @@ export type {
   List,
 } from 'whatsapp-web.js'
 
+export * from './event-name.js'
+
 export default WAWebJS

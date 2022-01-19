@@ -6,8 +6,8 @@ import { FlashStore } from 'flash-store'
 import type { Contact, InviteV4Data, Message } from '../schema/index.js'
 
 import { log } from '../config.js'
-import WAError from '../pure-function-helpers/error-type.js'
-import { WA_ERROR_TYPE } from '../schema/error-type.js'
+import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
+import WAError from '../exceptions/whatsapp-error.js'
 
 const PRE = 'CacheManager'
 
