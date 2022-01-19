@@ -16,7 +16,7 @@ test('PuppetWhatsapp perfect restart testing', async t => {
       t.ok(puppet.state.active(), 'should be turned active after start()')
 
       await puppet.stop()
-      t.ok(puppet.state.active(), 'should be turned inactive after stop()')
+      t.ok(puppet.state.inactive(), 'should be turned inactive after stop()')
 
       t.pass('start/stop-ed at #' + i)
     }
