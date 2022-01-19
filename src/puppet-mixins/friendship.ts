@@ -1,6 +1,5 @@
 import * as PUPPET from 'wechaty-puppet-1.0-migration'
-import { log } from 'wechaty-puppet-1.0-migration'
-import { PRE } from '../config.js'
+import { logger } from '../logger/index.js'
 
 export async function friendshipRawPayload (id: string): Promise<any> {
   return PUPPET.throwUnsupportedError()
@@ -13,14 +12,14 @@ export async function friendshipRawPayloadParser (rawPayload: any): Promise<PUPP
 export async function friendshipSearchPhone (
   phone: string,
 ): Promise<null | string> {
-  log.verbose(PRE, 'friendshipSearchPhone(%s)', phone)
+  logger.verbose('friendshipSearchPhone(%s)', phone)
   return PUPPET.throwUnsupportedError()
 }
 
 export async function friendshipSearchWeixin (
   weixin: string,
 ): Promise<null | string> {
-  log.verbose(PRE, 'friendshipSearchWeixin(%s)', weixin)
+  logger.verbose('friendshipSearchWeixin(%s)', weixin)
   return PUPPET.throwUnsupportedError()
 }
 
@@ -28,13 +27,13 @@ export async function friendshipAdd (
   contactId: string,
   hello: string,
 ): Promise<void> {
-  log.verbose(PRE, 'friendshipAdd(%s, %s)', contactId, hello)
+  logger.verbose('friendshipAdd(%s, %s)', contactId, hello)
   return PUPPET.throwUnsupportedError()
 }
 
 export async function friendshipAccept (
   friendshipId: string,
 ): Promise<void> {
-  log.verbose(PRE, 'friendshipAccept(%s)', friendshipId)
+  logger.verbose('friendshipAccept(%s)', friendshipId)
   return PUPPET.throwUnsupportedError()
 }

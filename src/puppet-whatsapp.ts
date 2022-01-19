@@ -20,11 +20,10 @@ import * as PUPPET from 'wechaty-puppet-1.0-migration'
 import type { MemoryCard } from 'memory-card'
 
 import {
-  log,
   MEMORY_SLOT,
   VERSION,
 } from './config.js'
-
+import { logger } from './logger/index.js'
 import { contactSelfName, contactSelfQRCode, contactSelfSignature } from './puppet-mixins/contact-self.js'
 import { contactAlias, contactAvatar, contactCorporationRemark, contactDescription, contactList, contactPhone, contactRawPayload, contactRawPayloadParser } from './puppet-mixins/contact.js'
 import { conversationReadMark } from './puppet-mixins/conversation.js'
@@ -49,7 +48,6 @@ export type PuppetWhatsAppOptions = PUPPET.PuppetOptions & {
   puppeteerOptions?: ClientOptions
 }
 
-const PRE = 'PuppetWhatsApp'
 const EVENT_LOG_PRE = 'EVENT_LOG'
 class PuppetWhatsapp extends PUPPET.Puppet {
 
@@ -75,9 +73,9 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
     try {
       whatsapp = await this.startManager(this.manager)
-    } catch (error) {
-      log.error(PRE, `Can not start whatsapp, error: ${(error as Error).message}`)
-      throw new WAError(WA_ERROR_TYPE.ERR_INIT, `Can not start whatsapp, error: ${(error as Error).message}`)
+    } catch (err) {
+      logger.error(`Can not start whatsapp, error: ${(err as Error).message}`)
+      throw new WAError(WA_ERROR_TYPE.ERR_INIT, `Can not start whatsapp, error: ${(err as Error).message}`)
     }
 
     /**
@@ -131,8 +129,8 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     this.manager.removeAllListeners()
     try {
       await this.manager.stop()
-    } catch (error) {
-      log.error(PRE, `Can not stop, error: ${(error as Error).message}`)
+    } catch (err) {
+      logger.error(`Can not stop, error: ${(err as Error).message}`)
     }
     this.state.inactive(true)
   }
@@ -143,13 +141,13 @@ class PuppetWhatsapp extends PUPPET.Puppet {
    *
    */
   private async onLogin (wxid: string): Promise<void> {
-    log.info(PRE, 'onLogin(%s)', wxid)
+    logger.info('onLogin(%s)', wxid)
 
     if (this.logonoff()) {
-      log.warn(PRE, 'onLogin(%s) already login? NOOP', wxid)
+      logger.warn('onLogin(%s) already login? NOOP', wxid)
       return
     }
-    log.info(EVENT_LOG_PRE, `${EventName.LOGIN}, ${wxid}`)
+    logger.info(EVENT_LOG_PRE, `${EventName.LOGIN}, ${wxid}`)
     if (!this.selfId()) {
       await super.login(this.id)
     } else {
@@ -158,37 +156,37 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   private async onLogout (wxid: string, message: string): Promise<void> {
-    log.info(PRE, 'onLogout(%s, %s)', wxid, message)
+    logger.info('onLogout(%s, %s)', wxid, message)
 
     if (!this.logonoff()) {
-      log.warn(PRE, 'onLogout(%s) already logged out?', wxid)
+      logger.warn('onLogout(%s) already logged out?', wxid)
     }
-    log.info(EVENT_LOG_PRE, `${EventName.LOGOUT}, ${wxid}`)
+    logger.info(EVENT_LOG_PRE, `${EventName.LOGOUT}, ${wxid}`)
 
     this.emit('logout', { contactId: wxid, data: message })
   }
 
   private async onMessage (message: PUPPET.EventMessagePayload): Promise<void> {
-    log.verbose(PRE, 'onMessage(%s)', JSON.stringify(message))
+    logger.verbose('onMessage(%s)', JSON.stringify(message))
     this.emit('message', message)
   }
 
   private async onScan (status: PUPPET.ScanStatus, qrcode?: string): Promise<void> {
-    log.info(PRE, 'onScan(%s, %s)', status, qrcode)
+    logger.info('onScan(%s, %s)', status, qrcode)
 
-    log.info(EVENT_LOG_PRE, `${EventName.SCAN}`)
+    logger.info(EVENT_LOG_PRE, `${EventName.SCAN}`)
     this.emit('scan', { qrcode, status })
   }
 
   private async onError (e: string) {
-    log.info(EVENT_LOG_PRE, `${EventName.ERROR}, ${e}`)
+    logger.info(EVENT_LOG_PRE, `${EventName.ERROR}, ${e}`)
     this.emit('error', {
       data: e,
     })
   }
 
   private async onReset (reason: string) {
-    log.info(EVENT_LOG_PRE, `${EventName.RESET}, ${reason}`)
+    logger.info(EVENT_LOG_PRE, `${EventName.RESET}, ${reason}`)
     this.emit('reset', { data: reason } as PUPPET.EventResetPayload)
   }
 
@@ -219,9 +217,9 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   private async onReady () {
-    log.info(PRE, 'onReady()')
+    logger.info('onReady()')
 
-    log.info(EVENT_LOG_PRE, `${EventName.READY}`)
+    logger.info(EVENT_LOG_PRE, `${EventName.READY}`)
     this.emit('ready', { data: 'ready' })
   }
 
@@ -230,7 +228,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   override ding (data?: string): void {
-    log.silly(PRE, 'ding(%s)', data || '')
+    logger.silly('ding(%s)', data || '')
     setTimeout(() => this.emit('dong', { data: data || '' }), 1000)
   }
 
