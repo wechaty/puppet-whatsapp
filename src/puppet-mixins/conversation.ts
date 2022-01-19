@@ -1,6 +1,5 @@
 import * as PUPPET from 'wechaty-puppet'
-import { log } from 'wechaty-puppet'
-import { PRE } from '../config.js'
+import { PRE, log } from '../config.js'
 
 export async function conversationReadMark (
   conversationId: string,

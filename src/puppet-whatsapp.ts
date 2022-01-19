@@ -35,8 +35,9 @@ import { friendshipRawPayload, friendshipRawPayloadParser, friendshipSearchPhone
 import { tagContactAdd, tagContactRemove, tagContactDelete, tagContactList } from './puppet-mixins/tag.js'
 
 import { Manager } from './manager.js'
-import WAError from './pure-function-helpers/error-type.js'
-import { ClientOptions, EventName, WA_ERROR_TYPE } from './schema/index.js'
+import { WA_ERROR_TYPE } from './exceptions/error-type.js'
+import WAError from './exceptions/whatsapp-error.js'
+import { ClientOptions, EventName } from './schema/index.js'
 import type { WhatsApp } from './whatsapp.js'
 
 process.on('uncaughtException', (e) => {

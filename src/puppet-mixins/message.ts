@@ -1,14 +1,13 @@
 import * as PUPPET from 'wechaty-puppet'
+import { FileBox } from 'wechaty-puppet'
 
-import { log, FileBox } from 'wechaty-puppet'
 import WAWebJS from 'whatsapp-web.js'
-import { PRE } from '../config.js'
+import { PRE, log } from '../config.js'
 import type { PuppetWhatsapp } from '../puppet-whatsapp.js'
-import WAError from '../pure-function-helpers/error-type.js'
 import { parseVcard } from '../pure-function-helpers/vcard-parser.js'
-import type {  MessageContent } from '../schema/index.js'
-import { WA_ERROR_TYPE } from '../schema/error-type.js'
-import type { WhatsappMessage } from '../whatsapp'
+import type {  Message, MessageContent } from '../schema/index.js'
+import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
+import WAError from '../exceptions/whatsapp-error.js'
 
 /**
   * Get contact message
@@ -213,7 +212,7 @@ export async function messageForward (this:PuppetWhatsapp, conversationId: strin
   }
 }
 
-export async function messageRawPayload (this:PuppetWhatsapp, id: string): Promise<WhatsappMessage> {
+export async function messageRawPayload (this:PuppetWhatsapp, id: string): Promise<Message> {
   log.verbose(PRE, 'messageRawPayload(%s)', id)
   const cacheManager = await this.manager.getCacheManager()
   const msg = await cacheManager.getMessageRawPayload(id)
@@ -223,7 +222,7 @@ export async function messageRawPayload (this:PuppetWhatsapp, id: string): Promi
   return msg
 }
 
-export async function messageRawPayloadParser (this:PuppetWhatsapp, whatsAppPayload: WhatsappMessage): Promise<PUPPET.MessagePayload> {
+export async function messageRawPayloadParser (this:PuppetWhatsapp, whatsAppPayload: Message): Promise<PUPPET.MessagePayload> {
   let type: PUPPET.MessageType = PUPPET.MessageType.Unknown
   switch (whatsAppPayload.type) {
     case WAWebJS.MessageTypes.TEXT:

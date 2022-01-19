@@ -1,4 +1,3 @@
-import type { FriendshipPayload } from 'wechaty-puppet'
 import * as PUPPET from 'wechaty-puppet'
 import { PRE, log } from '../config.js'
 
@@ -6,7 +5,7 @@ export async function friendshipRawPayload (id: string): Promise<any> {
   return PUPPET.throwUnsupportedError()
 }
 
-export async function friendshipRawPayloadParser (rawPayload: any): Promise<FriendshipPayload> {
+export async function friendshipRawPayloadParser (rawPayload: any): Promise<PUPPET.FriendshipPayload> {
   return PUPPET.throwUnsupportedError()
 }
 

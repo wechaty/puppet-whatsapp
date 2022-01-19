@@ -4,9 +4,9 @@ import { FileBox } from 'wechaty-puppet'
 import type { GroupChat } from 'whatsapp-web.js'
 import type WAWebJS from 'whatsapp-web.js'
 import { PRE, avatarForGroup, log } from '../config.js'
+import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
+import WAError from '../exceptions/whatsapp-error.js'
 import type { PuppetWhatsapp } from '../puppet-whatsapp'
-import WAError from '../pure-function-helpers/error-type.js'
-import { WA_ERROR_TYPE } from '../schema/error-type.js'
 import type { WhatsappContact } from '../whatsapp'
 
 export async function roomRawPayloadParser (this: PuppetWhatsapp, whatsAppPayload: WhatsappContact): Promise<PUPPET.RoomPayload> {

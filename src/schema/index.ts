@@ -50,6 +50,5 @@ export type {
 } from 'whatsapp-web.js'
 
 export * from './event-name.js'
-export * from './error-type.js'
 
 export default WAWebJS

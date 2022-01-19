@@ -9,8 +9,8 @@ import * as PUPPET from 'wechaty-puppet'
 import { RequestManager } from './request/requestManager.js'
 import { CacheManager } from './data-manager/cache-manager.js'
 import { log, MEMORY_SLOT } from './config.js'
-import WAError from './pure-function-helpers/error-type.js'
-import { WA_ERROR_TYPE } from './schema/error-type.js'
+import { WA_ERROR_TYPE } from './exceptions/error-type.js'
+import WAError from './exceptions/whatsapp-error.js'
 import { getWhatsApp } from './whatsapp.js'
 import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
 import type { Client as WhatsApp, ClientOptions, Contact, InviteV4Data, Message, MessageContent, MessageSendOptions } from './schema/index.js'
@@ -126,7 +126,7 @@ export class Manager extends EventEmitter {
     // auth_failure due to session invalidation
     // clear sessionData -> reinit
     await this.options.memory?.delete(MEMORY_SLOT)
-    // await this.start()
+    // await this.start() // FIXME: need to restart
   }
 
   private async onReady () {
