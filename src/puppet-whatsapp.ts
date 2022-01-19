@@ -25,9 +25,7 @@ import {
   merge,
 } from 'rxjs'
 import {
-  avatarForGroup,
   log,
-  FileBox,
   MEMORY_SLOT,
   VERSION,
 } from './config.js'
@@ -37,12 +35,19 @@ import {
   WhatsApp,
   WhatsappContact,
   WhatsappMessage,
-}                   from './whatsapp.js'
-import WAWebJS, { ClientOptions, GroupChat, MessageContent } from './schema/index.js'
-import { parseVcard } from './pure-function-helpers/vcard-parser.js'
+} from './whatsapp.js'
+import WAWebJS, { ClientOptions } from './schema/index.js'
 import { Manager } from './manager.js'
 import WAError from './pure-function-helpers/error-type.js'
 import { WA_ERROR_TYPE } from './schema/error-type.js'
+import { contactSelfName, contactSelfQRCode, contactSelfSignature } from './puppet-mixins/contact-self.js'
+import { contactAlias, contactAvatar, contactCorporationRemark, contactDescription, contactList, contactPhone, contactRawPayload, contactRawPayloadParser } from './puppet-mixins/contact.js'
+import { conversationReadMark } from './puppet-mixins/conversation.js'
+import { messageContact, messageImage, messageRecall, messageFile, messageUrl, messageMiniProgram, messageSendText, messageSendFile, messageSendContact, messageSendMiniProgram, messageForward, messageRawPayload, messageSendUrl } from './puppet-mixins/message.js'
+import { messageRawPayloadParser } from './pure-function-helpers/message-raw-payload-parse.js'
+import { roomRawPayloadParser, roomRawPayload, roomList, roomDel, roomAvatar, roomAdd, roomTopic, roomCreate, roomQuit, roomQRCode, roomMemberList, roomMemberRawPayload, roomMemberRawPayloadParser, roomAnnounce, roomInvitationAccept, roomInvitationRawPayload, roomInvitationRawPayloadParser } from './puppet-mixins/room.js'
+import { friendshipRawPayload, friendshipRawPayloadParser, friendshipSearchPhone, friendshipSearchWeixin, friendshipAdd, friendshipAccept } from './puppet-mixins/friendship.js'
+import { tagContactAdd, tagContactRemove, tagContactDelete, tagContactList } from './puppet-mixins/tag.js'
 
 process.on('uncaughtException', (e) => {
   console.error('process error is:', e.message)
@@ -67,6 +72,10 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     override options: PuppetWhatsAppOptions = {},
   ) {
     super(options)
+  }
+
+  getWhatsapp () {
+    return this.whatsapp
   }
 
   override async start (): Promise<void> {
@@ -142,7 +151,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     this.state.off(true)
   }
 
-  private async getCacheManager () {
+  async getCacheManager () {
     if (!this.manager) {
       throw new WAError(WA_ERROR_TYPE.ERR_INIT, 'No manager')
     }
@@ -225,10 +234,10 @@ class PuppetWhatsapp extends PUPPET.Puppet {
               // TODO:
             }
           } else {
-            this.emit('message', { messageId : msg.id.id })
+            this.emit('message', { messageId: msg.id.id })
           }
         } else {
-          this.emit('message', { messageId : msg.id.id })
+          this.emit('message', { messageId: msg.id.id })
         }
 
       } else {
@@ -250,16 +259,16 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
     whatsapp.on('qr', (qr) => {
       // NOTE: This event will not be fired if a session is specified.
-      this.emit('scan', { qrcode : qr, status : PUPPET.ScanStatus.Waiting })
+      this.emit('scan', { qrcode: qr, status: PUPPET.ScanStatus.Waiting })
     })
 
     whatsapp.on('group_join', noti => {
       (async () => {
         const roomJoinPayload: PUPPET.EventRoomJoinPayload = {
-          inviteeIdList : noti.recipientIds,
-          inviterId     : noti.author,
-          roomId        : noti.chatId,
-          timestamp     : noti.timestamp,
+          inviteeIdList: noti.recipientIds,
+          inviterId: noti.author,
+          roomId: noti.chatId,
+          timestamp: noti.timestamp,
         }
         this.emit('room-join', roomJoinPayload)
       })().catch(console.error)
@@ -268,10 +277,10 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     whatsapp.on('group_leave', noti => {
       (async () => {
         const roomJoinPayload: PUPPET.EventRoomLeavePayload = {
-          removeeIdList : noti.recipientIds,
-          removerId     : noti.author,
-          roomId        : noti.chatId,
-          timestamp     : noti.timestamp,
+          removeeIdList: noti.recipientIds,
+          removerId: noti.author,
+          roomId: noti.chatId,
+          timestamp: noti.timestamp,
         }
         this.emit('room-leave', roomJoinPayload)
       })().catch(console.error)
@@ -282,11 +291,11 @@ class PuppetWhatsapp extends PUPPET.Puppet {
         if (noti.type === WAWebJS.GroupNotificationTypes.SUBJECT) {
           const roomInCache = await cacheManager.getContactOrRoomRawPayload(noti.chatId)
           const roomJoinPayload: PUPPET.EventRoomTopicPayload = {
-            changerId : noti.author,
-            newTopic  : noti.body,
-            oldTopic  : roomInCache?.name || '',
-            roomId    : noti.chatId,
-            timestamp : noti.timestamp,
+            changerId: noti.author,
+            newTopic: noti.body,
+            oldTopic: roomInCache?.name || '',
+            roomId: noti.chatId,
+            timestamp: noti.timestamp,
           }
           this.emit('room-topic', roomJoinPayload)
         }
@@ -302,7 +311,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     const eventStreams = events.map((event) => fromEvent(whatsapp, event).pipe(map((value: any) => ({ event, value }))))
     const allEvents$ = merge(...eventStreams)
 
-    allEvents$.pipe(distinctUntilKeyChanged('event')).subscribe(({ event, value } : {event:string, value:any}) => {
+    allEvents$.pipe(distinctUntilKeyChanged('event')).subscribe(({ event, value }: { event: string, value: any }) => {
       if (event === 'disconnected' && value as string === 'NAVIGATION') {
         void this.logout(value as string)
       }
@@ -314,645 +323,102 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     setTimeout(() => this.emit('dong', { data: data || '' }), 1000)
   }
 
+  public getManager () {
+    return this.manager
+  }
+
   /**
    *
    * ContactSelf
    *
    */
-  override async contactSelfQRCode (): Promise<string> {
-    log.verbose(PRE, 'contactSelfQRCode()')
-    return ''
-  }
-
-  override async contactSelfName (name: string): Promise<void> {
-    log.verbose(PRE, 'contactSelfName(%s)', name)
-    await this.manager!.setNickname(name)
-  }
-
-  override async contactSelfSignature (signature: string): Promise<void> {
-    log.verbose(PRE, 'contactSelfSignature(%s)', signature)
-    await this.whatsapp!.setStatus(signature)
-  }
+  contactSelfQRCode = contactSelfQRCode
+  contactSelfName = contactSelfName
+  contactSelfSignature = contactSelfSignature
 
   /**
    *
    * Contact
    *
    */
-  override contactAlias (contactId: string)                      : Promise<string>
-  override contactAlias (contactId: string, alias: string | null): Promise<void>
-
-  override async contactAlias (contactId: string, alias?: string | null): Promise<void | string> {
-    log.verbose(PRE, 'contactAlias(%s, %s)', contactId, alias)
-
-    if (typeof alias === 'undefined') {
-      return 'mock alias'
-    }
-  }
-
-  override async contactPhone (contactId: string): Promise<string[]>
-  override async contactPhone (contactId: string, phoneList: string[]): Promise<void>
-
-  override async contactPhone (contactId: string, phoneList?: string[]): Promise<string[] | void> {
-    log.verbose(PRE, 'contactPhone(%s, %s)', contactId, phoneList)
-    if (typeof phoneList === 'undefined') {
-      const cacheManager = await this.getCacheManager()
-      const contact = await cacheManager.getContactOrRoomRawPayload(contactId)
-      if (contact) {
-        return [contact!.number]
-      } else {
-        return []
-      }
-    }
-  }
-
-  override async contactCorporationRemark (contactId: string, corporationRemark: string) {
-    log.verbose(PRE, 'contactCorporationRemark(%s, %s)', contactId, corporationRemark)
-  }
-
-  override async contactDescription (contactId: string, description: string) {
-    log.verbose(PRE, 'contactDescription(%s, %s)', contactId, description)
-  }
-
-  override async contactList (): Promise<string[]> {
-    log.verbose(PRE, 'contactList()')
-    const cacheManager = await this.getCacheManager()
-    const contactIdList = await cacheManager.getContactIdList()
-    return contactIdList
-  }
-
-  override async contactAvatar (contactId: string)                : Promise<FileBox>
-  override async contactAvatar (contactId: string, file: FileBox) : Promise<void>
-
-  override async contactAvatar (contactId: string, file?: FileBox): Promise<void | FileBox> {
-    log.verbose(PRE, 'contactAvatar(%s)', contactId)
-
-    if (file) {
-      return
-    }
-
-    const con = await this.whatsapp!.getContactById(contactId)
-    const avatar = await con.getProfilePicUrl()
-    return FileBox.fromUrl(avatar)
-  }
-
-  override async contactRawPayloadParser (whatsAppPayload: WhatsappContact): Promise<PUPPET.ContactPayload> {
-    let type
-    if (whatsAppPayload.isUser) {
-      type = PUPPET.ContactType.Individual
-    } else if (whatsAppPayload.isEnterprise) {
-      type = PUPPET.ContactType.Corporation
-    } else {
-      type = PUPPET.ContactType.Unknown
-    }
-
-    return {
-      avatar : await whatsAppPayload.getProfilePicUrl(),
-      friend: whatsAppPayload.isWAContact && whatsAppPayload.isUser && !whatsAppPayload.isMe,
-      gender : PUPPET.ContactGender.Unknown,
-      id     : whatsAppPayload.id._serialized,
-      name   : !whatsAppPayload.isMe ? whatsAppPayload.pushname : whatsAppPayload.pushname || this.whatsapp?.info.pushname || '',
-      phone : [whatsAppPayload.number],
-      type   : type,
-      weixin : whatsAppPayload.number,
-    }
-  }
-
-  override async contactRawPayload (id: string): Promise<WhatsappContact> {
-    log.verbose(PRE, 'contactRawPayload(%s)', id)
-    const cacheManager = await this.getCacheManager()
-    const contact = await cacheManager.getContactOrRoomRawPayload(id)
-    if (contact) {
-      return contact
-    } else {
-      const rawContact = await this.whatsapp!.getContactById(id)
-      await cacheManager.setContactOrRoomRawPayload(id, rawContact)
-      return rawContact
-    }
-  }
+  contactAlias = contactAlias
+  contactPhone = contactPhone
+  contactCorporationRemark = contactCorporationRemark
+  contactDescription = contactDescription
+  contactList = contactList
+  contactAvatar = contactAvatar
+  contactRawPayloadParser = contactRawPayloadParser
+  contactRawPayload = contactRawPayload
 
   /**
    *
    * Conversation
    *
    */
-  override async conversationReadMark (
-    conversationId: string,
-    hasRead?: boolean,
-  ) : Promise<void | boolean> {
-    log.verbose(PRE, 'conversationReadMark(%s, %s)', conversationId, hasRead)
-    return PUPPET.throwUnsupportedError()
-  }
+  conversationReadMark = conversationReadMark
 
   /**
    *
    * Message
    *
    */
+  messageContact = messageContact
+  messageImage = messageImage
+  messageRecall = messageRecall
+  messageFile = messageFile
+  messageUrl = messageUrl
+  messageMiniProgram = messageMiniProgram
+  messageSendText = messageSendText
+  messageSendFile = messageSendFile
+  messageSendContact = messageSendContact
+  messageSendUrl = messageSendUrl
+  messageSendMiniProgram = messageSendMiniProgram
+  messageForward = messageForward
+  // @ts-ignore
+  messageRawPayloadParser = messageRawPayloadParser
+  messageRawPayload = messageRawPayload
   /**
-   * Get contact message
-   * @param messageId message Id
-   * @returns contact name
-   */
-  override async messageContact (messageId: string): Promise<string> {
-    log.verbose(PRE, 'messageContact(%s)', messageId)
-    const cacheManager = await this.getCacheManager()
-    const msg = await cacheManager.getMessageRawPayload(messageId)
-    if (!msg) {
-      log.error('Message %s not found', messageId)
-      throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} not found`)
-    }
-    if (msg.type !== WAWebJS.MessageTypes.CONTACT_CARD) {
-      log.error('Message %s is not contact type', messageId)
-      throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} is not contact type`)
-    }
-    try {
-      const vcard = parseVcard(msg.vCards[0]!)
-      // FIXME: Under current typing configuration, it is not possible to return multiple vcards that WhatsApp allows
-      // Therefore sending the first vcard only (for now?)
-      if (!vcard.TEL) {
-        log.warn('vcard has not TEL field')
-      }
-      return vcard.TEL ? vcard.TEL.waid : ''
-    } catch (error) {
-      throw new WAError(WA_ERROR_TYPE.ERR_MSG_CONTACT, `Can not parse contact card from message: ${messageId}, error: ${(error as Error).message}`)
-    }
-  }
-
+    *
+    * Room
+    *
+    */
+  roomRawPayloadParser = roomRawPayloadParser
+  roomRawPayload = roomRawPayload
+  roomList = roomList
+  roomDel = roomDel
+  roomAvatar = roomAvatar
+  roomAdd = roomAdd
+  roomTopic = roomTopic
+  roomCreate = roomCreate
+  roomQuit = roomQuit
+  roomQRCode = roomQRCode
+  roomMemberList = roomMemberList
+  roomMemberRawPayload = roomMemberRawPayload
+  roomMemberRawPayloadParser = roomMemberRawPayloadParser
+  roomAnnounce = roomAnnounce
+  roomInvitationAccept = roomInvitationAccept
+  roomInvitationRawPayload =  roomInvitationRawPayload
+  roomInvitationRawPayloadParser = roomInvitationRawPayloadParser
   /**
-   * Get image from message
-   * @param messageId message id
-   * @param imageType image size to get (may not apply to WhatsApp)
-   * @returns the image
-   */
-  override async messageImage (messageId: string, imageType: PUPPET.ImageType): Promise<FileBox> {
-    log.info(PRE, 'messageImage(%s, %s[%s])', messageId, imageType, PUPPET.ImageType[imageType])
-    const cacheManager = await this.getCacheManager()
-    const msg = await cacheManager.getMessageRawPayload(messageId)
-    if (!msg) {
-      log.error('Message %s not found', messageId)
-      throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} Not Found`)
-    }
-    if (msg.type !== WAWebJS.MessageTypes.IMAGE || !msg.hasMedia) {
-      log.error('Message %s does not contain any media', messageId)
-      throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} does not contain any media`)
-    }
-    try {
-      const media = await msg.downloadMedia()
-      return FileBox.fromBase64(media.data, media.filename ?? '')
-    } catch (error) {
-      throw new WAError(WA_ERROR_TYPE.ERR_MSG_IMAGE, `Message ${messageId} does not contain any media`)
-    }
-  }
-
+    *
+    * Friendship
+    *
+    */
+  friendshipRawPayload = friendshipRawPayload
+  friendshipRawPayloadParser = friendshipRawPayloadParser
+  friendshipSearchPhone = friendshipSearchPhone
+  friendshipSearchWeixin = friendshipSearchWeixin
+  friendshipAdd = friendshipAdd
+  friendshipAccept = friendshipAccept
   /**
-   * Recall message
-   * @param messageId message id
-   * @returns { Promise<boolean> }
-   */
-  override async messageRecall (messageId: string): Promise<boolean> {
-    log.info(PRE, 'messageRecall(%s)', messageId)
-    const cacheManager = await this.getCacheManager()
-    const msg = await cacheManager.getMessageRawPayload(messageId)
-    if (!msg) {
-      log.error('Message %s not found', messageId)
-      throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} not found`)
-    }
-
-    try {
-      await msg.delete(true)
-      return true
-    } catch (error) {
-      log.error(`Can not recall this message: ${messageId}, error: ${(error as Error).message}`)
-      return false
-    }
-  }
-
-  /**
-   * Get the file attached to the message
-   * @param messageId message id
-   * @returns the file that attached to the message
-   */
-  override async messageFile (messageId: string): Promise<FileBox> {
-    log.info(PRE, 'messageFile(%s)', messageId)
-    const cacheManager = await this.getCacheManager()
-    const msg = await cacheManager.getMessageRawPayload(messageId)
-    if (!msg) {
-      log.error('Message %s not found', messageId)
-      throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} Not Found`)
-    }
-    if (!msg.hasMedia) {
-      log.error('Message %s does not contain any media', messageId)
-      throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} does not contain any media`)
-    }
-    try {
-      const media = await msg.downloadMedia()
-      return FileBox.fromBase64(media.data, media.filename ?? '')
-    } catch (error) {
-      throw new WAError(WA_ERROR_TYPE.ERR_MSG_FILE, `Message ${messageId} does not contain any media`)
-    }
-  }
-
-  /**
-   * Get url in the message
-   * @param messageId message id
-   * @returns url in the message
-   */
-  override async messageUrl (messageId: string): Promise<PUPPET.UrlLinkPayload> {
-    log.info(PRE, 'messageUrl(%s)', messageId)
-    const cacheManager = await this.getCacheManager()
-    const msg = await cacheManager.getMessageRawPayload(messageId)
-    if (!msg) {
-      log.error('Message %s not found', messageId)
-      throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} Not Found`)
-    }
-    if (msg.links.length === 0) {
-      log.error('Message %s is does not contain links', messageId)
-      throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} does not contain any link message.`)
-    }
-    try {
-      return {
-        // FIXME: Link title not available in WhatsApp
-        title: 'N/A',
-        url: msg.links[0]!.link,
-      }
-    } catch (error) {
-      throw new WAError(WA_ERROR_TYPE.ERR_MSG_URL_LINK, `Get link message: ${messageId} failed, error: ${(error as Error).message}`)
-    }
-  }
-
-  /**
-   * Not supported for WhatsApp
-   * @param messageId message id
-   */
-  override async messageMiniProgram (messageId: string): Promise<PUPPET.MiniProgramPayload> {
-    log.info(PRE, 'messageMiniProgram(%s)', messageId)
-    return PUPPET.throwUnsupportedError()
-  }
-
-  private async messageSend (conversationId: string, content: MessageContent): Promise<void> {
-    log.verbose(PRE, 'messageSend(%s, %s)', conversationId, typeof content)
-
-    if (!this.whatsapp) {
-      log.warn(PRE, 'messageSend() this.client not found')
-      return
-    }
-
-    const msg = await this.whatsapp.sendMessage(conversationId, content)
-    const messageId = msg.id.id
-    const cacheManager = await this.getCacheManager()
-    await cacheManager.setMessageRawPayload(messageId, msg)
-  }
-
-  override async messageSendText (conversationId: string, text: string): Promise<void> {
-    log.info(PRE, 'messageSendText(%s, %s)', conversationId, text)
-    return this.messageSend(conversationId, text)
-  }
-
-  override async messageSendFile (conversationId: string, file: FileBox): Promise<void> {
-    log.info(PRE, 'messageSendFile(%s, %s)', conversationId, file.name)
-    const msgContent = new WAWebJS.MessageMedia(file.mimeType!, await file.toBase64(), file.name)
-    return this.messageSend(conversationId, msgContent)
-  }
-
-  override async messageSendContact (conversationId: string, contactId: string): Promise<void> {
-    log.info(PRE, 'messageSendContact(%s, %s)', conversationId, contactId)
-    if (!this.whatsapp) {
-      log.error('WhatsApp instance is undefined')
-      return
-    }
-    const contact = await this.whatsapp.getContactById(contactId)
-    await this.messageSend(conversationId, contact)
-  }
-
-  override async messageSendUrl (
-    conversationId: string,
-    urlLinkPayload: PUPPET.UrlLinkPayload,
-  ): Promise<void> {
-    log.info(PRE, 'messageSendUrl(%s, %s)', conversationId, JSON.stringify(urlLinkPayload))
-    // FIXME: Does WhatsApp really support link messages like wechat? Find out and fix this!
-    await this.messageSend(conversationId, urlLinkPayload.url)
-  }
-
-  override async messageSendMiniProgram (conversationId: string, miniProgramPayload: PUPPET.MiniProgramPayload): Promise<void> {
-    log.info(
-      'PuppetWhatsApp',
-      'messageSendMiniProgram(%s, %s)',
-      conversationId,
-      JSON.stringify(miniProgramPayload),
-    )
-    return PUPPET.throwUnsupportedError()
-  }
-
-  override async messageForward (conversationId: string, messageId: string): Promise<void> {
-    log.info(PRE, 'messageForward(%s, %s)', conversationId, messageId)
-    const cacheManager = await this.getCacheManager()
-    const msg = await cacheManager.getMessageRawPayload(messageId)
-    if (!msg) {
-      log.error('Message %s not found', messageId)
-      throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} not found`)
-    }
-    try {
-      await msg.forward(conversationId)
-    } catch (error) {
-      throw new WAError(WA_ERROR_TYPE.ERR_MSG_FORWARD, `Forward message: ${messageId} failed, error: ${(error as Error).message}`)
-    }
-  }
-
-  override async messageRawPayloadParser (whatsAppPayload: WhatsappMessage): Promise<PUPPET.MessagePayload> {
-    let type: PUPPET.MessageType = PUPPET.MessageType.Unknown
-    switch (whatsAppPayload.type) {
-      case WAWebJS.MessageTypes.TEXT:
-        type = PUPPET.MessageType.Text
-        break
-      case WAWebJS.MessageTypes.STICKER:
-        type = PUPPET.MessageType.Emoticon
-        break
-      case WAWebJS.MessageTypes.VOICE:
-        type = PUPPET.MessageType.Audio
-        break
-      case WAWebJS.MessageTypes.IMAGE:
-        type = PUPPET.MessageType.Image
-        break
-      case WAWebJS.MessageTypes.AUDIO:
-        type = PUPPET.MessageType.Audio
-        break
-      case WAWebJS.MessageTypes.VIDEO:
-        type = PUPPET.MessageType.Video
-        break
-      case WAWebJS.MessageTypes.CONTACT_CARD:
-        type = PUPPET.MessageType.Contact
-        break
-    }
-    return {
-      fromId        : whatsAppPayload.from,
-      id            : whatsAppPayload.id.id,
-      mentionIdList : whatsAppPayload.mentionedIds,
-      text          : whatsAppPayload.body,
-      timestamp     : Date.now(),
-      toId          : whatsAppPayload.to,
-      type,
-      // filename
-    }
-  }
-
-  override async messageRawPayload (id: string): Promise<WhatsappMessage> {
-    log.verbose(PRE, 'messageRawPayload(%s)', id)
-    const cacheManager = await this.getCacheManager()
-    const msg = await cacheManager.getMessageRawPayload(id)
-    if (!msg) {
-      throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Can not find this message: ${id}`)
-    }
-    return msg
-  }
-
-  /**
-   *
-   * Room
-   *
-   */
-  override async roomRawPayloadParser (whatsAppPayload: WhatsappContact): Promise<PUPPET.RoomPayload> {
-    const chat = await this.whatsapp?.getChatById(whatsAppPayload.id._serialized) as GroupChat
-    return {
-      adminIdList:chat.participants.filter(p => p.isAdmin || p.isSuperAdmin).map(p => p.id._serialized),
-      avatar : await whatsAppPayload.getProfilePicUrl(),
-      id     : whatsAppPayload.id._serialized,
-      memberIdList: chat.participants.map(p => p.id._serialized),
-      topic   : whatsAppPayload.name || whatsAppPayload.pushname || '',
-    }
-  }
-
-  override async roomRawPayload (id: string): Promise<WhatsappContact> {
-    log.verbose(PRE, 'roomRawPayload(%s)', id)
-    const cacheManager = await this.getCacheManager()
-    const room = await cacheManager.getContactOrRoomRawPayload(id)
-    if (room) {
-      return room
-    } else {
-      const rawRoom = await this.whatsapp!.getContactById(id)
-      await cacheManager.setContactOrRoomRawPayload(id, rawRoom)
-      return rawRoom
-    }
-  }
-
-  override async roomList (): Promise<string[]> {
-    log.verbose(PRE, 'roomList()')
-    const cacheManager = await this.getCacheManager()
-    const roomIdList = await cacheManager.getRoomIdList()
-    return roomIdList
-  }
-
-  override async roomDel (
-    roomId    : string,
-    contactId : string,
-  ): Promise<void> {
-    log.verbose(PRE, 'roomDel(%s, %s)', roomId, contactId)
-    const chat = await this.whatsapp?.getChatById(roomId) as GroupChat
-    await chat.removeParticipants([contactId])
-  }
-
-  override async roomAvatar (roomId: string): Promise<FileBox> {
-    log.verbose(PRE, 'roomAvatar(%s)', roomId)
-
-    const payload = await this.roomPayload(roomId)
-
-    if (payload.avatar) {
-      return FileBox.fromUrl(payload.avatar)
-    }
-    log.warn(PRE, 'roomAvatar() avatar not found, use the chatie default.')
-    return avatarForGroup()
-  }
-
-  override async roomAdd (
-    roomId    : string,
-    contactId : string,
-  ): Promise<void> {
-    log.verbose(PRE, 'roomAdd(%s, %s)', roomId, contactId)
-    const chat = await this.whatsapp?.getChatById(roomId) as GroupChat
-    await chat.addParticipants([contactId])
-  }
-
-  override async roomTopic (roomId: string)                : Promise<string>
-  override async roomTopic (roomId: string, topic: string) : Promise<void>
-
-  override async roomTopic (
-    roomId: string,
-    topic?: string,
-  ): Promise<void | string> {
-    log.verbose(PRE, 'roomTopic(%s, %s)', roomId, topic)
-
-    if (typeof topic === 'undefined') {
-      const cacheManager = await this.getCacheManager()
-      const room = await cacheManager.getContactOrRoomRawPayload(roomId)
-      if (!room) {
-        throw new WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `Can not find this room: ${roomId}`)
-      }
-      return room.name
-    }
-    const chat = await this.whatsapp?.getChatById(roomId) as GroupChat
-    if (chat.isGroup) {
-      await chat.setSubject(topic)
-    }
-    await this.dirtyPayload(PUPPET.PayloadType.Room, roomId)
-  }
-
-  override async roomCreate (
-    contactIdList : string[],
-    topic         : string,
-  ): Promise<string> {
-    log.verbose(PRE, 'roomCreate(%s, %s)', contactIdList, topic)
-    const group = await this.whatsapp?.createGroup(topic, contactIdList)
-    if (group) {
-      return group.gid
-    } else {
-      throw new WAError(WA_ERROR_TYPE.ERR_CREATE_ROOM, 'An error occurred while creating the group!')
-    }
-  }
-
-  override async roomQuit (roomId: string): Promise<void> {
-    log.verbose(PRE, 'roomQuit(%s)', roomId)
-    const chat = await this.whatsapp?.getChatById(roomId) as GroupChat
-    await chat.leave()
-  }
-
-  override async roomQRCode (roomId: string): Promise<string> {
-    log.verbose(PRE, 'roomQRCode(%s)', roomId)
-    const con = await this.whatsapp!.getChatById(roomId)as GroupChat
-    const code = await con.getInviteCode()
-    const url = `https://chat.whatsapp.com/${code}`
-    return url
-  }
-
-  override async roomMemberList (roomId: string) : Promise<string[]> {
-    log.verbose(PRE, 'roomMemberList(%s)', roomId)
-    const chat = await this.whatsapp?.getChatById(roomId) as GroupChat
-    return chat.participants.map(p => p.id._serialized)
-  }
-
-  override async roomMemberRawPayload (roomId: string, contactId: string): Promise<PUPPET.RoomMemberPayload>  {
-    log.verbose(PRE, 'roomMemberRawPayload(%s, %s)', roomId, contactId)
-    const contact = await this.whatsapp!.getContactById(contactId)
-    const avatar = await contact.getProfilePicUrl()
-    return {
-      avatar,
-      id        : contact.id._serialized,
-      name      : contact.pushname || contact.name || '',
-      // roomAlias : contact.name,
-    }
-  }
-
-  override async roomMemberRawPayloadParser (rawPayload: PUPPET.RoomMemberPayload): Promise<PUPPET.RoomMemberPayload>  {
-    log.verbose(PRE, 'roomMemberRawPayloadParser(%O)', rawPayload)
-    return rawPayload
-  }
-
-  override async roomAnnounce (roomId: string)                : Promise<string>
-  override async roomAnnounce (roomId: string, text: string)  : Promise<void>
-
-  override async roomAnnounce (roomId: string, text?: string) : Promise<void | string> {
-    return PUPPET.throwUnsupportedError()
-  }
-
-  /**
-   *
-   * Room Invitation
-   *
-   */
-  override async roomInvitationAccept (roomInvitationId: string): Promise<void> {
-    log.verbose(PRE, 'roomInvitationAccept(%s)', roomInvitationId)
-    const cacheManager = await this.getCacheManager()
-
-    const info = await cacheManager.getRoomInvitationRawPayload(roomInvitationId)
-    if (info) {
-      if (Object.keys(info).length === 1) {
-        this.whatsapp?.acceptInvite(info.inviteCode!)
-      } else {
-        this.whatsapp?.acceptGroupV4Invite(info as WAWebJS.InviteV4Data)
-      }
-
-    }
-  }
-
-  override async roomInvitationRawPayload (roomInvitationId: string): Promise<any> {
-    log.verbose(PRE, 'roomInvitationRawPayload(%s)', roomInvitationId)
-  }
-
-  override async roomInvitationRawPayloadParser (rawPayload: any): Promise<PUPPET.RoomInvitationPayload> {
-    log.verbose(PRE, 'roomInvitationRawPayloadParser(%s)', JSON.stringify(rawPayload))
-    return rawPayload
-  }
-
-  /**
-   *
-   * Friendship
-   *
-   */
-  override async friendshipRawPayload (id: string): Promise<any> {
-    return { id } as any
-  }
-
-  override async friendshipRawPayloadParser (rawPayload: any): Promise<PUPPET.FriendshipPayload> {
-    return rawPayload
-  }
-
-  override async friendshipSearchPhone (
-    phone: string,
-  ): Promise<null | string> {
-    log.verbose(PRE, 'friendshipSearchPhone(%s)', phone)
-    return null
-  }
-
-  override async friendshipSearchWeixin (
-    weixin: string,
-  ): Promise<null | string> {
-    log.verbose(PRE, 'friendshipSearchWeixin(%s)', weixin)
-    return null
-  }
-
-  override async friendshipAdd (
-    contactId : string,
-    hello     : string,
-  ): Promise<void> {
-    log.verbose(PRE, 'friendshipAdd(%s, %s)', contactId, hello)
-  }
-
-  override async friendshipAccept (
-    friendshipId : string,
-  ): Promise<void> {
-    log.verbose(PRE, 'friendshipAccept(%s)', friendshipId)
-  }
-
-  /**
-   *
-   * Tag
-   *
-   */
-  override async tagContactAdd (
-    tagId: string,
-    contactId: string,
-  ): Promise<void> {
-    log.verbose(PRE, 'tagContactAdd(%s)', tagId, contactId)
-  }
-
-  override async tagContactRemove (
-    tagId: string,
-    contactId: string,
-  ): Promise<void> {
-    log.verbose(PRE, 'tagContactRemove(%s)', tagId, contactId)
-  }
-
-  override async tagContactDelete (
-    tagId: string,
-  ): Promise<void> {
-    log.verbose(PRE, 'tagContactDelete(%s)', tagId)
-  }
-
-  override async tagContactList (
-    contactId?: string,
-  ): Promise<string[]> {
-    log.verbose(PRE, 'tagContactList(%s)', contactId)
-    return []
-  }
+    *
+    * Tag
+    *
+    */
+  tagContactAdd = tagContactAdd
+  tagContactRemove = tagContactRemove
+  tagContactDelete = tagContactDelete
+  tagContactList = tagContactList
 
 }
 
