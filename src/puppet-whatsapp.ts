@@ -79,19 +79,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       log.error(PRE, `Can not start whatsapp, error: ${(error as Error).message}`)
       throw new WAError(WA_ERROR_TYPE.ERR_INIT, `Can not start whatsapp, error: ${(error as Error).message}`)
     }
-    /**
-     * Huan(202102): initialize() will rot be resolved not before bot log in
-     */
-    whatsapp
-      .initialize()
-      .then(() => log.verbose(PRE, 'start() whatsapp.initialize() done'))
-      .catch(e => {
-        if (this.state.on()) {
-          log.error(PRE, 'start() whatsapp.initialize() rejection: %s', e)
-        } else {
-          log.error(PRE, 'start() whatsapp.initialize() rejected on a stopped puppet. %s', e)
-        }
-      })
 
     /**
      * Huan(202102): Wait for Puppeteer to be inited before resolve start() for robust state management
