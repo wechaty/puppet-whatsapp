@@ -14,11 +14,12 @@ function avatarForGroup (): FileBox {
 }
 
 const MEMORY_SLOT = 'PUPPET_WHATSAPP'
-
+const PRE = 'PuppetWhatsApp'
 export {
   FileBox,
   MEMORY_SLOT,
   avatarForGroup,
   VERSION,
   log,
+  PRE,
 }
