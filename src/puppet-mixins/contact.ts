@@ -1,5 +1,5 @@
 /* eslint-disable no-redeclare */
-import * as PUPPET from 'wechaty-puppet'
+import * as PUPPET from 'wechaty-puppet-1.0-migration'
 
 import {
   log, FileBox, PRE,

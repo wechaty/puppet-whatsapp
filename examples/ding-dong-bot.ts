@@ -16,7 +16,7 @@
  *   limitations under the License.
  *
  */
-import type * as PUPPET from 'wechaty-puppet'
+import type * as PUPPET from 'wechaty-puppet-1.0-migration'
 
 import qrTerm from 'qrcode-terminal'
 

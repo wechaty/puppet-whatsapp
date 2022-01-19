@@ -16,7 +16,7 @@
  *   limitations under the License.
  *
  */
-import * as PUPPET from 'wechaty-puppet'
+import * as PUPPET from 'wechaty-puppet-1.0-migration'
 import type { MemoryCard } from 'memory-card'
 import {
   distinctUntilKeyChanged,
@@ -78,13 +78,12 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     return this.whatsapp
   }
 
-  override async start (): Promise<void> {
+  override async onStart (): Promise<void> {
     log.verbose(PRE, 'onStart()')
-    if (this.state.on()) {
-      await this.state.ready('on')
+    if (this.state.active()) {
       return
     }
-    this.state.on('pending')
+    this.state.active('pending')
     const session = await this.memory.get(MEMORY_SLOT)
     const whatsapp = await getWhatsApp(this.options['puppeteerOptions'] as ClientOptions, session)
     this.whatsapp = whatsapp
@@ -101,7 +100,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       .initialize()
       .then(() => log.verbose(PRE, 'start() whatsapp.initialize() done'))
       .catch(e => {
-        if (this.state.on()) {
+        if (this.state.active()) {
           log.error(PRE, 'start() whatsapp.initialize() rejection: %s', e)
         } else {
           log.error(PRE, 'start() whatsapp.initialize() rejected on a stopped puppet. %s', e)
@@ -115,7 +114,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     const future = new Promise<void>(resolve => {
       function check () {
         if (whatsapp.pupBrowser) {
-          resolve(state.on(true))
+          resolve(state.active(true))
         } else {
           setTimeout(check, 100)
         }
@@ -124,23 +123,19 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       check()
     })
 
-    return Promise.race([
-      future,
-      this.state.ready('off'),
-    ])
+    return future
   }
 
-  override async stop (): Promise<void> {
+  override async onStop (): Promise<void> {
     log.verbose(PRE, 'onStop()')
-    if (this.state.off()) {
-      await this.state.ready('off')
+    if (this.state.inactive()) {
       return
     }
     if (!this.whatsapp) {
       log.error(PRE, 'stop() this.whatsapp is undefined!')
       return
     }
-    this.state.off('pending')
+    this.state.inactive('pending')
     try {
       await this.manager?.stop()
       await this.whatsapp.destroy()
@@ -148,7 +143,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     } catch (error) {
       log.error(PRE, `Can not stop, error: ${(error as Error).message}`)
     }
-    this.state.off(true)
+    this.state.inactive(true)
   }
 
   async getCacheManager () {
@@ -189,14 +184,14 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       // msg -> auth_failure message
       // auth_failure due to session invalidation
       // clear sessionData -> reinit
-      this.state.off(true)
+      this.state.inactive(true)
       await this.memory.delete(MEMORY_SLOT)
       await this.start()
     })
 
     whatsapp.on('ready', () => {
       (async () => {
-        // await this.state.on(true)
+        // await this.state.active(true)
         const contacts: WhatsappContact[] = await whatsapp.getContacts()
         const nonBroadcast = contacts.filter(c => c.id.server !== 'broadcast')
         for (const contact of nonBroadcast) {
@@ -332,93 +327,93 @@ class PuppetWhatsapp extends PUPPET.Puppet {
    * ContactSelf
    *
    */
-  contactSelfQRCode = contactSelfQRCode
-  contactSelfName = contactSelfName
-  contactSelfSignature = contactSelfSignature
+  override contactSelfQRCode = contactSelfQRCode
+  override contactSelfName = contactSelfName
+  override contactSelfSignature = contactSelfSignature
 
   /**
    *
    * Contact
    *
    */
-  contactAlias = contactAlias
-  contactPhone = contactPhone
-  contactCorporationRemark = contactCorporationRemark
-  contactDescription = contactDescription
-  contactList = contactList
-  contactAvatar = contactAvatar
-  contactRawPayloadParser = contactRawPayloadParser
-  contactRawPayload = contactRawPayload
+  override contactAlias = contactAlias
+  override contactPhone = contactPhone
+  override contactCorporationRemark = contactCorporationRemark
+  override contactDescription = contactDescription
+  override contactList = contactList
+  override contactAvatar = contactAvatar
+  override contactRawPayloadParser = contactRawPayloadParser
+  override contactRawPayload = contactRawPayload
 
   /**
    *
    * Conversation
    *
    */
-  conversationReadMark = conversationReadMark
+  override conversationReadMark = conversationReadMark
 
   /**
    *
    * Message
    *
    */
-  messageContact = messageContact
-  messageImage = messageImage
-  messageRecall = messageRecall
-  messageFile = messageFile
-  messageUrl = messageUrl
-  messageMiniProgram = messageMiniProgram
-  messageSendText = messageSendText
-  messageSendFile = messageSendFile
-  messageSendContact = messageSendContact
-  messageSendUrl = messageSendUrl
-  messageSendMiniProgram = messageSendMiniProgram
-  messageForward = messageForward
+  override messageContact = messageContact
+  override messageImage = messageImage
+  override messageRecall = messageRecall
+  override messageFile = messageFile
+  override messageUrl = messageUrl
+  override messageMiniProgram = messageMiniProgram
+  override messageSendText = messageSendText
+  override messageSendFile = messageSendFile
+  override messageSendContact = messageSendContact
+  override messageSendUrl = messageSendUrl
+  override messageSendMiniProgram = messageSendMiniProgram
+  override messageForward = messageForward
   // @ts-ignore
   messageRawPayloadParser = messageRawPayloadParser
-  messageRawPayload = messageRawPayload
+  override messageRawPayload = messageRawPayload
   /**
     *
     * Room
     *
     */
-  roomRawPayloadParser = roomRawPayloadParser
-  roomRawPayload = roomRawPayload
-  roomList = roomList
-  roomDel = roomDel
-  roomAvatar = roomAvatar
-  roomAdd = roomAdd
-  roomTopic = roomTopic
-  roomCreate = roomCreate
-  roomQuit = roomQuit
-  roomQRCode = roomQRCode
-  roomMemberList = roomMemberList
-  roomMemberRawPayload = roomMemberRawPayload
-  roomMemberRawPayloadParser = roomMemberRawPayloadParser
-  roomAnnounce = roomAnnounce
-  roomInvitationAccept = roomInvitationAccept
-  roomInvitationRawPayload =  roomInvitationRawPayload
-  roomInvitationRawPayloadParser = roomInvitationRawPayloadParser
+  override roomRawPayloadParser = roomRawPayloadParser
+  override roomRawPayload = roomRawPayload
+  override roomList = roomList
+  override roomDel = roomDel
+  override roomAvatar = roomAvatar
+  override roomAdd = roomAdd
+  override roomTopic = roomTopic
+  override roomCreate = roomCreate
+  override roomQuit = roomQuit
+  override roomQRCode = roomQRCode
+  override roomMemberList = roomMemberList
+  override roomMemberRawPayload = roomMemberRawPayload
+  override roomMemberRawPayloadParser = roomMemberRawPayloadParser
+  override roomAnnounce = roomAnnounce
+  override roomInvitationAccept = roomInvitationAccept
+  override roomInvitationRawPayload =  roomInvitationRawPayload
+  override roomInvitationRawPayloadParser = roomInvitationRawPayloadParser
   /**
     *
     * Friendship
     *
     */
-  friendshipRawPayload = friendshipRawPayload
-  friendshipRawPayloadParser = friendshipRawPayloadParser
-  friendshipSearchPhone = friendshipSearchPhone
-  friendshipSearchWeixin = friendshipSearchWeixin
-  friendshipAdd = friendshipAdd
-  friendshipAccept = friendshipAccept
+  override friendshipRawPayload = friendshipRawPayload
+  override friendshipRawPayloadParser = friendshipRawPayloadParser
+  override friendshipSearchPhone = friendshipSearchPhone
+  override friendshipSearchWeixin = friendshipSearchWeixin
+  override friendshipAdd = friendshipAdd
+  override friendshipAccept = friendshipAccept
   /**
     *
     * Tag
     *
     */
-  tagContactAdd = tagContactAdd
-  tagContactRemove = tagContactRemove
-  tagContactDelete = tagContactDelete
-  tagContactList = tagContactList
+  override tagContactAdd = tagContactAdd
+  override tagContactRemove = tagContactRemove
+  override tagContactDelete = tagContactDelete
+  override tagContactList = tagContactList
 
 }
 
