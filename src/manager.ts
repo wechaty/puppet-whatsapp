@@ -13,7 +13,7 @@ import WAError from './pure-function-helpers/error-type.js'
 import { WA_ERROR_TYPE } from './schema/error-type.js'
 import { getWhatsApp } from './whatsapp.js'
 import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
-import type { Client as WhatsApp, ClientOptions, Contact, InviteV4Data, Message } from './schema/index.js'
+import type { Client as WhatsApp, ClientOptions, Contact, InviteV4Data, Message, MessageContent, MessageSendOptions } from './schema/index.js'
 import WAWebJS from './schema/index.js'
 
 const PRE = 'WhatsAppManager'
@@ -292,12 +292,200 @@ export class Manager extends EventEmitter {
     await CacheManager.release()
   }
 
+  private getRequestManager () {
+    if (!this.requestManager) {
+      throw new WAError(WA_ERROR_TYPE.ERR_INIT, 'No request manager')
+    }
+    return this.requestManager
+  }
+
+  /**
+   * LOGIC METHODS
+   */
+
+  public logout () {
+    const requestManager = this.getRequestManager()
+    return requestManager.logout()
+  }
+
+  public acceptPrivateRoomInvite (invitation: InviteV4Data) {
+    const requestManager = this.getRequestManager()
+    return requestManager.acceptPrivateRoomInvite(invitation)
+  }
+
+  public acceptRoomInvite (inviteCode: string) {
+    const requestManager = this.getRequestManager()
+    return requestManager.acceptRoomInvite(inviteCode)
+  }
+
+  public archiveChat (chatId: string) {
+    const requestManager = this.getRequestManager()
+    return requestManager.archiveChat(chatId)
+  }
+
+  public unarchiveChat (chatId: string) {
+    const requestManager = this.getRequestManager()
+    return requestManager.unarchiveChat(chatId)
+  }
+
+  public createRoom (name: string, participants: Contact[] | string[]) {
+    const requestManager = this.getRequestManager()
+    return requestManager.createRoom(name, participants)
+  }
+
+  public destroy () {
+    const requestManager = this.getRequestManager()
+    return requestManager.destroy()
+  }
+
+  public getBLockedContacts () {
+    const requestManager = this.getRequestManager()
+    return requestManager.getBLockedContacts()
+  }
+
+  public getChatById (chatId: string) {
+    const requestManager = this.getRequestManager()
+    return requestManager.getChatById(chatId)
+  }
+
+  public getChatLabels (chatId: string) {
+    const requestManager = this.getRequestManager()
+    return requestManager.getChatLabels(chatId)
+  }
+
+  public getChats () {
+    const requestManager = this.getRequestManager()
+    return requestManager.getChats()
+  }
+
+  public getChatsByLabelId (labelId: string) {
+    const requestManager = this.getRequestManager()
+    return requestManager.getChatsByLabelId(labelId)
+  }
+
+  public getContactById (contactId: string) {
+    const requestManager = this.getRequestManager()
+    return requestManager.getContactById(contactId)
+  }
+
+  public getContacts () {
+    const requestManager = this.getRequestManager()
+    return requestManager.getContacts()
+  }
+
+  public getCountryCode (whatsappId: string) {
+    const requestManager = this.getRequestManager()
+    return requestManager.getCountryCode(whatsappId)
+  }
+
+  public getFormattedNumber (whatsappId: string) {
+    const requestManager = this.getRequestManager()
+    return requestManager.getFormattedNumber(whatsappId)
+  }
+
+  public getInviteInfo (inviteId: string) {
+    const requestManager = this.getRequestManager()
+    return requestManager.getInviteInfo(inviteId)
+  }
+
+  public getLabelById (labelId: string) {
+    const requestManager = this.getRequestManager()
+    return requestManager.getLabelById(labelId)
+  }
+
+  public getLabels () {
+    const requestManager = this.getRequestManager()
+    return requestManager.getLabels()
+  }
+
+  public getWhatsappIdByNumber (number: string) {
+    const requestManager = this.getRequestManager()
+    return requestManager.getWhatsappIdByNumber(number)
+  }
+
+  public getAvatarUrl (contactId: string) {
+    const requestManager = this.getRequestManager()
+    return requestManager.getAvatarUrl(contactId)
+  }
+
+  public getState () {
+    const requestManager = this.getRequestManager()
+    return requestManager.getState()
+  }
+
+  public getWhatsAppVersion () {
+    const requestManager = this.getRequestManager()
+    return requestManager.getWhatsAppVersion()
+  }
+
+  public init () {
+    const requestManager = this.getRequestManager()
+    return requestManager.init()
+  }
+
+  public isWhatsappUser (contactId: string) {
+    const requestManager = this.getRequestManager()
+    return requestManager.isWhatsappUser(contactId)
+  }
+
+  public markChatUnread (chatId: string) {
+    const requestManager = this.getRequestManager()
+    return requestManager.markChatUnread(chatId)
+  }
+
+  public muteChat (chatId: string) {
+    const requestManager = this.getRequestManager()
+    return requestManager.muteChat(chatId)
+  }
+
+  public unmuteChat (chatId: string) {
+    const requestManager = this.getRequestManager()
+    return requestManager.unmuteChat(chatId)
+  }
+
+  public pinChat (chatId: string) {
+    const requestManager = this.getRequestManager()
+    return requestManager.pinChat(chatId)
+  }
+
+  public unpinChat (chatId: string) {
+    const requestManager = this.getRequestManager()
+    return requestManager.unpinChat(chatId)
+  }
+
+  public resetConnection () {
+    const requestManager = this.getRequestManager()
+    return requestManager.resetConnection()
+  }
+
+  public searchMessage (query: string, options?: { chatId?: string, page?: number, limit?: number }) {
+    const requestManager = this.getRequestManager()
+    return requestManager.searchMessage(query, options)
+  }
+
+  public sendMessage (chatId: string, content: MessageContent, options?: MessageSendOptions) {
+    const requestManager = this.getRequestManager()
+    return requestManager.sendMessage(chatId, content, options)
+  }
+
+  public sendPresenceAvailable () {
+    const requestManager = this.getRequestManager()
+    return requestManager.sendPresenceAvailable()
+  }
+
+  public markChatRead (chatId: string) {
+    const requestManager = this.getRequestManager()
+    return requestManager.markChatRead(chatId)
+  }
+
   public async setNickname (nickname: string) {
-    return this.requestManager?.setNickname(nickname)
+    const requestManager = this.getRequestManager()
+    return requestManager.setNickname(nickname)
   }
 
   public async setStatusMessage (nickname: string) {
-    return this.requestManager?.setStatusMessage(nickname)
+    const requestManager = this.getRequestManager()
+    return requestManager.setStatusMessage(nickname)
   }
 
 }

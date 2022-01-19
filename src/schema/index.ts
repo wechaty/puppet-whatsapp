@@ -49,7 +49,7 @@ export type {
   List,
 } from 'whatsapp-web.js'
 
-export * from './event-name'
-export * from './error-type'
+export * from './event-name.js'
+export * from './error-type.js'
 
 export default WAWebJS

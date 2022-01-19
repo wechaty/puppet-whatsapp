@@ -17,7 +17,7 @@ import type { WhatsappMessage } from '../whatsapp'
   */
 export async function messageContact (this:PuppetWhatsapp, messageId: string): Promise<string> {
   log.verbose(PRE, 'messageContact(%s)', messageId)
-  const cacheManager = await this.getCacheManager()
+  const cacheManager = await this.manager.getCacheManager()
   const msg = await cacheManager.getMessageRawPayload(messageId)
   if (!msg) {
     log.error('Message %s not found', messageId)
@@ -48,7 +48,7 @@ export async function messageContact (this:PuppetWhatsapp, messageId: string): P
 */
 export async function messageImage (this:PuppetWhatsapp, messageId: string, imageType: PUPPET.ImageType): Promise<FileBox> {
   log.info(PRE, 'messageImage(%s, %s[%s])', messageId, imageType, PUPPET.ImageType[imageType])
-  const cacheManager = await this.getCacheManager()
+  const cacheManager = await this.manager.getCacheManager()
   const msg = await cacheManager.getMessageRawPayload(messageId)
   if (!msg) {
     log.error('Message %s not found', messageId)
@@ -73,7 +73,7 @@ export async function messageImage (this:PuppetWhatsapp, messageId: string, imag
 */
 export async function messageRecall (this:PuppetWhatsapp, messageId: string): Promise<boolean> {
   log.info(PRE, 'messageRecall(%s)', messageId)
-  const cacheManager = await this.getCacheManager()
+  const cacheManager = await this.manager.getCacheManager()
   const msg = await cacheManager.getMessageRawPayload(messageId)
   if (!msg) {
     log.error('Message %s not found', messageId)
@@ -96,7 +96,7 @@ export async function messageRecall (this:PuppetWhatsapp, messageId: string): Pr
 */
 export async function messageFile (this:PuppetWhatsapp, messageId: string): Promise<FileBox> {
   log.info(PRE, 'messageFile(%s)', messageId)
-  const cacheManager = await this.getCacheManager()
+  const cacheManager = await this.manager.getCacheManager()
   const msg = await cacheManager.getMessageRawPayload(messageId)
   if (!msg) {
     log.error('Message %s not found', messageId)
@@ -121,7 +121,7 @@ export async function messageFile (this:PuppetWhatsapp, messageId: string): Prom
 */
 export async function messageUrl (this:PuppetWhatsapp, messageId: string): Promise<PUPPET.UrlLinkPayload> {
   log.info(PRE, 'messageUrl(%s)', messageId)
-  const cacheManager = await this.getCacheManager()
+  const cacheManager = await this.manager.getCacheManager()
   const msg = await cacheManager.getMessageRawPayload(messageId)
   if (!msg) {
     log.error('Message %s not found', messageId)
@@ -154,14 +154,9 @@ export async function messageMiniProgram (this:PuppetWhatsapp, messageId: string
 export async function messageSend (this:PuppetWhatsapp, conversationId: string, content: MessageContent): Promise<void> {
   log.verbose(PRE, 'messageSend(%s, %s)', conversationId, typeof content)
 
-  if (!this.getWhatsapp()) {
-    log.warn(PRE, 'messageSend() this.client not found')
-    return
-  }
-
-  const msg = await this.getWhatsapp()!.sendMessage(conversationId, content)
+  const msg = await this.manager.sendMessage(conversationId, content)
   const messageId = msg.id.id
-  const cacheManager = await this.getCacheManager()
+  const cacheManager = await this.manager.getCacheManager()
   await cacheManager.setMessageRawPayload(messageId, msg)
 }
 
@@ -178,11 +173,8 @@ export async function messageSendFile (this:PuppetWhatsapp, conversationId: stri
 
 export async function messageSendContact (this:PuppetWhatsapp, conversationId: string, contactId: string): Promise<void> {
   log.info(PRE, 'messageSendContact(%s, %s)', conversationId, contactId)
-  if (!this.getWhatsapp()) {
-    log.error('WhatsApp instance is undefined')
-    return
-  }
-  const contact = await this.getWhatsapp()!.getContactById(contactId)
+
+  const contact = await this.manager.getContactById(contactId)
   await messageSend.call(this, conversationId, contact)
 }
 
@@ -208,7 +200,7 @@ export async function messageSendMiniProgram (this:PuppetWhatsapp, conversationI
 
 export async function messageForward (this:PuppetWhatsapp, conversationId: string, messageId: string): Promise<void> {
   log.info(PRE, 'messageForward(%s, %s)', conversationId, messageId)
-  const cacheManager = await this.getCacheManager()
+  const cacheManager = await this.manager.getCacheManager()
   const msg = await cacheManager.getMessageRawPayload(messageId)
   if (!msg) {
     log.error('Message %s not found', messageId)
@@ -219,6 +211,16 @@ export async function messageForward (this:PuppetWhatsapp, conversationId: strin
   } catch (error) {
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_FORWARD, `Forward message: ${messageId} failed, error: ${(error as Error).message}`)
   }
+}
+
+export async function messageRawPayload (this:PuppetWhatsapp, id: string): Promise<WhatsappMessage> {
+  log.verbose(PRE, 'messageRawPayload(%s)', id)
+  const cacheManager = await this.manager.getCacheManager()
+  const msg = await cacheManager.getMessageRawPayload(id)
+  if (!msg) {
+    throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Can not find this message: ${id}`)
+  }
+  return msg
 }
 
 export async function messageRawPayloadParser (this:PuppetWhatsapp, whatsAppPayload: WhatsappMessage): Promise<PUPPET.MessagePayload> {
@@ -256,14 +258,4 @@ export async function messageRawPayloadParser (this:PuppetWhatsapp, whatsAppPayl
     type,
     // filename
   }
-}
-
-export async function messageRawPayload (this:PuppetWhatsapp, id: string): Promise<WhatsappMessage> {
-  log.verbose(PRE, 'messageRawPayload(%s)', id)
-  const cacheManager = await this.getCacheManager()
-  const msg = await cacheManager.getMessageRawPayload(id)
-  if (!msg) {
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Can not find this message: ${id}`)
-  }
-  return msg
 }

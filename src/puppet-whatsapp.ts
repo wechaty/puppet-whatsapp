@@ -254,18 +254,14 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   /**
-   *
    * ContactSelf
-   *
    */
   contactSelfQRCode = contactSelfQRCode
   contactSelfName = contactSelfName
   contactSelfSignature = contactSelfSignature
 
   /**
-   *
    * Contact
-   *
    */
   contactAlias = contactAlias
   contactPhone = contactPhone
@@ -277,16 +273,12 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   contactRawPayload = contactRawPayload
 
   /**
-   *
    * Conversation
-   *
    */
   conversationReadMark = conversationReadMark
 
   /**
-   *
    * Message
-   *
    */
   messageContact = messageContact
   messageImage = messageImage
@@ -305,9 +297,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   messageRawPayload = messageRawPayload
 
   /**
-    *
     * Room
-    *
     */
   roomRawPayloadParser = roomRawPayloadParser
   roomRawPayload = roomRawPayload
@@ -326,10 +316,9 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   roomInvitationAccept = roomInvitationAccept
   roomInvitationRawPayload =  roomInvitationRawPayload
   roomInvitationRawPayloadParser = roomInvitationRawPayloadParser
+
   /**
-    *
     * Friendship
-    *
     */
   friendshipRawPayload = friendshipRawPayload
   friendshipRawPayloadParser = friendshipRawPayloadParser
@@ -337,20 +326,14 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   friendshipSearchWeixin = friendshipSearchWeixin
   friendshipAdd = friendshipAdd
   friendshipAccept = friendshipAccept
+
   /**
-    *
     * Tag
-    *
     */
   tagContactAdd = tagContactAdd
   tagContactRemove = tagContactRemove
   tagContactDelete = tagContactDelete
   tagContactList = tagContactList
-
-  public async getCacheManager () {
-    const cacheManager = await this.manager.getCacheManager()
-    return cacheManager
-  }
 
 }
 
