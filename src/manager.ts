@@ -24,6 +24,7 @@ export class Manager {
   }
 
   public async stop () {
+    log.info('stop()')
     await this.releaseCache()
     this.whatsapp = undefined
   }
@@ -46,7 +47,7 @@ export class Manager {
   }
 
   public async releaseCache () {
-    log.verbose(PRE, 'releaseCache()')
+    log.info(PRE, 'releaseCache()')
     if (this.cacheManager) {
       log.warn(PRE, 'releaseCache() already initialized, skip the init...')
       return
@@ -54,7 +55,7 @@ export class Manager {
     await CacheManager.release()
   }
 
-  setNickname (nickname: string) {
+  public async setNickname (nickname: string) {
     return this.requestManager.setNickname(nickname)
   }
 

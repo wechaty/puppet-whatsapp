@@ -60,7 +60,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   static override readonly VERSION = VERSION
 
-  private whatsapp: undefined | WhatsApp
+  private whatsapp?: WhatsApp
   private manager?: Manager
 
   constructor (
@@ -133,7 +133,8 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     }
     this.state.off('pending')
     try {
-      await this.manager?.stop()
+      const manager = await this.getManager()
+      await manager.stop()
       await this.whatsapp.destroy()
       this.whatsapp = undefined
     } catch (error) {
@@ -142,19 +143,10 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     this.state.off(true)
   }
 
-  private async getCacheManager () {
-    if (!this.manager) {
-      throw new WAError(WA_ERROR_TYPE.ERR_INIT, 'No manager')
-    }
-
-    const cacheManager = await this.manager.getCacheManager()
-    return cacheManager
-  }
-
   private async initWhatsAppEvents (
     whatsapp: WhatsApp,
   ): Promise<void> {
-    log.verbose('PuppetwhatsApp', 'initWhatsAppEvents()')
+    log.verbose(PRE, 'initWhatsAppEvents()')
 
     const cacheManager = await this.getCacheManager()
     whatsapp.on('authenticated', session => {
@@ -163,7 +155,8 @@ class PuppetWhatsapp extends PUPPET.Puppet {
           // save session file
           await this.memory.set(MEMORY_SLOT, session)
           await this.memory.save()
-          await this.manager!.initCache(session.WABrowserId)
+          const manager = await this.getManager()
+          await manager.initCache(session.WABrowserId)
         } catch (e) {
           console.error(e)
           log.error(PRE, 'getClient() whatsapp.on(authenticated) rejection: %s', e)
@@ -326,7 +319,8 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   override async contactSelfName (name: string): Promise<void> {
     log.verbose(PRE, 'contactSelfName(%s)', name)
-    await this.manager!.setNickname(name)
+    const manager = await this.getManager()
+    await manager.setNickname(name)
   }
 
   override async contactSelfSignature (signature: string): Promise<void> {
@@ -636,7 +630,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   override async messageSendMiniProgram (conversationId: string, miniProgramPayload: PUPPET.MiniProgramPayload): Promise<void> {
     log.info(
-      'PuppetWhatsApp',
+      PRE,
       'messageSendMiniProgram(%s, %s)',
       conversationId,
       JSON.stringify(miniProgramPayload),
@@ -952,6 +946,20 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   ): Promise<string[]> {
     log.verbose(PRE, 'tagContactList(%s)', contactId)
     return []
+  }
+
+  private async getManager () {
+    if (!this.manager) {
+      throw new WAError(WA_ERROR_TYPE.ERR_INIT, 'No manager')
+    }
+    return this.manager
+  }
+
+  private async getCacheManager () {
+    const manager = await this.getManager()
+
+    const cacheManager = await manager.getCacheManager()
+    return cacheManager
   }
 
 }
