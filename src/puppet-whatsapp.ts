@@ -99,7 +99,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     return future
   }
 
-
   private async startManager (manager: Manager) {
     manager
       .on('heartbeat', data => this.emit('heartbeat', { data }))
@@ -151,7 +150,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       return
     }
     log.info(EVENT_LOG_PRE, `${EventName.LOGIN}, ${wxid}`)
-    this.id = wxid
     if (!this.selfId()) {
       await super.login(this.id)
     } else {
@@ -167,8 +165,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     }
     log.info(EVENT_LOG_PRE, `${EventName.LOGOUT}, ${wxid}`)
 
-    this.id = undefined
-
     this.emit('logout', { contactId: wxid, data: message })
   }
 
@@ -176,7 +172,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     log.verbose(PRE, 'onMessage(%s)', JSON.stringify(message))
     this.emit('message', message)
   }
-
 
   private async onScan (status: PUPPET.ScanStatus, qrcode?: string): Promise<void> {
     log.info(PRE, 'onScan(%s, %s)', status, qrcode)
@@ -230,7 +225,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     this.emit('ready', { data: 'ready' })
   }
 
-  private async onDirty (payload: PUPPET.EventDirtyPayload) {
+  private override async onDirty (payload: PUPPET.EventDirtyPayload) {
     this.emit('dirty', payload)
   }
 
@@ -281,7 +276,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   // @ts-ignore
   messageRawPayloadParser = messageRawPayloadParser
   override messageRawPayload = messageRawPayload
-
 
   /**
     * Room

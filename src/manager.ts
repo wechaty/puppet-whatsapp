@@ -5,7 +5,7 @@ import {
   map,
   merge,
 } from 'rxjs'
-import * as PUPPET from 'wechaty-puppet'
+import * as PUPPET from 'wechaty-puppet-1.0-migration'
 import { RequestManager } from './request/requestManager.js'
 import { CacheManager } from './data-manager/cache-manager.js'
 import { log, MEMORY_SLOT } from './config.js'

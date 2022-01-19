@@ -1,6 +1,6 @@
 /* eslint-disable no-redeclare */
 import * as PUPPET from 'wechaty-puppet-1.0-migration'
-import { log, FileBox } from 'wechaty-puppet-1.0-migration'
+import { FileBox } from 'wechaty-puppet-1.0-migration'
 import type { GroupChat } from 'whatsapp-web.js'
 import type WAWebJS from 'whatsapp-web.js'
 import { PRE, avatarForGroup, log } from '../config.js'

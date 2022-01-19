@@ -1,4 +1,4 @@
-import type { FriendshipPayload } from 'wechaty-puppet-1.0-migration'
+import * as PUPPET from 'wechaty-puppet-1.0-migration'
 import { log } from 'wechaty-puppet-1.0-migration'
 import { PRE } from '../config.js'
 
