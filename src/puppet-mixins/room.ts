@@ -1,16 +1,14 @@
 /* eslint-disable no-redeclare */
 import * as PUPPET from 'wechaty-puppet'
 import { FileBox } from '../compact/index.js'
-import type { GroupChat } from 'whatsapp-web.js'
-import type WAWebJS from 'whatsapp-web.js'
 import { avatarForGroup } from '../config.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import type { PuppetWhatsapp } from '../puppet-whatsapp'
-import type { WhatsappContact } from '../whatsapp'
+import type { Contact, InviteV4Data, GroupChat } from '../schema/index'
 import { verbose, warn } from '../logger/index.js'
 
-export async function roomRawPayloadParser (this: PuppetWhatsapp, whatsAppPayload: WhatsappContact): Promise<PUPPET.RoomPayload> {
+export async function roomRawPayloadParser (this: PuppetWhatsapp, whatsAppPayload: Contact): Promise<PUPPET.RoomPayload> {
   const chat = await this.manager.getChatById(whatsAppPayload.id._serialized) as GroupChat
   return {
     adminIdList: chat.participants.filter(p => p.isAdmin || p.isSuperAdmin).map(p => p.id._serialized),
@@ -21,7 +19,7 @@ export async function roomRawPayloadParser (this: PuppetWhatsapp, whatsAppPayloa
   }
 }
 
-export async function roomRawPayload (this: PuppetWhatsapp, id: string): Promise<WhatsappContact> {
+export async function roomRawPayload (this: PuppetWhatsapp, id: string): Promise<Contact> {
   verbose('roomRawPayload(%s)', id)
   const cacheManager = await this.manager.getCacheManager()
   const room = await cacheManager.getContactOrRoomRawPayload(id)
@@ -170,7 +168,7 @@ export async function roomInvitationAccept (this: PuppetWhatsapp, roomInvitation
     if (Object.keys(info).length === 1) {
       await this.manager.acceptRoomInvite(info.inviteCode!)
     } else {
-      await this.manager.acceptPrivateRoomInvite(info as WAWebJS.InviteV4Data)
+      await this.manager.acceptPrivateRoomInvite(info as InviteV4Data)
     }
 
   }

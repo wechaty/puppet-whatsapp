@@ -1,9 +1,8 @@
 import * as PUPPET from 'wechaty-puppet'
 import { FileBox } from '../compact/index.js'
-import WAWebJS from 'whatsapp-web.js'
 import type { PuppetWhatsapp } from '../puppet-whatsapp.js'
 import { parseVcard } from '../pure-function-helpers/vcard-parser.js'
-import type {  Message, MessageContent } from '../schema/index.js'
+import {  Message, MessageContent, MessageMedia, MessageType } from '../schema/index.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import { verbose, info, error, warn } from '../logger/index.js'
@@ -21,7 +20,7 @@ export async function messageContact (this:PuppetWhatsapp, messageId: string): P
     error('Message %s not found', messageId)
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} not found`)
   }
-  if (msg.type !== WAWebJS.MessageTypes.CONTACT_CARD) {
+  if (msg.type !== MessageType.CONTACT_CARD) {
     error('Message %s is not contact type', messageId)
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} is not contact type`)
   }
@@ -52,7 +51,7 @@ export async function messageImage (this:PuppetWhatsapp, messageId: string, imag
     error('Message %s not found', messageId)
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} Not Found`)
   }
-  if (msg.type !== WAWebJS.MessageTypes.IMAGE || !msg.hasMedia) {
+  if (msg.type !== MessageType.IMAGE || !msg.hasMedia) {
     error('Message %s does not contain any media', messageId)
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} does not contain any media`)
   }
@@ -165,7 +164,7 @@ export async function messageSendText (this:PuppetWhatsapp, conversationId: stri
 
 export async function messageSendFile (this:PuppetWhatsapp, conversationId: string, file: FileBox): Promise<void> {
   info('messageSendFile(%s, %s)', conversationId, file.name)
-  const msgContent = new WAWebJS.MessageMedia(file.mimeType!, await file.toBase64(), file.name)
+  const msgContent = new MessageMedia(file.mimeType!, await file.toBase64(), file.name)
   return messageSend.call(this, conversationId, msgContent)
 }
 
@@ -224,25 +223,25 @@ export async function messageRawPayload (this:PuppetWhatsapp, id: string): Promi
 export async function messageRawPayloadParser (this:PuppetWhatsapp, whatsAppPayload: Message): Promise<PUPPET.MessagePayload> {
   let type: PUPPET.MessageType = PUPPET.MessageType.Unknown
   switch (whatsAppPayload.type) {
-    case WAWebJS.MessageTypes.TEXT:
+    case MessageType.TEXT:
       type = PUPPET.MessageType.Text
       break
-    case WAWebJS.MessageTypes.STICKER:
+    case MessageType.STICKER:
       type = PUPPET.MessageType.Emoticon
       break
-    case WAWebJS.MessageTypes.VOICE:
+    case MessageType.VOICE:
       type = PUPPET.MessageType.Audio
       break
-    case WAWebJS.MessageTypes.IMAGE:
+    case MessageType.IMAGE:
       type = PUPPET.MessageType.Image
       break
-    case WAWebJS.MessageTypes.AUDIO:
+    case MessageType.AUDIO:
       type = PUPPET.MessageType.Audio
       break
-    case WAWebJS.MessageTypes.VIDEO:
+    case MessageType.VIDEO:
       type = PUPPET.MessageType.Video
       break
-    case WAWebJS.MessageTypes.CONTACT_CARD:
+    case MessageType.CONTACT_CARD:
       type = PUPPET.MessageType.Contact
       break
   }

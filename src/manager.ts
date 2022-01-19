@@ -1,3 +1,4 @@
+/* eslint-disable import/no-duplicates */
 import { EventEmitter } from 'events'
 import {
   distinctUntilKeyChanged,
@@ -13,8 +14,8 @@ import { WA_ERROR_TYPE } from './exceptions/error-type.js'
 import WAError from './exceptions/whatsapp-error.js'
 import { getWhatsApp } from './whatsapp.js'
 import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
-import type { Client as WhatsApp, ClientOptions, Contact, InviteV4Data, Message, MessageContent, MessageSendOptions } from './schema/index.js'
-import WAWebJS from './schema/index.js'
+import type {  ClientOptions, Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification } from './schema/index.js'
+import { Client as WhatsApp, MessageType, GroupNotificationType } from './schema/index.js'
 import { verbose, info, warn, error } from './logger/index.js'
 
 const InviteLinkRegex = /^(https?:\/\/)?chat\.whatsapp\.com\/(?:invite\/)?([a-zA-Z0-9_-]{22})$/
@@ -150,7 +151,7 @@ export class Manager extends EventEmitter {
     const id = msg.id.id
     const cacheManager = await this.getCacheManager()
     await cacheManager.setMessageRawPayload(id, msg)
-    if (msg.type !== WAWebJS.MessageTypes.GROUP_INVITE) {
+    if (msg.type !== MessageType.GROUP_INVITE) {
       if (msg.links.length === 1 && InviteLinkRegex.test(msg.links[0]!.link)) {
         const matched = msg.links[0]!.link.match(InviteLinkRegex)
         if (matched) {
@@ -193,7 +194,7 @@ export class Manager extends EventEmitter {
     this.emit('scan', PUPPET.ScanStatus.Waiting, qr)
   }
 
-  private async onRoomJoin (notification: WAWebJS.GroupNotification) {
+  private async onRoomJoin (notification: GroupNotification) {
     const roomJoinPayload: PUPPET.EventRoomJoinPayload = {
       inviteeIdList: notification.recipientIds,
       inviterId: notification.author,
@@ -203,7 +204,7 @@ export class Manager extends EventEmitter {
     this.emit('room-join', roomJoinPayload)
   }
 
-  private async onRoomLeave (notification: WAWebJS.GroupNotification) {
+  private async onRoomLeave (notification: GroupNotification) {
     const roomJoinPayload: PUPPET.EventRoomLeavePayload = {
       removeeIdList: notification.recipientIds,
       removerId: notification.author,
@@ -213,8 +214,8 @@ export class Manager extends EventEmitter {
     this.emit('room-leave', roomJoinPayload)
   }
 
-  private async onRoomUpdate (notification: WAWebJS.GroupNotification) {
-    if (notification.type === WAWebJS.GroupNotificationTypes.SUBJECT) {
+  private async onRoomUpdate (notification: GroupNotification) {
+    if (notification.type === GroupNotificationType.SUBJECT) {
       const cacheManager = await this.getCacheManager()
       const roomInCache = await cacheManager.getContactOrRoomRawPayload(notification.chatId)
       const roomJoinPayload: PUPPET.EventRoomTopicPayload = {
