@@ -1,5 +1,5 @@
-import { WA_ERROR_TYPE } from '../schema/error-type.js'
-import WAError from './error-type.js'
+import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
+import WAError from '../exceptions/whatsapp-error.js'
 
 export interface IVcard {
   /**
@@ -40,7 +40,7 @@ export function parseVcard (body: string): IVcard {
    */
 
   const lines = body.split('\n')
-  // vcard body must be at least 3 lines, "begin", "VERSION" and "end"
+  // vcard body must be at least 3 lines, 'begin', 'VERSION' and 'end.js'
   if (lines.length < 2) {
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_CONTACT, `Invalid Vcard body: invalid length, detail: ${body}`)
   }
