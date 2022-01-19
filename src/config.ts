@@ -1,8 +1,7 @@
 /// <reference path="./typings.d.ts" />
 import {
   FileBox,
-  log,
-} from 'wechaty-puppet'
+} from './compact/index.js'
 import { packageJson } from './package-json.js'
 
 const VERSION = packageJson.version || '0.0.0'
@@ -16,10 +15,8 @@ function avatarForGroup (): FileBox {
 const MEMORY_SLOT = 'PUPPET_WHATSAPP'
 const PRE = 'PuppetWhatsApp'
 export {
-  FileBox,
   MEMORY_SLOT,
   avatarForGroup,
   VERSION,
-  log,
   PRE,
 }

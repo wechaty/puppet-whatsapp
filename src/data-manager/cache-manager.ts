@@ -4,12 +4,9 @@ import * as os from 'os'
 
 import { FlashStore } from 'flash-store'
 import type { Contact, InviteV4Data, Message } from '../schema/index.js'
-
-import { log } from '../config.js'
+import { logger } from '../logger/index.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
-
-const PRE = 'CacheManager'
 
 export class CacheManager {
 
@@ -198,17 +195,17 @@ export class CacheManager {
 
     const messageTotal = await this.cacheMessageRawPayload.size
 
-    log.info(PRE, `initCache() inited Messages: ${messageTotal} cacheDir="${baseDir}"`)
+    logger.info(`initCache() inited Messages: ${messageTotal} cacheDir="${baseDir}"`)
   }
 
   private async releaseCache () {
-    log.verbose(PRE, 'releaseCache()')
+    logger.verbose('releaseCache()')
 
     if (this.cacheMessageRawPayload
         && this.cacheContactOrRoomRawPayload
         && this.cacheRoomInvitationRawPayload
     ) {
-      log.silly(PRE, 'releaseCache() closing caches ...')
+      logger.silly('releaseCache() closing caches ...')
 
       await Promise.all([
         this.cacheMessageRawPayload.close(),
@@ -220,9 +217,9 @@ export class CacheManager {
       this.cacheContactOrRoomRawPayload = undefined
       this.cacheRoomInvitationRawPayload = undefined
 
-      log.silly(PRE, 'releaseCache() cache closed.')
+      logger.silly('releaseCache() cache closed.')
     } else {
-      log.verbose(PRE, 'releaseCache() cache not exist.')
+      logger.verbose('releaseCache() cache not exist.')
     }
   }
 

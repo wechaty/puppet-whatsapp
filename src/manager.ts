@@ -1,3 +1,4 @@
+/* eslint-disable import/no-duplicates */
 import { EventEmitter } from 'events'
 import {
   distinctUntilKeyChanged,
@@ -8,15 +9,15 @@ import {
 import * as PUPPET from 'wechaty-puppet'
 import { RequestManager } from './request/requestManager.js'
 import { CacheManager } from './data-manager/cache-manager.js'
-import { log, MEMORY_SLOT } from './config.js'
+import { MEMORY_SLOT } from './config.js'
 import { WA_ERROR_TYPE } from './exceptions/error-type.js'
 import WAError from './exceptions/whatsapp-error.js'
 import { getWhatsApp } from './whatsapp.js'
 import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
-import type { Client as WhatsApp, ClientOptions, Contact, InviteV4Data, Message, MessageContent, MessageSendOptions } from './schema/index.js'
-import WAWebJS from './schema/index.js'
+import type {  ClientOptions, Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification } from './schema/index.js'
+import { Client as WhatsApp, MessageType, GroupNotificationType } from './schema/index.js'
+import { logger } from './logger/index.js'
 
-const PRE = 'WhatsAppManager'
 const InviteLinkRegex = /^(https?:\/\/)?chat\.whatsapp\.com\/(?:invite\/)?([a-zA-Z0-9_-]{22})$/
 type ManagerEvents = 'message'
                    | 'room-join'
@@ -85,13 +86,13 @@ export class Manager extends EventEmitter {
   }
 
   public async start (session: any) {
-    log.info('start()')
+    logger.info('start()')
     const whatsapp = await getWhatsApp(this.options['puppeteerOptions'] as ClientOptions, session)
     whatsapp
       .initialize()
-      .then(() => log.verbose(PRE, 'start() whatsapp.initialize() done'))
+      .then(() => logger.verbose('start() whatsapp.initialize() done'))
       .catch(e => {
-        log.error(PRE, 'start() whatsapp.initialize() rejection: %s', e)
+        logger.error('start() whatsapp.initialize() rejection: %s', e)
       })
 
     this.whatsapp = whatsapp
@@ -101,7 +102,7 @@ export class Manager extends EventEmitter {
   }
 
   public async stop () {
-    log.info('stop()')
+    logger.info('stop()')
     if (this.whatsapp) {
       await this.whatsapp.destroy()
       await this.releaseCache()
@@ -116,12 +117,12 @@ export class Manager extends EventEmitter {
       await this.initCache(session.WABrowserId)
     } catch (e) {
       console.error(e)
-      log.error(PRE, 'getClient() whatsapp.on(authenticated) rejection: %s', e)
+      logger.error('getClient() whatsapp.on(authenticated) rejection: %s', e)
     }
   }
 
   private async onAuthFailure (message: string) {
-    log.warn(PRE, 'auth_failure: %s, then restart no use exist session', message)
+    logger.warn('auth_failure: %s, then restart no use exist session', message)
     // msg -> auth_failure message
     // auth_failure due to session invalidation
     // clear sessionData -> reinit
@@ -150,7 +151,7 @@ export class Manager extends EventEmitter {
     const id = msg.id.id
     const cacheManager = await this.getCacheManager()
     await cacheManager.setMessageRawPayload(id, msg)
-    if (msg.type !== WAWebJS.MessageTypes.GROUP_INVITE) {
+    if (msg.type !== MessageType.GROUP_INVITE) {
       if (msg.links.length === 1 && InviteLinkRegex.test(msg.links[0]!.link)) {
         const matched = msg.links[0]!.link.match(InviteLinkRegex)
         if (matched) {
@@ -193,7 +194,7 @@ export class Manager extends EventEmitter {
     this.emit('scan', PUPPET.ScanStatus.Waiting, qr)
   }
 
-  private async onRoomJoin (notification: WAWebJS.GroupNotification) {
+  private async onRoomJoin (notification: GroupNotification) {
     const roomJoinPayload: PUPPET.EventRoomJoinPayload = {
       inviteeIdList: notification.recipientIds,
       inviterId: notification.author,
@@ -203,7 +204,7 @@ export class Manager extends EventEmitter {
     this.emit('room-join', roomJoinPayload)
   }
 
-  private async onRoomLeave (notification: WAWebJS.GroupNotification) {
+  private async onRoomLeave (notification: GroupNotification) {
     const roomJoinPayload: PUPPET.EventRoomLeavePayload = {
       removeeIdList: notification.recipientIds,
       removerId: notification.author,
@@ -213,8 +214,8 @@ export class Manager extends EventEmitter {
     this.emit('room-leave', roomJoinPayload)
   }
 
-  private async onRoomUpdate (notification: WAWebJS.GroupNotification) {
-    if (notification.type === WAWebJS.GroupNotificationTypes.SUBJECT) {
+  private async onRoomUpdate (notification: GroupNotification) {
+    if (notification.type === GroupNotificationType.SUBJECT) {
       const cacheManager = await this.getCacheManager()
       const roomInCache = await cacheManager.getContactOrRoomRawPayload(notification.chatId)
       const roomJoinPayload: PUPPET.EventRoomTopicPayload = {
@@ -231,7 +232,7 @@ export class Manager extends EventEmitter {
   public async initWhatsAppEvents (
     whatsapp: WhatsApp,
   ): Promise<void> {
-    log.verbose(PRE, 'initWhatsAppEvents()')
+    logger.verbose('initWhatsAppEvents()')
 
     whatsapp.on('authenticated', this.onAuthenticated.bind(this))
     /**
@@ -274,9 +275,9 @@ export class Manager extends EventEmitter {
   }
 
   public async initCache (userId: string) {
-    log.info(PRE, `initCache(${userId})`)
+    logger.info(`initCache(${userId})`)
     if (this.cacheManager) {
-      log.warn(PRE, 'initCache() already initialized, skip the init...')
+      logger.warn('initCache() already initialized, skip the init...')
       return
     }
     await CacheManager.init(userId)
@@ -284,9 +285,9 @@ export class Manager extends EventEmitter {
   }
 
   public async releaseCache () {
-    log.info(PRE, 'releaseCache()')
+    logger.info('releaseCache()')
     if (this.cacheManager) {
-      log.warn(PRE, 'releaseCache() already initialized, skip the init...')
+      logger.warn('releaseCache() already initialized, skip the init...')
       return
     }
     await CacheManager.release()
