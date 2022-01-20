@@ -14,7 +14,7 @@ import { logger } from '../logger/index.js'
   * @returns contact name
   */
 export async function messageContact (this:PuppetWhatsapp, messageId: string): Promise<string> {
-  logger.verbose('messageContact(%s)', messageId)
+  logger.info('messageContact(%s)', messageId)
   const cacheManager = await this.manager.getCacheManager()
   const msg = await cacheManager.getMessageRawPayload(messageId)
   if (!msg) {
@@ -150,7 +150,7 @@ export async function messageMiniProgram (this:PuppetWhatsapp, messageId: string
 }
 
 export async function messageSend (this:PuppetWhatsapp, conversationId: string, content: MessageContent): Promise<void> {
-  logger.verbose('messageSend(%s, %s)', conversationId, typeof content)
+  logger.info('messageSend(%s, %s)', conversationId, typeof content)
 
   const msg = await this.manager.sendMessage(conversationId, content)
   const messageId = msg.id.id
@@ -187,7 +187,7 @@ export async function messageSendUrl (
 }
 
 export async function messageSendMiniProgram (this:PuppetWhatsapp, conversationId: string, miniProgramPayload: PUPPET.MiniProgramPayload): Promise<void> {
-  logger.info(
+  logger.verbose(
     'PuppetWhatsApp',
     'messageSendMiniProgram(%s, %s)',
     conversationId,

@@ -63,7 +63,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   override async onStart (): Promise<void> {
-    logger.verbose('onStart()')
+    logger.info('onStart()')
     if (this.state.active()) {
       return
     }
@@ -107,7 +107,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       .on('logout',    this.onLogout.bind(this))
       .on('message',   this.onMessage.bind(this))
       .on('friendship',  this.onFriendship.bind(this))
-      // .on('room-invite', id => this.emit('room-invite', id)) // 2020/10/05 windmemory: comment out since not supported yet
       .on('room-join',  this.onRoomJoin.bind(this))
       .on('room-leave', this.onRoomLeave.bind(this))
       .on('room-topic', this.onRoomTopic.bind(this))
@@ -121,7 +120,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   override async onStop (): Promise<void> {
-    logger.verbose('onStop()')
+    logger.info('onStop()')
     if (this.state.inactive()) {
       return
     }
@@ -167,7 +166,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   private async onMessage (message: PUPPET.EventMessagePayload): Promise<void> {
-    logger.verbose('onMessage(%s)', JSON.stringify(message))
+    logger.info('onMessage(%s)', JSON.stringify(message))
     this.emit('message', message)
   }
 

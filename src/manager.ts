@@ -111,6 +111,7 @@ export class Manager extends EventEmitter {
   }
 
   private async onAuthenticated (session: any) {
+    logger.info(`onAuthenticated(${JSON.stringify(session)})`)
     try {
       await this.options.memory?.set(MEMORY_SLOT, session)
       await this.options.memory?.save()
@@ -131,6 +132,7 @@ export class Manager extends EventEmitter {
   }
 
   private async onReady () {
+    logger.info('onReady()')
     const contacts: Contact[] = await this.whatsapp!.getContacts()
     const nonBroadcast = contacts.filter(c => c.id.server !== 'broadcast')
     for (const contact of nonBroadcast) {
@@ -141,6 +143,7 @@ export class Manager extends EventEmitter {
   }
 
   private async onMessage (msg: Message) {
+    logger.info(`onMessage(${msg.id.id})`)
     // @ts-ignore
     if (msg.type === 'e2e_notification') {
       if (msg.body === '' && msg.author === undefined) {
@@ -190,11 +193,13 @@ export class Manager extends EventEmitter {
   }
 
   private onQRCode (qr: string) {
+    logger.info(`onQRCode(${qr})`)
     // NOTE: This event will not be fired if a session is specified.
     this.emit('scan', PUPPET.ScanStatus.Waiting, qr)
   }
 
   private async onRoomJoin (notification: GroupNotification) {
+    logger.info(`onRoomJoin(${JSON.stringify(notification)})`)
     const roomJoinPayload: PUPPET.EventRoomJoinPayload = {
       inviteeIdList: notification.recipientIds,
       inviterId: notification.author,
@@ -205,6 +210,7 @@ export class Manager extends EventEmitter {
   }
 
   private async onRoomLeave (notification: GroupNotification) {
+    logger.info(`onRoomLeave(${JSON.stringify(notification)})`)
     const roomJoinPayload: PUPPET.EventRoomLeavePayload = {
       removeeIdList: notification.recipientIds,
       removerId: notification.author,
@@ -215,6 +221,7 @@ export class Manager extends EventEmitter {
   }
 
   private async onRoomUpdate (notification: GroupNotification) {
+    logger.info(`onRoomUpdate(${JSON.stringify(notification)})`)
     if (notification.type === GroupNotificationType.SUBJECT) {
       const cacheManager = await this.getCacheManager()
       const roomInCache = await cacheManager.getContactOrRoomRawPayload(notification.chatId)
