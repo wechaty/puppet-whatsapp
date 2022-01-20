@@ -9,17 +9,6 @@ import type { PuppetWhatsapp } from '../puppet-whatsapp'
 import type { Contact, InviteV4Data, GroupChat } from '../schema/index'
 import { logger } from '../logger/index.js'
 
-export async function roomRawPayloadParser (this: PuppetWhatsapp, whatsAppPayload: Contact): Promise<PUPPET.RoomPayload> {
-  const chat = await this.manager.getChatById(whatsAppPayload.id._serialized) as GroupChat
-  return {
-    adminIdList: chat.participants.filter(p => p.isAdmin || p.isSuperAdmin).map(p => p.id._serialized),
-    avatar: await whatsAppPayload.getProfilePicUrl(),
-    id: whatsAppPayload.id._serialized,
-    memberIdList: chat.participants.map(p => p.id._serialized),
-    topic: whatsAppPayload.name || whatsAppPayload.pushname || '',
-  }
-}
-
 export async function roomRawPayload (this: PuppetWhatsapp, id: string): Promise<Contact> {
   logger.verbose('roomRawPayload(%s)', id)
   const cacheManager = await this.manager.getCacheManager()
@@ -30,6 +19,17 @@ export async function roomRawPayload (this: PuppetWhatsapp, id: string): Promise
     const rawRoom = await this.manager.getContactById(id)
     await cacheManager.setContactOrRoomRawPayload(id, rawRoom)
     return rawRoom
+  }
+}
+
+export async function roomRawPayloadParser (this: PuppetWhatsapp, whatsAppPayload: Contact): Promise<PUPPET.RoomPayload> {
+  const chat = await this.manager.getChatById(whatsAppPayload.id._serialized) as GroupChat
+  return {
+    adminIdList: chat.participants.filter(p => p.isAdmin || p.isSuperAdmin).map(p => p.id._serialized),
+    avatar: await whatsAppPayload.getProfilePicUrl(),
+    id: whatsAppPayload.id._serialized,
+    memberIdList: chat.participants.map(p => p.id._serialized),
+    topic: whatsAppPayload.name || whatsAppPayload.pushname || '',
   }
 }
 
@@ -45,13 +45,13 @@ export async function roomDel (
   roomId: string,
   contactId: string,
 ): Promise<void> {
-  logger.verbose('roomDel(%s, %s)', roomId, contactId)
+  logger.info('roomDel(%s, %s)', roomId, contactId)
   const chat = await this.manager.getChatById(roomId) as GroupChat
   await chat.removeParticipants([contactId])
 }
 
 export async function roomAvatar (this: PuppetWhatsapp, roomId: string): Promise<FileBox> {
-  logger.verbose('roomAvatar(%s)', roomId)
+  logger.info('roomAvatar(%s)', roomId)
 
   const payload = await this.roomPayload(roomId)
 
@@ -67,7 +67,7 @@ export async function roomAdd (
   roomId: string,
   contactId: string,
 ): Promise<void> {
-  logger.verbose('roomAdd(%s, %s)', roomId, contactId)
+  logger.info('roomAdd(%s, %s)', roomId, contactId)
   const chat = await this.manager.getChatById(roomId) as GroupChat
   await chat.addParticipants([contactId])
 }
@@ -80,7 +80,7 @@ export async function roomTopic (
   roomId: string,
   topic?: string,
 ): Promise<void | string> {
-  logger.verbose('roomTopic(%s, %s)', roomId, topic)
+  logger.info('roomTopic(%s, %s)', roomId, topic)
 
   if (typeof topic === 'undefined') {
     const cacheManager = await this.manager.getCacheManager()
@@ -102,7 +102,7 @@ export async function roomCreate (
   contactIdList: string[],
   topic: string,
 ): Promise<string> {
-  logger.verbose('roomCreate(%s, %s)', contactIdList, topic)
+  logger.info('roomCreate(%s, %s)', contactIdList, topic)
   const group = await this.manager.createRoom(topic, contactIdList)
   if (group.gid) {
     return group.gid
@@ -112,13 +112,13 @@ export async function roomCreate (
 }
 
 export async function roomQuit (this: PuppetWhatsapp, roomId: string): Promise<void> {
-  logger.verbose('roomQuit(%s)', roomId)
+  logger.info('roomQuit(%s)', roomId)
   const chat = await this.manager.getChatById(roomId) as GroupChat
   await chat.leave()
 }
 
 export async function roomQRCode (this: PuppetWhatsapp, roomId: string): Promise<string> {
-  logger.verbose('roomQRCode(%s)', roomId)
+  logger.info('roomQRCode(%s)', roomId)
   const con = await this.manager.getChatById(roomId) as GroupChat
   const code = await con.getInviteCode()
   const url = `https://chat.whatsapp.com/${code}`
@@ -126,7 +126,7 @@ export async function roomQRCode (this: PuppetWhatsapp, roomId: string): Promise
 }
 
 export async function roomMemberList (this: PuppetWhatsapp, roomId: string): Promise<string[]> {
-  logger.verbose('roomMemberList(%s)', roomId)
+  logger.info('roomMemberList(%s)', roomId)
   const chat = await this.manager.getChatById(roomId) as GroupChat
   return chat.participants.map(p => p.id._serialized)
 }
