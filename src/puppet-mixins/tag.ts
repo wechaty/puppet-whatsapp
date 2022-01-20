@@ -1,4 +1,4 @@
-import * as PUPPET from 'wechaty-puppet'
+import * as PUPPET from 'wechaty-puppet-1.0-migration'
 import { logger } from '../logger/index.js'
 
 export async function tagContactAdd (

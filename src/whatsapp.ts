@@ -1,6 +1,6 @@
 import {
   log,
-}                               from 'wechaty-puppet'
+}                               from 'wechaty-puppet-1.0-migration'
 import {
   Client as WhatsApp,
   Message as WhatsappMessage,

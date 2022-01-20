@@ -1,7 +1,8 @@
 /* eslint-disable no-redeclare */
-import * as PUPPET from 'wechaty-puppet'
-import { FileBox } from '../compact/index.js'
+import * as PUPPET from 'wechaty-puppet-1.0-migration'
+import { FileBox } from 'wechaty-puppet-1.0-migration'
 import { avatarForGroup } from '../config.js'
+
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import type { PuppetWhatsapp } from '../puppet-whatsapp'

@@ -1,5 +1,6 @@
-import * as PUPPET from 'wechaty-puppet'
-import { FileBox } from '../compact/index.js'
+import * as PUPPET from 'wechaty-puppet-1.0-migration'
+import { FileBox } from 'wechaty-puppet-1.0-migration'
+
 import type { PuppetWhatsapp } from '../puppet-whatsapp.js'
 import { parseVcard } from '../pure-function-helpers/vcard-parser.js'
 import {  Message, MessageContent, MessageMedia, MessageType } from '../schema/index.js'
