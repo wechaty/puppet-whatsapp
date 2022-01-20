@@ -1,6 +1,6 @@
 /// <reference path="./typings.d.ts" />
 import {
-  FileBox
+  FileBox,
 } from 'wechaty-puppet-1.0-migration'
 
 import { packageJson } from './package-json.js'

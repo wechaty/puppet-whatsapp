@@ -1,6 +1,5 @@
 import * as PUPPET from 'wechaty-puppet-1.0-migration'
 import { FileBox } from 'wechaty-puppet-1.0-migration'
-import WAWebJS from 'whatsapp-web.js'
 
 import type { PuppetWhatsapp } from '../puppet-whatsapp.js'
 import { parseVcard } from '../pure-function-helpers/vcard-parser.js'

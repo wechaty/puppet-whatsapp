@@ -63,7 +63,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   override async onStart (): Promise<void> {
-    log.verbose(PRE, 'onStart()')
+    logger.verbose('onStart()')
     if (this.state.active()) {
       return
     }
@@ -121,7 +121,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   override async onStop (): Promise<void> {
-    log.verbose(PRE, 'onStop()')
+    logger.verbose('onStop()')
     if (this.state.inactive()) {
       return
     }
