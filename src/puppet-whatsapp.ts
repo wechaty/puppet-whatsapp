@@ -27,8 +27,7 @@ import { logger } from './logger/index.js'
 import { contactSelfName, contactSelfQRCode, contactSelfSignature } from './puppet-mixins/contact-self.js'
 import { contactAlias, contactAvatar, contactCorporationRemark, contactDescription, contactList, contactPhone, contactRawPayload, contactRawPayloadParser } from './puppet-mixins/contact.js'
 import { conversationReadMark } from './puppet-mixins/conversation.js'
-import { messageContact, messageImage, messageRecall, messageFile, messageUrl, messageMiniProgram, messageSendText, messageSendFile, messageSendContact, messageSendMiniProgram, messageForward, messageRawPayload, messageSendUrl } from './puppet-mixins/message.js'
-import { messageRawPayloadParser } from './pure-function-helpers/message-raw-payload-parse.js'
+import { messageContact, messageImage, messageRecall, messageFile, messageUrl, messageMiniProgram, messageSendText, messageSendFile, messageSendContact, messageSendMiniProgram, messageForward, messageRawPayload, messageSendUrl, messageRawPayloadParser } from './puppet-mixins/message.js'
 import { roomRawPayloadParser, roomRawPayload, roomList, roomDel, roomAvatar, roomAdd, roomTopic, roomCreate, roomQuit, roomQRCode, roomMemberList, roomMemberRawPayload, roomMemberRawPayloadParser, roomAnnounce, roomInvitationAccept, roomInvitationRawPayload, roomInvitationRawPayloadParser } from './puppet-mixins/room.js'
 import { friendshipRawPayload, friendshipRawPayloadParser, friendshipSearchPhone, friendshipSearchWeixin, friendshipAdd, friendshipAccept } from './puppet-mixins/friendship.js'
 import { tagContactAdd, tagContactRemove, tagContactDelete, tagContactList } from './puppet-mixins/tag.js'
@@ -277,7 +276,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   messageSendUrl = messageSendUrl
   messageSendMiniProgram = messageSendMiniProgram
   messageForward = messageForward
-  // @ts-ignore
+
   messageRawPayloadParser = messageRawPayloadParser
   messageRawPayload = messageRawPayload
 

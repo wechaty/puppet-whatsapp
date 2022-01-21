@@ -6,7 +6,7 @@ import {
 } from '../compact/index.js'
 import { logger } from '../logger/index.js'
 import type { PuppetWhatsapp } from '../puppet-whatsapp.js'
-import type { Contact } from '../schema'
+import { Contact, ContactCls, ContactPayload } from '../schema/index.js'
 
 async function contactAlias (this: PuppetWhatsapp, contactId: string)                       : Promise<string>;
 async function contactAlias (this: PuppetWhatsapp, contactId: string, alias: string | null) : Promise<void>;
@@ -64,7 +64,7 @@ async function contactAvatar (this: PuppetWhatsapp, contactId: string, file?: Fi
   return FileBox.fromUrl(avatar)
 }
 
-async function contactRawPayload (this: PuppetWhatsapp, id: string): Promise<Contact> {
+async function contactRawPayload (this: PuppetWhatsapp, id: string): Promise<ContactPayload> {
   logger.verbose('contactRawPayload(%s)', id)
   const cacheManager = await this.manager.getCacheManager()
   const contact = await cacheManager.getContactOrRoomRawPayload(id)
@@ -77,7 +77,7 @@ async function contactRawPayload (this: PuppetWhatsapp, id: string): Promise<Con
   }
 }
 
-async function contactRawPayloadParser (this: PuppetWhatsapp, whatsAppPayload: Contact): Promise<PUPPET.ContactPayload> {
+async function contactRawPayloadParser (this: PuppetWhatsapp, whatsAppPayload: ContactPayload): Promise<PUPPET.ContactPayload> {
   let type
   if (whatsAppPayload.isUser) {
     type = PUPPET.ContactType.Individual
@@ -86,9 +86,10 @@ async function contactRawPayloadParser (this: PuppetWhatsapp, whatsAppPayload: C
   } else {
     type = PUPPET.ContactType.Unknown
   }
-
+  const contactIns: Contact = new ContactCls(this.manager.whatsapp!)
+  Object.assign(contactIns, whatsAppPayload)
   return {
-    avatar: await whatsAppPayload.getProfilePicUrl(),
+    avatar: await contactIns.getProfilePicUrl(),
     friend: whatsAppPayload.isWAContact && whatsAppPayload.isUser && !whatsAppPayload.isMe,
     gender: PUPPET.ContactGender.Unknown,
     id: whatsAppPayload.id._serialized,

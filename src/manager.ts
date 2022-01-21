@@ -87,18 +87,17 @@ export class Manager extends EventEmitter {
 
   public async start (session: any) {
     logger.info('start()')
-    const whatsapp = await getWhatsApp(this.options['puppeteerOptions'] as ClientOptions, session)
-    whatsapp
+    this.whatsapp = await getWhatsApp(this.options['puppeteerOptions'] as ClientOptions, session)
+    this.whatsapp
       .initialize()
       .then(() => logger.verbose('start() whatsapp.initialize() done'))
       .catch(e => {
         logger.error('start() whatsapp.initialize() rejection: %s', e)
       })
 
-    this.whatsapp = whatsapp
-    this.requestManager = new RequestManager(whatsapp)
-    await this.initWhatsAppEvents(whatsapp)
-    return whatsapp
+    this.requestManager = new RequestManager(this.whatsapp)
+    await this.initWhatsAppEvents(this.whatsapp)
+    return this.whatsapp
   }
 
   public async stop () {
@@ -115,7 +114,6 @@ export class Manager extends EventEmitter {
     try {
       await this.options.memory?.set(MEMORY_SLOT, session)
       await this.options.memory?.save()
-      await this.initCache(session.WABrowserId)
     } catch (e) {
       console.error(e)
       logger.error('getClient() whatsapp.on(authenticated) rejection: %s', e)
@@ -132,6 +130,7 @@ export class Manager extends EventEmitter {
   }
 
   private async onReady () {
+    await this.initCache(this.whatsapp!.info.wid._serialized)
     logger.info('onReady()')
     const contacts: Contact[] = await this.whatsapp!.getContacts()
     const nonBroadcast = contacts.filter(c => c.id.server !== 'broadcast')

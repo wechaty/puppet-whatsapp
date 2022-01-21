@@ -2,7 +2,7 @@ import * as PUPPET from 'wechaty-puppet'
 import { FileBox } from '../compact/index.js'
 import type { PuppetWhatsapp } from '../puppet-whatsapp.js'
 import { parseVcard } from '../pure-function-helpers/vcard-parser.js'
-import {  Message, MessageContent, MessageMedia, MessageType } from '../schema/index.js'
+import { MessageContent, MessageMedia, MessagePayload, MessageType, restoreMessage } from '../schema/index.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import { logger } from '../logger/index.js'
@@ -55,8 +55,9 @@ export async function messageImage (this:PuppetWhatsapp, messageId: string, imag
     logger.error('Message %s does not contain any media', messageId)
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} does not contain any media`)
   }
+  const msgIns = restoreMessage(this.manager.whatsapp!, msg)
   try {
-    const media = await msg.downloadMedia()
+    const media = await msgIns.downloadMedia()
     return FileBox.fromBase64(media.data, media.filename ?? '')
   } catch (error) {
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_IMAGE, `Message ${messageId} does not contain any media`)
@@ -76,9 +77,9 @@ export async function messageRecall (this:PuppetWhatsapp, messageId: string): Pr
     logger.error('Message %s not found', messageId)
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} not found`)
   }
-
+  const msgIns = restoreMessage(this.manager.whatsapp!, msg)
   try {
-    await msg.delete(true)
+    await msgIns.delete(true)
     return true
   } catch (err) {
     logger.error(`Can not recall this message: ${messageId}, error: ${(err as Error).message}`)
@@ -103,8 +104,9 @@ export async function messageFile (this:PuppetWhatsapp, messageId: string): Prom
     logger.error('Message %s does not contain any media', messageId)
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} does not contain any media`)
   }
+  const msgIns = restoreMessage(this.manager.whatsapp!, msg)
   try {
-    const media = await msg.downloadMedia()
+    const media = await msgIns.downloadMedia()
     return FileBox.fromBase64(media.data, media.filename ?? '')
   } catch (error) {
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_FILE, `Message ${messageId} does not contain any media`)
@@ -203,15 +205,16 @@ export async function messageForward (this:PuppetWhatsapp, conversationId: strin
     logger.error('Message %s not found', messageId)
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} not found`)
   }
+  const msgIns = restoreMessage(this.manager.whatsapp!, msg)
   try {
-    await msg.forward(conversationId)
+    await msgIns.forward(conversationId)
   } catch (error) {
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_FORWARD, `Forward message: ${messageId} failed, error: ${(error as Error).message}`)
   }
 }
 
-export async function messageRawPayload (this:PuppetWhatsapp, id: string): Promise<Message> {
-  logger.verbose('messageRawPayload(%s)', id)
+export async function messageRawPayload (this:PuppetWhatsapp, id: string): Promise<MessagePayload> {
+  logger.info('messageRawPayload(%s)', id)
   const cacheManager = await this.manager.getCacheManager()
   const msg = await cacheManager.getMessageRawPayload(id)
   if (!msg) {
@@ -220,7 +223,7 @@ export async function messageRawPayload (this:PuppetWhatsapp, id: string): Promi
   return msg
 }
 
-export async function messageRawPayloadParser (this:PuppetWhatsapp, whatsAppPayload: Message): Promise<PUPPET.MessagePayload> {
+export async function messageRawPayloadParser (this:PuppetWhatsapp, whatsAppPayload: MessagePayload): Promise<PUPPET.MessagePayload> {
   let type: PUPPET.MessageType = PUPPET.MessageType.Unknown
   switch (whatsAppPayload.type) {
     case MessageType.TEXT:
@@ -245,6 +248,7 @@ export async function messageRawPayloadParser (this:PuppetWhatsapp, whatsAppPayl
       type = PUPPET.MessageType.Contact
       break
   }
+
   return {
     fromId: whatsAppPayload.from,
     id: whatsAppPayload.id.id,
