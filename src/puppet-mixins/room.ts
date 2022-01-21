@@ -5,7 +5,7 @@ import { avatarForGroup } from '../config.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import type { PuppetWhatsapp } from '../puppet-whatsapp'
-import type { Contact, InviteV4Data, GroupChat } from '../schema/index'
+import { Contact, InviteV4Data, GroupChat, restoreContact } from '../schema/index.js'
 import { logger } from '../logger/index.js'
 
 export async function roomRawPayload (this: PuppetWhatsapp, id: string): Promise<Contact> {
@@ -13,7 +13,7 @@ export async function roomRawPayload (this: PuppetWhatsapp, id: string): Promise
   const cacheManager = await this.manager.getCacheManager()
   const room = await cacheManager.getContactOrRoomRawPayload(id)
   if (room) {
-    return room
+    return restoreContact(this.manager.whatsapp!, room)
   } else {
     const rawRoom = await this.manager.getContactById(id)
     await cacheManager.setContactOrRoomRawPayload(id, rawRoom)

@@ -1,4 +1,4 @@
-import type {  MessageMedia } from 'whatsapp-web.js'
+import type {  Contact, MessageMedia } from 'whatsapp-web.js'
 
 declare module 'whatsapp-web.js' {
   declare namespace WAWebJS {

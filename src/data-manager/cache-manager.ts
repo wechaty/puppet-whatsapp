@@ -3,7 +3,7 @@ import * as fs from 'fs-extra'
 import * as os from 'os'
 
 import { FlashStore } from 'flash-store'
-import type { Contact, InviteV4Data, Message } from '../schema/index.js'
+import type { Contact, ContactPayload, InviteV4Data, Message, MessagePayload } from '../schema/index.js'
 import { logger } from '../logger/index.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
@@ -46,8 +46,8 @@ export class CacheManager {
    * ************************************************************************
    */
   // Static cache, won't change over time
-  private cacheMessageRawPayload?: FlashStore<string, Message>
-  private cacheContactOrRoomRawPayload?: FlashStore<string, Contact>
+  private cacheMessageRawPayload?: FlashStore<string, MessagePayload>
+  private cacheContactOrRoomRawPayload?: FlashStore<string, ContactPayload>
   private cacheRoomInvitationRawPayload?: FlashStore<string, Partial<InviteV4Data>>
 
   /**
