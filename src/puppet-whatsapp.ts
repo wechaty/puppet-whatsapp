@@ -115,7 +115,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       .on('dirty', this.onDirty.bind(this))
 
     const session = await this.memory.get(MEMORY_SLOT)
-    const whatsapp = await this.manager.start(session)
+    const whatsapp = await manager.start(session)
     return whatsapp
   }
 
@@ -125,13 +125,17 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       return
     }
     this.state.inactive('pending')
-    this.manager.removeAllListeners()
     try {
-      await this.manager.stop()
+      await this.stopManager()
     } catch (err) {
       logger.error(`Can not stop, error: ${(err as Error).message}`)
     }
     this.state.inactive(true)
+  }
+
+  private async stopManager () {
+    this.manager.removeAllListeners()
+    await this.manager.stop()
   }
 
   /**
@@ -161,7 +165,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       logger.warn('onLogout(%s) already logged out?', wxid)
     }
     logger.info(EVENT_LOG_PRE, `${EventName.LOGOUT}, ${wxid}`)
-
+    this.__currentUserId = undefined
     this.emit('logout', { contactId: wxid, data: message })
   }
 
