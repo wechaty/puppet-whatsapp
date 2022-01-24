@@ -19,3 +19,5 @@ tsconfig.cjs.json
 .markdownlintrc
 .vscode/
 *.tgz
+.nyc_output/
+.eslintignore

@@ -1,6 +1,6 @@
 {
-  "name": "wechaty-puppet-whatsapp",
-  "version": "1.11.28",
+  "name": "@bung87/wechaty-puppet-whatsapp",
+  "version": "1.11.30",
   "description": "Wechaty Puppet for WhatsApp",
   "type": "module",
   "exports": {
