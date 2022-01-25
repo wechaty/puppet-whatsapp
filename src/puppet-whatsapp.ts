@@ -37,6 +37,7 @@ import { WA_ERROR_TYPE } from './exceptions/error-type.js'
 import WAError from './exceptions/whatsapp-error.js'
 import { ClientOptions, EventName } from './schema/index.js'
 import type { WhatsApp } from './whatsapp.js'
+import { getSession } from './session-file.js'
 
 process.on('uncaughtException', (e) => {
   console.error('process error is:', e.message)
@@ -116,7 +117,9 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       .on('ready',      this.onReady.bind(this))
       .on('dirty', this.onDirty.bind(this))
 
-    const session = await this.memory.get(MEMORY_SLOT)
+    // const session = await this.memory.get(MEMORY_SLOT)
+    const session = await getSession()
+    console.info(session)
     const whatsapp = await this.manager.start(session)
     return whatsapp
   }
