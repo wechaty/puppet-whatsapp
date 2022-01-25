@@ -2,7 +2,7 @@ import * as PUPPET from 'wechaty-puppet'
 import { FileBox } from '../compact/index.js'
 import type { PuppetWhatsapp } from '../puppet-whatsapp.js'
 import { parseVcard } from '../pure-function-helpers/vcard-parser.js'
-import { MessageContent, MessageMedia, MessagePayload, MessageType, restoreMessage } from '../schema/index.js'
+import { Contact, MessageContent, MessageMedia, MessagePayload, MessageSendOptions, MessageType, restoreMessage } from '../schema/index.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import { logger } from '../logger/index.js'
@@ -150,41 +150,50 @@ export async function messageMiniProgram (this:PuppetWhatsapp, messageId: string
   return PUPPET.throwUnsupportedError()
 }
 
-export async function messageSend (this:PuppetWhatsapp, conversationId: string, content: MessageContent): Promise<void> {
+export async function messageSend (this:PuppetWhatsapp, conversationId: string, content: MessageContent, options?: MessageSendOptions): Promise<string> {
   logger.info('messageSend(%s, %s)', conversationId, typeof content)
 
-  const msg = await this.manager.sendMessage(conversationId, content)
+  const msg = await this.manager.sendMessage(conversationId, content, options)
   const messageId = msg.id.id
   const cacheManager = await this.manager.getCacheManager()
   await cacheManager.setMessageRawPayload(messageId, msg)
+  return messageId
 }
 
-export async function messageSendText (this:PuppetWhatsapp, conversationId: string, text: string): Promise<void> {
+export async function messageSendText (this:PuppetWhatsapp, conversationId: string, text: string, mentions?: string[]): Promise<void> {
   logger.info('messageSendText(%s, %s)', conversationId, text)
-  return messageSend.call(this, conversationId, text)
+  if (mentions) {
+    const contacts = Promise.all(mentions.map((v) => (
+      this.manager.getContactById(v)
+    )))
+    return messageSend.call(this, conversationId, text, { mentions: contacts })
+  } else {
+    return messageSend.call(this, conversationId, text)
+  }
 }
 
-export async function messageSendFile (this:PuppetWhatsapp, conversationId: string, file: FileBox): Promise<void> {
+export async function messageSendFile (this:PuppetWhatsapp, conversationId: string, file: FileBox, options?: MessageSendOptions): Promise<void> {
   logger.info('messageSendFile(%s, %s)', conversationId, file.name)
   const msgContent = new MessageMedia(file.mimeType!, await file.toBase64(), file.name)
-  return messageSend.call(this, conversationId, msgContent)
+  return messageSend.call(this, conversationId, msgContent, options)
 }
 
-export async function messageSendContact (this:PuppetWhatsapp, conversationId: string, contactId: string): Promise<void> {
+export async function messageSendContact (this:PuppetWhatsapp, conversationId: string, contactId: string, options?: MessageSendOptions): Promise<void> {
   logger.info('messageSendContact(%s, %s)', conversationId, contactId)
 
   const contact = await this.manager.getContactById(contactId)
-  await messageSend.call(this, conversationId, contact)
+  await messageSend.call(this, conversationId, contact, options)
 }
 
 export async function messageSendUrl (
   this:PuppetWhatsapp,
   conversationId: string,
   urlLinkPayload: PUPPET.UrlLinkPayload,
+  options?: MessageSendOptions,
 ): Promise<void> {
   logger.info('messageSendUrl(%s, %s)', conversationId, JSON.stringify(urlLinkPayload))
   // FIXME: Does WhatsApp really support link messages like wechat? Find out and fix this!
-  await messageSend.call(this, conversationId, urlLinkPayload.url)
+  await messageSend.call(this, conversationId, urlLinkPayload.url, options)
 }
 
 export async function messageSendMiniProgram (this:PuppetWhatsapp, conversationId: string, miniProgramPayload: PUPPET.MiniProgramPayload): Promise<void> {
