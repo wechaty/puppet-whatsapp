@@ -263,7 +263,7 @@ export async function messageRawPayloadParser (this:PuppetWhatsapp, whatsAppPayl
     id: whatsAppPayload.id.id,
     mentionIdList: whatsAppPayload.mentionedIds,
     text: whatsAppPayload.body,
-    timestamp: Date.now(),
+    timestamp: whatsAppPayload.timestamp,
     toId: whatsAppPayload.to,
     type,
     // filename
