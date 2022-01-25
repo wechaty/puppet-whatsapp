@@ -255,6 +255,9 @@ export async function messageRawPayloadParser (this:PuppetWhatsapp, whatsAppPayl
     case WhatsAppMessageType.CONTACT_CARD:
       type = PUPPET.MessageType.Contact
       break
+    case WhatsAppMessageType.DOCUMENT:
+      type = PUPPET.MessageType.Attachment
+      break
   }
 
   return {

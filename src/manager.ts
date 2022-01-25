@@ -282,7 +282,7 @@ export class Manager extends EventEmitter {
     }
   }
 
-  /*
+  /**
    * unsupported events
    * leave logs to for futher dev
   */
