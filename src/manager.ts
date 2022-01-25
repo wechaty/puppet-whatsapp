@@ -269,11 +269,11 @@ export class Manager extends EventEmitter {
       this.emit('room-topic', roomJoinPayload)
     }
     if (notification.type === GroupNotificationType.CREATE) {
-      const roomChat = await this.getChatById(notification.chatId) as GroupChat
-      const contacts = roomChat.participants.map(participant => participant.id._serialized)
+      const roomChat = await this.getChatById((notification.id as any).remote) as GroupChat
+      const members = roomChat.participants.map(participant => participant.id._serialized)
 
       const roomJoinPayload: PUPPET.EventRoomJoinPayload = {
-        inviteeIdList: contacts,
+        inviteeIdList: members,
         inviterId: notification.author,
         roomId: notification.chatId,
         timestamp: notification.timestamp,
