@@ -15,7 +15,7 @@ import WAError from './exceptions/whatsapp-error.js'
 import { getWhatsApp } from './whatsapp.js'
 import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
 import type {  ClientOptions, Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification } from './schema/index.js'
-import { Client as WhatsApp, MessageType, GroupNotificationType } from './schema/index.js'
+import { Client as WhatsApp, WhatsAppMessageType, GroupNotificationType } from './schema/index.js'
 import { logger } from './logger/index.js'
 
 const InviteLinkRegex = /^(https?:\/\/)?chat\.whatsapp\.com\/(?:invite\/)?([a-zA-Z0-9_-]{22})$/
@@ -141,8 +141,13 @@ export class Manager extends EventEmitter {
     this.emit('login', this.whatsapp!.info.wid._serialized)
   }
 
+  private onLogout (reason: string = '退出登录') {
+    logger.info(`onLogout(${reason})`)
+    this.emit('logout', this.whatsapp!.info.wid._serialized, reason as string)
+  }
+
   private async onMessage (msg: Message) {
-    logger.info(`onMessage(${msg.id.id})`)
+    logger.info(`onMessage(${JSON.stringify(msg)})`)
     // @ts-ignore
     if (msg.type === 'e2e_notification') {
       if (msg.body === '' && msg.author === undefined) {
@@ -153,7 +158,7 @@ export class Manager extends EventEmitter {
     const id = msg.id.id
     const cacheManager = await this.getCacheManager()
     await cacheManager.setMessageRawPayload(id, msg)
-    if (msg.type !== MessageType.GROUP_INVITE) {
+    if (msg.type !== WhatsAppMessageType.GROUP_INVITE) {
       if (msg.links.length === 1 && InviteLinkRegex.test(msg.links[0]!.link)) {
         const matched = msg.links[0]!.link.match(InviteLinkRegex)
         if (matched) {
@@ -267,8 +272,9 @@ export class Manager extends EventEmitter {
     const eventStreams = events.map((event) => fromEvent(whatsapp, event).pipe(map((value: any) => ({ event, value }))))
     const allEvents$ = merge(...eventStreams)
     allEvents$.pipe(distinctUntilKeyChanged('event')).subscribe(({ event, value }: { event: string, value: any }) => {
+      logger.info(`event: ${JSON.stringify(event)}, value: ${JSON.stringify(value)}`)
       if (event === 'disconnected' && value as string === 'NAVIGATION') {
-        this.emit('logout', this.whatsapp!.info.wid._serialized, value as string)
+        this.onLogout(value as string)
       }
     })
   }
