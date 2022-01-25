@@ -5,15 +5,16 @@ import { avatarForGroup } from '../config.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import type { PuppetWhatsapp } from '../puppet-whatsapp'
-import { Contact, InviteV4Data, GroupChat, restoreContact } from '../schema/index.js'
+import type { ContactPayload, InviteV4Data, GroupChat } from '../schema/index.js'
 import { logger } from '../logger/index.js'
+import { contactRawPayload } from './contact.js'
 
-export async function roomRawPayload (this: PuppetWhatsapp, id: string): Promise<Contact> {
+export async function roomRawPayload (this: PuppetWhatsapp, id: string): Promise<ContactPayload> {
   logger.verbose('roomRawPayload(%s)', id)
   const cacheManager = await this.manager.getCacheManager()
   const room = await cacheManager.getContactOrRoomRawPayload(id)
   if (room) {
-    return restoreContact(this.manager.whatsapp!, room)
+    return room
   } else {
     const rawRoom = await this.manager.getContactById(id)
     const avatar = await rawRoom.getProfilePicUrl()
@@ -23,11 +24,11 @@ export async function roomRawPayload (this: PuppetWhatsapp, id: string): Promise
   }
 }
 
-export async function roomRawPayloadParser (this: PuppetWhatsapp, whatsAppPayload: Contact): Promise<PUPPET.RoomPayload> {
+export async function roomRawPayloadParser (this: PuppetWhatsapp, whatsAppPayload: ContactPayload): Promise<PUPPET.RoomPayload> {
   const chat = await this.manager.getChatById(whatsAppPayload.id._serialized) as GroupChat
   return {
     adminIdList: chat.participants.filter(p => p.isAdmin || p.isSuperAdmin).map(p => p.id._serialized),
-    avatar: await whatsAppPayload.getProfilePicUrl(),
+    avatar: whatsAppPayload.avatar,
     id: whatsAppPayload.id._serialized,
     memberIdList: chat.participants.map(p => p.id._serialized),
     topic: whatsAppPayload.name || whatsAppPayload.pushname || '',
@@ -134,10 +135,9 @@ export async function roomMemberList (this: PuppetWhatsapp, roomId: string): Pro
 
 export async function roomMemberRawPayload (this: PuppetWhatsapp, roomId: string, contactId: string): Promise<PUPPET.RoomMemberPayload> {
   logger.verbose('roomMemberRawPayload(%s, %s)', roomId, contactId)
-  const contact = await this.manager.getContactById(contactId)
-  const avatar = await contact.getProfilePicUrl()
+  const contact = await contactRawPayload.call(this, contactId)
   return {
-    avatar,
+    avatar: contact.avatar,
     id: contact.id._serialized,
     name: contact.pushname || contact.name || '',
     // roomAlias : contact.name,
@@ -163,24 +163,37 @@ export async function roomAnnounce (this: PuppetWhatsapp, roomId: string, text?:
 */
 export async function roomInvitationAccept (this: PuppetWhatsapp, roomInvitationId: string): Promise<void> {
   logger.verbose('roomInvitationAccept(%s)', roomInvitationId)
-  const cacheManager = await this.manager.getCacheManager()
 
+  const info = await roomInvitationRawPayload.call(this, roomInvitationId)
+
+  if (Object.keys(info).length === 1) {
+    await this.manager.acceptRoomInvite(info.inviteCode!)
+  } else {
+    await this.manager.acceptPrivateRoomInvite(info as InviteV4Data)
+  }
+
+}
+
+export async function roomInvitationRawPayload (this: PuppetWhatsapp, roomInvitationId: string): Promise<Partial<InviteV4Data>> {
+  logger.verbose('roomInvitationRawPayload(%s)', roomInvitationId)
+  const cacheManager = await this.manager.getCacheManager()
   const info = await cacheManager.getRoomInvitationRawPayload(roomInvitationId)
   if (info) {
-    if (Object.keys(info).length === 1) {
-      await this.manager.acceptRoomInvite(info.inviteCode!)
-    } else {
-      await this.manager.acceptPrivateRoomInvite(info as InviteV4Data)
+    return info
+  } else {
+    return {
+      inviteCode: roomInvitationId,
     }
-
   }
 }
 
-export async function roomInvitationRawPayload (this: PuppetWhatsapp, roomInvitationId: string): Promise<any> {
-  logger.verbose('roomInvitationRawPayload(%s)', roomInvitationId)
-  return PUPPET.throwUnsupportedError()
-}
-
+/**
+ *
+ * @param this PuppetWhatsapp
+ * @param rawPayload Partial<InviteV4Data>
+ * @returns Partial<InviteV4Data>
+ * TODO: Here we return Partial<InviteV4Data> for roomInvitationAccept usage, We may need other fields required by RoomInvitationPayload
+ */
 export async function roomInvitationRawPayloadParser (this: PuppetWhatsapp, rawPayload: any): Promise<PUPPET.RoomInvitationPayload> {
   logger.verbose('roomInvitationRawPayloadParser(%s)', JSON.stringify(rawPayload))
   return rawPayload
