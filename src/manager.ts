@@ -14,7 +14,7 @@ import { WA_ERROR_TYPE } from './exceptions/error-type.js'
 import WAError from './exceptions/whatsapp-error.js'
 import { getWhatsApp } from './whatsapp.js'
 import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
-import type {  ClientOptions, Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification } from './schema/index.js'
+import type {  ClientOptions, Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification, ContactPayload } from './schema/index.js'
 import { Client as WhatsApp, MessageType, GroupNotificationType } from './schema/index.js'
 import { logger } from './logger/index.js'
 
@@ -136,7 +136,9 @@ export class Manager extends EventEmitter {
     const nonBroadcast = contacts.filter(c => c.id.server !== 'broadcast')
     const cacheManager = await this.getCacheManager()
     for (const contact of nonBroadcast) {
-      await cacheManager.setContactOrRoomRawPayload(contact.id._serialized, contact)
+      const avatar = await contact.getProfilePicUrl()
+      const contactWithAvatar = Object.assign(contact, { avatar })
+      await cacheManager.setContactOrRoomRawPayload(contact.id._serialized, contactWithAvatar)
     }
     this.emit('login', this.whatsapp!.info.wid._serialized)
   }

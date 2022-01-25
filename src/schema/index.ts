@@ -59,7 +59,9 @@ export type {
   List,
 } from 'whatsapp-web.js'
 
-export type ContactPayload = Omit<Contact, 'getProfilePicUrl' | 'getChat' | 'getCountryCode' | 'getFormattedNumber' | 'block' | 'unblock' | 'getAbout'>
+export type ContactPayload = {
+  avatar: string
+} & Omit<Contact, 'getProfilePicUrl' | 'getChat' | 'getCountryCode' | 'getFormattedNumber' | 'block' | 'unblock' | 'getAbout'>
 export type MessagePayload = Omit<Message, 'acceptGroupV4Invite' | 'delete' | 'downloadMedia' | 'getChat' | 'getContact' | 'getMentions' | 'getQuotedMessage' | 'reply' | 'forward' | 'star' | 'unstar' | 'getInfo' | 'getOrder' | 'getPayment'>
 
 export function restoreContact(client: Client, payload: ContactPayload): Contact {
