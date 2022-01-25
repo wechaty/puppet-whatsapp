@@ -22,7 +22,6 @@ import qrTerm from 'qrcode-terminal'
 
 import { PuppetWhatsapp } from '../src/mod.js'
 import { MemoryCard } from 'wechaty-puppet'
-import { MEMORY_SLOT } from '../src/config.js'
 
 /**
  *
