@@ -4,7 +4,7 @@ import WAWebJS, { Client, Contact, Message } from 'whatsapp-web.js'
 
 export const WhatsWebURL = WAWebJS.WhatsWebURL
 export const DefaultOptions = WAWebJS.DefaultOptions
-export const MessageType = WAWebJS.MessageTypes
+export const WhatsAppMessageType = WAWebJS.MessageTypes
 export const GroupNotificationType = WAWebJS.GroupNotificationTypes
 export const MessageMedia = WAWebJS.MessageMedia
 // @ts-ignore
