@@ -246,9 +246,17 @@ export class Manager extends EventEmitter {
 
   private async onRoomUpdate (notification: GroupNotification) {
     logger.info(`onRoomUpdate(${JSON.stringify(notification)})`)
+    const cacheManager = await this.getCacheManager()
+    const roomInCache = await cacheManager.getContactOrRoomRawPayload(notification.chatId)
+
+    if (!roomInCache) {
+      const rawRoom = await this.getContactById(notification.chatId)
+      const avatar = await rawRoom.getProfilePicUrl()
+      const room = Object.assign(rawRoom, { avatar })
+      logger.info(rawRoom)
+      await cacheManager.setContactOrRoomRawPayload(notification.chatId, room)
+    }
     if (notification.type === GroupNotificationType.SUBJECT) {
-      const cacheManager = await this.getCacheManager()
-      const roomInCache = await cacheManager.getContactOrRoomRawPayload(notification.chatId)
       const roomJoinPayload: PUPPET.EventRoomTopicPayload = {
         changerId: notification.author,
         newTopic: notification.body,
