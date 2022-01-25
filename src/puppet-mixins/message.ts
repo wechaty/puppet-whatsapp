@@ -150,13 +150,14 @@ export async function messageMiniProgram (this:PuppetWhatsapp, messageId: string
   return PUPPET.throwUnsupportedError()
 }
 
-export async function messageSend (this:PuppetWhatsapp, conversationId: string, content: MessageContent): Promise<void> {
+export async function messageSend (this:PuppetWhatsapp, conversationId: string, content: MessageContent): Promise<string> {
   logger.info('messageSend(%s, %s)', conversationId, typeof content)
 
   const msg = await this.manager.sendMessage(conversationId, content)
   const messageId = msg.id.id
   const cacheManager = await this.manager.getCacheManager()
   await cacheManager.setMessageRawPayload(messageId, msg)
+  return messageId
 }
 
 export async function messageSendText (this:PuppetWhatsapp, conversationId: string, text: string): Promise<void> {
