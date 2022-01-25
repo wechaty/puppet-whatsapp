@@ -18,6 +18,7 @@ import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
 import type {  ClientOptions, Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification } from './schema/index.js'
 import { Client as WhatsApp, MessageType, GroupNotificationType } from './schema/index.js'
 import { logger } from './logger/index.js'
+import { saveSession } from './session-file.js'
 
 const InviteLinkRegex = /^(https?:\/\/)?chat\.whatsapp\.com\/(?:invite\/)?([a-zA-Z0-9_-]{22})$/
 type ManagerEvents = 'message'
@@ -112,6 +113,7 @@ export class Manager extends EventEmitter {
 
   private async onAuthenticated (session: any) {
     logger.info(`onAuthenticated(${JSON.stringify(session)})`)
+    await saveSession(session)
     try {
       await this.options.memory?.set(MEMORY_SLOT, session)
       await this.options.memory?.save()
@@ -127,7 +129,8 @@ export class Manager extends EventEmitter {
     // auth_failure due to session invalidation
     // clear sessionData -> reinit
     await this.options.memory?.delete(MEMORY_SLOT)
-    // await this.start() // FIXME: need to restart
+    // session tmp add
+    await this.start(null) // FIXME: need to restart
   }
 
   private async onReady () {
