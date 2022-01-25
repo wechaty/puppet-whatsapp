@@ -127,7 +127,9 @@ export class Manager extends EventEmitter {
     // auth_failure due to session invalidation
     // clear sessionData -> reinit
     await this.options.memory?.delete(MEMORY_SLOT)
-    // await this.start() // FIXME: need to restart
+    await this.options.memory?.save()
+    // tmp fix restart
+    // await this.start(null) // FIXME: need to restart
   }
 
   private async onReady () {
