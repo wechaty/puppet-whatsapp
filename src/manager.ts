@@ -15,9 +15,10 @@ import { WA_ERROR_TYPE } from './exceptions/error-type.js'
 import WAError from './exceptions/whatsapp-error.js'
 import { getWhatsApp } from './whatsapp.js'
 import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
-import type {  ClientOptions, Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification, ClientSession } from './schema/index.js'
-import { Client as WhatsApp, MessageType, GroupNotificationType } from './schema/index.js'
+import type {  ClientOptions, Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification, ClientSession, GroupChat } from './schema/index.js'
+import { Client as WhatsApp, WhatsAppMessageType, GroupNotificationType } from './schema/index.js'
 import { logger } from './logger/index.js'
+import { sleep } from './utils.js'
 
 const InviteLinkRegex = /^(https?:\/\/)?chat\.whatsapp\.com\/(?:invite\/)?([a-zA-Z0-9_-]{22})$/
 type ManagerEvents = 'message'
@@ -92,8 +93,10 @@ export class Manager extends EventEmitter {
     this.whatsapp
       .initialize()
       .then(() => logger.verbose('start() whatsapp.initialize() done'))
-      .catch(e => {
+      .catch(async e => {
         logger.error('start() whatsapp.initialize() rejection: %s', e)
+        await sleep(500)
+        await this.start(session)
       })
 
     this.requestManager = new RequestManager(this.whatsapp)
@@ -150,8 +153,13 @@ export class Manager extends EventEmitter {
     this.emit('login', this.whatsapp!.info.wid._serialized)
   }
 
+  private onLogout (reason: string = '退出登录') {
+    logger.info(`onLogout(${reason})`)
+    this.emit('logout', this.whatsapp!.info.wid._serialized, reason as string)
+  }
+
   private async onMessage (msg: Message) {
-    logger.info(`onMessage(${msg.id.id})`)
+    logger.info(`onMessage(${JSON.stringify(msg)})`)
     // @ts-ignore
     if (msg.type === 'e2e_notification') {
       if (msg.body === '' && msg.author === undefined) {
@@ -162,7 +170,18 @@ export class Manager extends EventEmitter {
     const id = msg.id.id
     const cacheManager = await this.getCacheManager()
     await cacheManager.setMessageRawPayload(id, msg)
-    if (msg.type !== MessageType.GROUP_INVITE) {
+
+    const contactId = msg.from
+    const contact = await this.getContactById(contactId)
+    if (contact.isMyContact) {
+      /*
+       * TODO: 也许可以将非好友发来的消息作为好友事件
+       * 优点：可以在秒回端复用一些好友逻辑
+       * 缺点：1、可能非好友连续发多条消息导致反复推送好友事件（例如：你好？在吗？在吗？在吗）
+       *      2、whatsapp并非真正的好友关系，如果手机卡换了一个手机，通讯录没有他，则相当于非好友了，与传统好友的运作逻辑不符
+      */
+    }
+    if (msg.type !== WhatsAppMessageType.GROUP_INVITE) {
       if (msg.links.length === 1 && InviteLinkRegex.test(msg.links[0]!.link)) {
         const matched = msg.links[0]!.link.match(InviteLinkRegex)
         if (matched) {
@@ -230,9 +249,16 @@ export class Manager extends EventEmitter {
 
   private async onRoomUpdate (notification: GroupNotification) {
     logger.info(`onRoomUpdate(${JSON.stringify(notification)})`)
+    const cacheManager = await this.getCacheManager()
+    const roomInCache = await cacheManager.getContactOrRoomRawPayload(notification.chatId)
+
+    if (!roomInCache) {
+      const rawRoom = await this.getContactById(notification.chatId)
+      const avatar = await rawRoom.getProfilePicUrl()
+      const room = Object.assign(rawRoom, { avatar })
+      await cacheManager.setContactOrRoomRawPayload(notification.chatId, room)
+    }
     if (notification.type === GroupNotificationType.SUBJECT) {
-      const cacheManager = await this.getCacheManager()
-      const roomInCache = await cacheManager.getContactOrRoomRawPayload(notification.chatId)
       const roomJoinPayload: PUPPET.EventRoomTopicPayload = {
         changerId: notification.author,
         newTopic: notification.body,
@@ -242,6 +268,54 @@ export class Manager extends EventEmitter {
       }
       this.emit('room-topic', roomJoinPayload)
     }
+    if (notification.type === GroupNotificationType.CREATE) {
+      const roomChat = await this.getChatById(notification.chatId) as GroupChat
+      const contacts = roomChat.participants.map(participant => participant.id._serialized)
+
+      const roomJoinPayload: PUPPET.EventRoomJoinPayload = {
+        inviteeIdList: contacts,
+        inviterId: notification.author,
+        roomId: notification.chatId,
+        timestamp: notification.timestamp,
+      }
+      this.emit('room-join', roomJoinPayload)
+    }
+  }
+
+  /*
+   * unsupported events
+   * leave logs to for futher dev
+  */
+  private async onChangeBattery (...args: any[]) {
+    logger.info(`onChangeBattery(${JSON.stringify(args)})`)
+  }
+
+  private async onChangeState (...args: any[]) {
+    logger.info(`onChangeState(${JSON.stringify(args)})`)
+  }
+
+  private async onIncomingCall (...args: any[]) {
+    logger.info(`onIncomingCall(${JSON.stringify(args)})`)
+  }
+
+  private async onMediaUploaded (...args: any[]) {
+    logger.info(`onMediaUploaded(${JSON.stringify(args)})`)
+  }
+
+  private async onMessageAck (...args: any[]) {
+    logger.info(`onMessageAck(${JSON.stringify(args)})`)
+  }
+
+  private async onMessageCreate (...args: any[]) {
+    logger.info(`onMessageCreate(${JSON.stringify(args)})`)
+  }
+
+  private async onMessageRevokeEveryone (...args: any[]) {
+    logger.info(`onMessageRevokeEveryone(${JSON.stringify(args)})`)
+  }
+
+  private async onMessageRevokeMe (...args: any[]) {
+    logger.info(`onMessageRevokeMe(${JSON.stringify(args)})`)
   }
 
   public async initWhatsAppEvents (
@@ -268,6 +342,16 @@ export class Manager extends EventEmitter {
 
     whatsapp.on('group_update', this.onRoomUpdate.bind(this))
 
+    // unsupported events
+    whatsapp.on('change_battery', this.onChangeBattery.bind(this))
+    whatsapp.on('change_state', this.onChangeState.bind(this))
+    whatsapp.on('incoming_call', this.onIncomingCall.bind(this))
+    whatsapp.on('media_uploaded', this.onMediaUploaded.bind(this))
+    whatsapp.on('message_ack', this.onMessageAck.bind(this))
+    whatsapp.on('message_create', this.onMessageCreate.bind(this))
+    whatsapp.on('message_revoke_everyone', this.onMessageRevokeEveryone.bind(this))
+    whatsapp.on('message_revoke_me', this.onMessageRevokeMe.bind(this))
+
     const events = [
       'authenticated',
       'ready',
@@ -276,8 +360,9 @@ export class Manager extends EventEmitter {
     const eventStreams = events.map((event) => fromEvent(whatsapp, event).pipe(map((value: any) => ({ event, value }))))
     const allEvents$ = merge(...eventStreams)
     allEvents$.pipe(distinctUntilKeyChanged('event')).subscribe(({ event, value }: { event: string, value: any }) => {
+      logger.info(`event: ${JSON.stringify(event)}, value: ${JSON.stringify(value)}`)
       if (event === 'disconnected' && value as string === 'NAVIGATION') {
-        this.emit('logout', this.whatsapp!.info.wid._serialized, value as string)
+        this.onLogout(value as string)
       }
     })
   }

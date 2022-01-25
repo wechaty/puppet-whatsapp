@@ -44,6 +44,7 @@ void (async () => {
         // clientId: '',
         puppeteer: {
           args: WHATSAPP_PUPPET_PROXY ? [`--proxy-server=${WHATSAPP_PUPPET_PROXY}`] : [],
+          headless: false,
         },
       },
     },
@@ -124,8 +125,17 @@ void (async () => {
    */
   async function onMessage (payload: PUPPET.EventMessagePayload): Promise<void> {
     const msgPayload = await puppet.messagePayload(payload.messageId)
+    console.info(`
+  =========================================
+  Message type: ${msgPayload.type}
+  text: ${msgPayload.text}
+  from: ${msgPayload.fromId}
+  to: ${msgPayload.toId}
+  =========================================
+  `)
     if ((/ding/i.test(msgPayload.text || ''))) {
-      await puppet.messageSendText(msgPayload.fromId!, 'dong')
+      const messageId = await puppet.messageSendText(msgPayload.fromId!, 'dong')
+      console.info(`messageId: ${messageId}`)
     }
   }
 
