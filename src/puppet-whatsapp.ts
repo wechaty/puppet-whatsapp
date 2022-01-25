@@ -47,7 +47,7 @@ export type PuppetWhatsAppOptions = PUPPET.PuppetOptions & {
   puppeteerOptions?: ClientOptions
 }
 
-const EVENT_LOG_PRE = 'EVENT_LOG'
+// const EVENT_LOG_PRE = 'EVENT_LOG'
 class PuppetWhatsapp extends PUPPET.Puppet {
 
   static override readonly VERSION = VERSION
@@ -116,7 +116,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       .on('ready',      this.onReady.bind(this))
       .on('dirty', this.onDirty.bind(this))
 
-    const session = await this.memory.get(MEMORY_SLOT)
+    const session = await this.options.memory?.get(MEMORY_SLOT)
     const whatsapp = await this.manager.start(session)
     return whatsapp
   }
@@ -149,7 +149,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       logger.warn('onLogin(%s) already login? NOOP', wxid)
       return
     }
-    logger.info(EVENT_LOG_PRE, `${EventName.LOGIN}, ${wxid}`)
+    logger.info(`${EventName.LOGIN}, ${wxid}`)
     this.id = wxid
     if (!this.selfId()) {
       await super.login(this.id)
@@ -164,7 +164,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     if (!this.logonoff()) {
       logger.warn('onLogout(%s) already logged out?', wxid)
     }
-    logger.info(EVENT_LOG_PRE, `${EventName.LOGOUT}, ${wxid}`)
+    logger.info(`${EventName.LOGOUT}, ${wxid}`)
 
     this.id = undefined
 
@@ -179,19 +179,19 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   private async onScan (status: PUPPET.ScanStatus, qrcode?: string): Promise<void> {
     logger.info('onScan(%s, %s)', status, qrcode)
 
-    logger.info(EVENT_LOG_PRE, `${EventName.SCAN}`)
+    logger.info(`${EventName.SCAN}`)
     this.emit('scan', { qrcode, status })
   }
 
   private async onError (e: string) {
-    logger.info(EVENT_LOG_PRE, `${EventName.ERROR}, ${e}`)
+    logger.info(`${EventName.ERROR}, ${e}`)
     this.emit('error', {
       data: e,
     })
   }
 
   private async onReset (reason: string) {
-    logger.info(EVENT_LOG_PRE, `${EventName.RESET}, ${reason}`)
+    logger.info(`${EventName.RESET}, ${reason}`)
     this.emit('reset', { data: reason } as PUPPET.EventResetPayload)
   }
 
@@ -224,7 +224,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   private async onReady () {
     logger.info('onReady()')
 
-    logger.info(EVENT_LOG_PRE, `${EventName.READY}`)
+    logger.info(`${EventName.READY}`)
     this.emit('ready', { data: 'ready' })
   }
 

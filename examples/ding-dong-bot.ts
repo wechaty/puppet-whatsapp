@@ -21,6 +21,8 @@ import type * as PUPPET from 'wechaty-puppet'
 import qrTerm from 'qrcode-terminal'
 
 import { PuppetWhatsapp } from '../src/mod.js'
+import { MemoryCard } from 'wechaty-puppet'
+import { MEMORY_SLOT } from '../src/config.js'
 
 /**
  *
@@ -28,12 +30,20 @@ import { PuppetWhatsapp } from '../src/mod.js'
  *
  */
 const WHATSAPP_PUPPET_PROXY = process.env['WHATSAPP_PUPPET_PROXY']
+const memoryCard = new MemoryCard({
+  name: 'session-file',
+  storageOptions: { type: 'file' },
+})
+await memoryCard.load()
+console.info(memoryCard.get(MEMORY_SLOT))
 const puppet = new PuppetWhatsapp(
   {
+    memory: memoryCard,
     puppeteerOptions: {
       // clientId: '',
       puppeteer:{
         args: WHATSAPP_PUPPET_PROXY ? [`--proxy-server=${WHATSAPP_PUPPET_PROXY}`] : [],
+        headless: false,
       },
     },
   },
@@ -114,8 +124,17 @@ function onError (payload: PUPPET.EventErrorPayload) {
  */
 async function onMessage (payload: PUPPET.EventMessagePayload): Promise<void> {
   const msgPayload = await puppet.messagePayload(payload.messageId)
+  console.info(`
+  =========================================
+  Message type: ${msgPayload.type}
+  text: ${msgPayload.text}
+  from: ${msgPayload.fromId}
+  to: ${msgPayload.toId}
+  =========================================
+  `)
   if ((/ding/i.test(msgPayload.text || ''))) {
-    await puppet.messageSendText(msgPayload.fromId!, 'dong')
+    const messageId = await puppet.messageSendText(msgPayload.fromId!, 'dong')
+    console.info(`messageId: ${messageId}`)
   }
 }
 

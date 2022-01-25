@@ -2,7 +2,7 @@ import * as PUPPET from 'wechaty-puppet'
 import { FileBox } from '../compact/index.js'
 import type { PuppetWhatsapp } from '../puppet-whatsapp.js'
 import { parseVcard } from '../pure-function-helpers/vcard-parser.js'
-import { MessageContent, MessageMedia, MessagePayload, MessageSendOptions, MessageType, restoreMessage } from '../schema/index.js'
+import { MessageContent, MessageMedia, MessagePayload, MessageSendOptions, WhatsAppMessageType, restoreMessage } from '../schema/index.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import { logger } from '../logger/index.js'
@@ -20,7 +20,7 @@ export async function messageContact (this:PuppetWhatsapp, messageId: string): P
     logger.error('Message %s not found', messageId)
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} not found`)
   }
-  if (msg.type !== MessageType.CONTACT_CARD) {
+  if (msg.type !== WhatsAppMessageType.CONTACT_CARD) {
     logger.error('Message %s is not contact type', messageId)
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} is not contact type`)
   }
@@ -51,7 +51,7 @@ export async function messageImage (this:PuppetWhatsapp, messageId: string, imag
     logger.error('Message %s not found', messageId)
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} Not Found`)
   }
-  if (msg.type !== MessageType.IMAGE || !msg.hasMedia) {
+  if (msg.type !== WhatsAppMessageType.IMAGE || !msg.hasMedia) {
     logger.error('Message %s does not contain any media', messageId)
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} does not contain any media`)
   }
@@ -189,11 +189,10 @@ export async function messageSendUrl (
   this:PuppetWhatsapp,
   conversationId: string,
   urlLinkPayload: PUPPET.UrlLinkPayload,
-  options?: MessageSendOptions,
-): Promise<void> {
+): Promise<string> {
   logger.info('messageSendUrl(%s, %s)', conversationId, JSON.stringify(urlLinkPayload))
   // FIXME: Does WhatsApp really support link messages like wechat? Find out and fix this!
-  await messageSend.call(this, conversationId, urlLinkPayload.url, options)
+  return messageSend.call(this, conversationId, urlLinkPayload.url)
 }
 
 export async function messageSendMiniProgram (this:PuppetWhatsapp, conversationId: string, miniProgramPayload: PUPPET.MiniProgramPayload): Promise<void> {
@@ -235,25 +234,25 @@ export async function messageRawPayload (this:PuppetWhatsapp, id: string): Promi
 export async function messageRawPayloadParser (this:PuppetWhatsapp, whatsAppPayload: MessagePayload): Promise<PUPPET.MessagePayload> {
   let type: PUPPET.MessageType = PUPPET.MessageType.Unknown
   switch (whatsAppPayload.type) {
-    case MessageType.TEXT:
+    case WhatsAppMessageType.TEXT:
       type = PUPPET.MessageType.Text
       break
-    case MessageType.STICKER:
+    case WhatsAppMessageType.STICKER:
       type = PUPPET.MessageType.Emoticon
       break
-    case MessageType.VOICE:
+    case WhatsAppMessageType.VOICE:
       type = PUPPET.MessageType.Audio
       break
-    case MessageType.IMAGE:
+    case WhatsAppMessageType.IMAGE:
       type = PUPPET.MessageType.Image
       break
-    case MessageType.AUDIO:
+    case WhatsAppMessageType.AUDIO:
       type = PUPPET.MessageType.Audio
       break
-    case MessageType.VIDEO:
+    case WhatsAppMessageType.VIDEO:
       type = PUPPET.MessageType.Video
       break
-    case MessageType.CONTACT_CARD:
+    case WhatsAppMessageType.CONTACT_CARD:
       type = PUPPET.MessageType.Contact
       break
   }

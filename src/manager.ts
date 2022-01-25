@@ -16,7 +16,7 @@ import WAError from './exceptions/whatsapp-error.js'
 import { getWhatsApp } from './whatsapp.js'
 import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
 import type {  ClientOptions, Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification, ClientSession } from './schema/index.js'
-import { Client as WhatsApp, MessageType, GroupNotificationType } from './schema/index.js'
+import { Client as WhatsApp, WhatsAppMessageType, GroupNotificationType } from './schema/index.js'
 import { logger } from './logger/index.js'
 
 const InviteLinkRegex = /^(https?:\/\/)?chat\.whatsapp\.com\/(?:invite\/)?([a-zA-Z0-9_-]{22})$/
@@ -127,7 +127,9 @@ export class Manager extends EventEmitter {
     // auth_failure due to session invalidation
     // clear sessionData -> reinit
     await this.options.memory?.delete(MEMORY_SLOT)
-    // await this.start() // FIXME: need to restart
+    await this.options.memory?.save()
+    // tmp fix restart
+    // await this.start(null) // FIXME: need to restart
   }
 
   private async onReady () {
@@ -146,6 +148,11 @@ export class Manager extends EventEmitter {
     })
     await Promise.all(all)
     this.emit('login', this.whatsapp!.info.wid._serialized)
+  }
+
+  private onLogout (reason: string = '退出登录') {
+    logger.info(`onLogout(${reason})`)
+    this.emit('logout', this.whatsapp!.info.wid._serialized, reason as string)
   }
 
   private async onMessage (msg: Message) {
@@ -171,7 +178,7 @@ export class Manager extends EventEmitter {
        *      2、whatsapp并非真正的好友关系，如果手机卡换了一个手机，通讯录没有他，则相当于非好友了，与传统好友的运作逻辑不符
       */
     }
-    if (msg.type !== MessageType.GROUP_INVITE) {
+    if (msg.type !== WhatsAppMessageType.GROUP_INVITE) {
       if (msg.links.length === 1 && InviteLinkRegex.test(msg.links[0]!.link)) {
         const matched = msg.links[0]!.link.match(InviteLinkRegex)
         if (matched) {
@@ -331,8 +338,9 @@ export class Manager extends EventEmitter {
     const eventStreams = events.map((event) => fromEvent(whatsapp, event).pipe(map((value: any) => ({ event, value }))))
     const allEvents$ = merge(...eventStreams)
     allEvents$.pipe(distinctUntilKeyChanged('event')).subscribe(({ event, value }: { event: string, value: any }) => {
+      logger.info(`event: ${JSON.stringify(event)}, value: ${JSON.stringify(value)}`)
       if (event === 'disconnected' && value as string === 'NAVIGATION') {
-        this.emit('logout', this.whatsapp!.info.wid._serialized, value as string)
+        this.onLogout(value as string)
       }
     })
   }
