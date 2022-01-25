@@ -266,6 +266,15 @@ export class Manager extends EventEmitter {
       }
       this.emit('room-topic', roomJoinPayload)
     }
+    if (notification.type === GroupNotificationType.CREATE) {
+      const roomJoinPayload: PUPPET.EventRoomJoinPayload = {
+        inviteeIdList: [],
+        inviterId: notification.author,
+        roomId: notification.chatId,
+        timestamp: notification.timestamp,
+      }
+      this.emit('room-join', roomJoinPayload)
+    }
   }
 
   /*
