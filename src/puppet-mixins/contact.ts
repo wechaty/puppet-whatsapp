@@ -6,7 +6,7 @@ import {
 } from '../compact/index.js'
 import { logger } from '../logger/index.js'
 import type { PuppetWhatsapp } from '../puppet-whatsapp.js'
-import { Contact, ContactCls, ContactPayload } from '../schema/index.js'
+import type { ContactPayload } from '../schema/index.js'
 
 async function contactAlias (this: PuppetWhatsapp, contactId: string)                       : Promise<string>;
 async function contactAlias (this: PuppetWhatsapp, contactId: string, alias: string | null) : Promise<void>;
