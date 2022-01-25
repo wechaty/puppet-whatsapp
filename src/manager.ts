@@ -149,7 +149,7 @@ export class Manager extends EventEmitter {
   }
 
   private async onMessage (msg: Message) {
-    logger.info(`onMessage(${msg.id.id})`)
+    logger.info(`onMessage(${JSON.stringify(msg)})`)
     // @ts-ignore
     if (msg.type === 'e2e_notification') {
       if (msg.body === '' && msg.author === undefined) {
