@@ -15,7 +15,7 @@ import { WA_ERROR_TYPE } from './exceptions/error-type.js'
 import WAError from './exceptions/whatsapp-error.js'
 import { getWhatsApp } from './whatsapp.js'
 import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
-import type {  ClientOptions, Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification } from './schema/index.js'
+import type {  ClientOptions, Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification, ClientSession } from './schema/index.js'
 import { Client as WhatsApp, MessageType, GroupNotificationType } from './schema/index.js'
 import { logger } from './logger/index.js'
 
@@ -110,7 +110,7 @@ export class Manager extends EventEmitter {
     }
   }
 
-  private async onAuthenticated (session: any) {
+  private async onAuthenticated (session: ClientSession) {
     logger.info(`onAuthenticated(${JSON.stringify(session)})`)
     try {
       await this.options.memory?.set(MEMORY_SLOT, session)
