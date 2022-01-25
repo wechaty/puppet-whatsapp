@@ -34,8 +34,6 @@ const memoryCard = new MemoryCard({
   name: 'session-file',
   storageOptions: { type: 'file' },
 })
-await memoryCard.load()
-console.info(memoryCard.get(MEMORY_SLOT))
 const puppet = new PuppetWhatsapp(
   {
     memory: memoryCard,
