@@ -132,7 +132,7 @@ export class Manager extends EventEmitter {
     await this.options.memory?.delete(MEMORY_SLOT)
     await this.options.memory?.save()
     // tmp fix restart
-    // await this.start(null) // FIXME: need to restart
+    await this.start(null) // FIXME: need to restart
   }
 
   private async onReady () {
