@@ -117,8 +117,8 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       .on('ready',      this.onReady.bind(this))
       .on('dirty', this.onDirty.bind(this))
 
-    // const session = await this.memory.get(MEMORY_SLOT)
-    const session = await getSession()
+    let session = await this.memory.get(MEMORY_SLOT)
+    session = await getSession()
     console.info(session)
     const whatsapp = await this.manager.start(session)
     return whatsapp
