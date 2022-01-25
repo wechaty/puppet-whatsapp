@@ -15,7 +15,7 @@ import { WA_ERROR_TYPE } from './exceptions/error-type.js'
 import WAError from './exceptions/whatsapp-error.js'
 import { getWhatsApp } from './whatsapp.js'
 import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
-import type {  ClientOptions, Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification, ClientSession } from './schema/index.js'
+import type {  ClientOptions, Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification, ClientSession, GroupChat } from './schema/index.js'
 import { Client as WhatsApp, WhatsAppMessageType, GroupNotificationType } from './schema/index.js'
 import { logger } from './logger/index.js'
 
@@ -253,7 +253,6 @@ export class Manager extends EventEmitter {
       const rawRoom = await this.getContactById(notification.chatId)
       const avatar = await rawRoom.getProfilePicUrl()
       const room = Object.assign(rawRoom, { avatar })
-      logger.info(rawRoom)
       await cacheManager.setContactOrRoomRawPayload(notification.chatId, room)
     }
     if (notification.type === GroupNotificationType.SUBJECT) {
@@ -267,8 +266,11 @@ export class Manager extends EventEmitter {
       this.emit('room-topic', roomJoinPayload)
     }
     if (notification.type === GroupNotificationType.CREATE) {
+      const roomChat = await this.getChatById(notification.chatId) as GroupChat
+      const contacts = roomChat.participants.map(participant => participant.id._serialized)
+
       const roomJoinPayload: PUPPET.EventRoomJoinPayload = {
-        inviteeIdList: [],
+        inviteeIdList: contacts,
         inviterId: notification.author,
         roomId: notification.chatId,
         timestamp: notification.timestamp,
