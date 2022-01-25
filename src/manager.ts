@@ -18,6 +18,7 @@ import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
 import type {  ClientOptions, Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification, ClientSession, GroupChat } from './schema/index.js'
 import { Client as WhatsApp, WhatsAppMessageType, GroupNotificationType } from './schema/index.js'
 import { logger } from './logger/index.js'
+import { sleep } from './utils.js'
 
 const InviteLinkRegex = /^(https?:\/\/)?chat\.whatsapp\.com\/(?:invite\/)?([a-zA-Z0-9_-]{22})$/
 type ManagerEvents = 'message'
@@ -92,8 +93,10 @@ export class Manager extends EventEmitter {
     this.whatsapp
       .initialize()
       .then(() => logger.verbose('start() whatsapp.initialize() done'))
-      .catch(e => {
+      .catch(async e => {
         logger.error('start() whatsapp.initialize() rejection: %s', e)
+        await sleep(500)
+        await this.start(session)
       })
 
     this.requestManager = new RequestManager(this.whatsapp)
