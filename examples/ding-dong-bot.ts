@@ -22,7 +22,6 @@ import qrTerm from 'qrcode-terminal'
 
 import { PuppetWhatsapp } from '../src/mod.js'
 import { MemoryCard } from 'wechaty-puppet'
-import { MEMORY_SLOT } from '../src/config.js'
 
 /**
  *
@@ -34,8 +33,6 @@ const memoryCard = new MemoryCard({
   name: 'session-file',
   storageOptions: { type: 'file' },
 })
-await memoryCard.load()
-console.info(memoryCard.get(MEMORY_SLOT))
 const puppet = new PuppetWhatsapp(
   {
     memory: memoryCard,
