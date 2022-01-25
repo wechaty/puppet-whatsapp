@@ -6,7 +6,7 @@ import {
 } from '../compact/index.js'
 import { logger } from '../logger/index.js'
 import type { PuppetWhatsapp } from '../puppet-whatsapp.js'
-import { Contact, ContactCls, ContactPayload } from '../schema/index.js'
+import type { ContactPayload } from '../schema/index.js'
 
 async function contactAlias (this: PuppetWhatsapp, contactId: string)                       : Promise<string>;
 async function contactAlias (this: PuppetWhatsapp, contactId: string, alias: string | null) : Promise<void>;
@@ -72,8 +72,10 @@ async function contactRawPayload (this: PuppetWhatsapp, id: string): Promise<Con
     return contact
   } else {
     const rawContact = await this.manager.getContactById(id)
-    await cacheManager.setContactOrRoomRawPayload(id, rawContact)
-    return rawContact
+    const avatar = await rawContact.getProfilePicUrl()
+    const contact = Object.assign(rawContact, { avatar })
+    await cacheManager.setContactOrRoomRawPayload(id, contact)
+    return contact
   }
 }
 
@@ -86,10 +88,8 @@ async function contactRawPayloadParser (this: PuppetWhatsapp, whatsAppPayload: C
   } else {
     type = PUPPET.ContactType.Unknown
   }
-  const contactIns: Contact = new ContactCls(this.manager.whatsapp!)
-  Object.assign(contactIns, whatsAppPayload)
   return {
-    avatar: await contactIns.getProfilePicUrl(),
+    avatar: whatsAppPayload.avatar,
     friend: whatsAppPayload.isWAContact && whatsAppPayload.isUser && !whatsAppPayload.isMe,
     gender: PUPPET.ContactGender.Unknown,
     id: whatsAppPayload.id._serialized,

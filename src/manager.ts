@@ -7,6 +7,7 @@ import {
   merge,
 } from 'rxjs'
 import * as PUPPET from 'wechaty-puppet'
+import pLimit from 'p-limit'
 import { RequestManager } from './request/requestManager.js'
 import { CacheManager } from './data-manager/cache-manager.js'
 import { MEMORY_SLOT } from './config.js'
@@ -14,7 +15,7 @@ import { WA_ERROR_TYPE } from './exceptions/error-type.js'
 import WAError from './exceptions/whatsapp-error.js'
 import { getWhatsApp } from './whatsapp.js'
 import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
-import type {  ClientOptions, Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification } from './schema/index.js'
+import type {  ClientOptions, Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification, ClientSession } from './schema/index.js'
 import { Client as WhatsApp, WhatsAppMessageType, GroupNotificationType } from './schema/index.js'
 import { logger } from './logger/index.js'
 
@@ -109,7 +110,7 @@ export class Manager extends EventEmitter {
     }
   }
 
-  private async onAuthenticated (session: any) {
+  private async onAuthenticated (session: ClientSession) {
     logger.info(`onAuthenticated(${JSON.stringify(session)})`)
     try {
       await this.options.memory?.set(MEMORY_SLOT, session)
@@ -135,9 +136,15 @@ export class Manager extends EventEmitter {
     const contacts: Contact[] = await this.whatsapp!.getContacts()
     const nonBroadcast = contacts.filter(c => c.id.server !== 'broadcast')
     const cacheManager = await this.getCacheManager()
-    for (const contact of nonBroadcast) {
-      await cacheManager.setContactOrRoomRawPayload(contact.id._serialized, contact)
-    }
+    const limit = pLimit(100)
+    const all = nonBroadcast.map((contact) => {
+      return limit(async () => {
+        const avatar = await contact.getProfilePicUrl()
+        const contactWithAvatar = Object.assign(contact, { avatar })
+        await cacheManager.setContactOrRoomRawPayload(contact.id._serialized, contactWithAvatar)
+      })
+    })
+    await Promise.all(all)
     this.emit('login', this.whatsapp!.info.wid._serialized)
   }
 
