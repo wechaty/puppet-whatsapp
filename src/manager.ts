@@ -134,8 +134,8 @@ export class Manager extends EventEmitter {
     logger.info('onReady()')
     const contacts: Contact[] = await this.whatsapp!.getContacts()
     const nonBroadcast = contacts.filter(c => c.id.server !== 'broadcast')
+    const cacheManager = await this.getCacheManager()
     for (const contact of nonBroadcast) {
-      const cacheManager = await this.getCacheManager()
       await cacheManager.setContactOrRoomRawPayload(contact.id._serialized, contact)
     }
     this.emit('login', this.whatsapp!.info.wid._serialized)
@@ -268,7 +268,7 @@ export class Manager extends EventEmitter {
     const allEvents$ = merge(...eventStreams)
     allEvents$.pipe(distinctUntilKeyChanged('event')).subscribe(({ event, value }: { event: string, value: any }) => {
       if (event === 'disconnected' && value as string === 'NAVIGATION') {
-        // void this.logout(value as string) // FIXME: why call logout method?
+        this.emit('logout', this.whatsapp!.info.wid._serialized, value as string)
       }
     })
   }
