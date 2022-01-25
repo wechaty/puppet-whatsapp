@@ -160,10 +160,13 @@ export async function messageSend (this:PuppetWhatsapp, conversationId: string, 
   return messageId
 }
 
-export async function messageSendText (this:PuppetWhatsapp, conversationId: string, text: string, mentions?: Contact[]): Promise<void> {
+export async function messageSendText (this:PuppetWhatsapp, conversationId: string, text: string, mentions?: string[]): Promise<void> {
   logger.info('messageSendText(%s, %s)', conversationId, text)
   if (mentions) {
-    return messageSend.call(this, conversationId, text, { mentions: mentions })
+    const contacts = Promise.all(mentions.map((v) => (
+      this.manager.getContactById(v)
+    )))
+    return messageSend.call(this, conversationId, text, { mentions: contacts })
   } else {
     return messageSend.call(this, conversationId, text)
   }
