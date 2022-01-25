@@ -258,6 +258,9 @@ export async function messageRawPayloadParser (this:PuppetWhatsapp, whatsAppPayl
     case WhatsAppMessageType.DOCUMENT:
       type = PUPPET.MessageType.Attachment
       break
+    case WhatsAppMessageType.LOCATION:
+      type = PUPPET.MessageType.Location
+      break
   }
 
   return {
