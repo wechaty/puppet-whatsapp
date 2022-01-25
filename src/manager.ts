@@ -15,7 +15,7 @@ import { WA_ERROR_TYPE } from './exceptions/error-type.js'
 import WAError from './exceptions/whatsapp-error.js'
 import { getWhatsApp } from './whatsapp.js'
 import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
-import type {  ClientOptions, Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification, ClientSession, GroupChat } from './schema/index.js'
+import type {  ClientOptions, Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification, ClientSession, GroupChat, BatteryInfo, WAState } from './schema/index.js'
 import { Client as WhatsApp, WhatsAppMessageType, GroupNotificationType } from './schema/index.js'
 import { logger } from './logger/index.js'
 import { sleep } from './utils.js'
@@ -286,36 +286,36 @@ export class Manager extends EventEmitter {
    * unsupported events
    * leave logs to for futher dev
   */
-  private async onChangeBattery (...args: any[]) {
-    logger.info(`onChangeBattery(${JSON.stringify(args)})`)
+  private async onChangeBattery (batteryInfo: BatteryInfo) {
+    logger.info(`onChangeBattery(${JSON.stringify(batteryInfo)})`)
   }
 
-  private async onChangeState (...args: any[]) {
-    logger.info(`onChangeState(${JSON.stringify(args)})`)
+  private async onChangeState (state: WAState) {
+    logger.info(`onChangeState(${JSON.stringify(state)})`)
   }
 
-  private async onIncomingCall (...args: any[]) {
+  private async onIncomingCall (...args: any[]) { // it is a any[] argument
     logger.info(`onIncomingCall(${JSON.stringify(args)})`)
   }
 
-  private async onMediaUploaded (...args: any[]) {
-    logger.info(`onMediaUploaded(${JSON.stringify(args)})`)
+  private async onMediaUploaded (message: Message) {
+    logger.info(`onMediaUploaded(${JSON.stringify(message)})`)
   }
 
-  private async onMessageAck (...args: any[]) {
-    logger.info(`onMessageAck(${JSON.stringify(args)})`)
+  private async onMessageAck (message: Message) {
+    logger.info(`onMessageAck(${JSON.stringify(message)})`)
   }
 
-  private async onMessageCreate (...args: any[]) {
-    logger.info(`onMessageCreate(${JSON.stringify(args)})`)
+  private async onMessageCreate (message: Message) {
+    logger.info(`onMessageCreate(${JSON.stringify(message)})`)
   }
 
-  private async onMessageRevokeEveryone (...args: any[]) {
-    logger.info(`onMessageRevokeEveryone(${JSON.stringify(args)})`)
+  private async onMessageRevokeEveryone (message: Message, revokedMsg?: Message | null | undefined) {
+    logger.info(`onMessageRevokeEveryone(${JSON.stringify(message)}), ${JSON.stringify(revokedMsg)}`)
   }
 
-  private async onMessageRevokeMe (...args: any[]) {
-    logger.info(`onMessageRevokeMe(${JSON.stringify(args)})`)
+  private async onMessageRevokeMe (message: Message) {
+    logger.info(`onMessageRevokeMe(${JSON.stringify(message)})`)
   }
 
   public async initWhatsAppEvents (
