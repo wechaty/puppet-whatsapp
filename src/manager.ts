@@ -7,6 +7,7 @@ import {
   merge,
 } from 'rxjs'
 import * as PUPPET from 'wechaty-puppet'
+import pLimit from 'p-limit'
 import { RequestManager } from './request/requestManager.js'
 import { CacheManager } from './data-manager/cache-manager.js'
 import { MEMORY_SLOT } from './config.js'
@@ -135,9 +136,15 @@ export class Manager extends EventEmitter {
     const contacts: Contact[] = await this.whatsapp!.getContacts()
     const nonBroadcast = contacts.filter(c => c.id.server !== 'broadcast')
     const cacheManager = await this.getCacheManager()
-    for (const contact of nonBroadcast) {
-      await cacheManager.setContactOrRoomRawPayload(contact.id._serialized, contact)
-    }
+    const limit = pLimit(100)
+    const all = nonBroadcast.map((contact) => {
+      return limit(async () => {
+        const avatar = await contact.getProfilePicUrl()
+        const contactWithAvatar = Object.assign(contact, { avatar })
+        await cacheManager.setContactOrRoomRawPayload(contact.id._serialized, contactWithAvatar)
+      })
+    })
+    await Promise.all(all)
     this.emit('login', this.whatsapp!.info.wid._serialized)
   }
 
