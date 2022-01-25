@@ -2,7 +2,7 @@ import * as PUPPET from 'wechaty-puppet'
 import { FileBox } from '../compact/index.js'
 import type { PuppetWhatsapp } from '../puppet-whatsapp.js'
 import { parseVcard } from '../pure-function-helpers/vcard-parser.js'
-import { Contact, MessageContent, MessageMedia, MessagePayload, MessageSendOptions, MessageType, restoreMessage } from '../schema/index.js'
+import { MessageContent, MessageMedia, MessagePayload, MessageSendOptions, MessageType, restoreMessage } from '../schema/index.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import { logger } from '../logger/index.js'
@@ -160,10 +160,10 @@ export async function messageSend (this:PuppetWhatsapp, conversationId: string, 
   return messageId
 }
 
-export async function messageSendText (this:PuppetWhatsapp, conversationId: string, text: string, mentions?: string[]): Promise<void> {
+export async function messageSendText (this:PuppetWhatsapp, conversationId: string, text: string, mentions?: string[]): Promise<void | string> {
   logger.info('messageSendText(%s, %s)', conversationId, text)
   if (mentions) {
-    const contacts = Promise.all(mentions.map((v) => (
+    const contacts = await Promise.all(mentions.map((v) => (
       this.manager.getContactById(v)
     )))
     return messageSend.call(this, conversationId, text, { mentions: contacts })
@@ -172,7 +172,7 @@ export async function messageSendText (this:PuppetWhatsapp, conversationId: stri
   }
 }
 
-export async function messageSendFile (this:PuppetWhatsapp, conversationId: string, file: FileBox, options?: MessageSendOptions): Promise<void> {
+export async function messageSendFile (this:PuppetWhatsapp, conversationId: string, file: FileBox, options?: MessageSendOptions): Promise<void | string> {
   logger.info('messageSendFile(%s, %s)', conversationId, file.name)
   const msgContent = new MessageMedia(file.mimeType!, await file.toBase64(), file.name)
   return messageSend.call(this, conversationId, msgContent, options)
