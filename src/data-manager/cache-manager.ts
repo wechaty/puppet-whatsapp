@@ -3,7 +3,7 @@ import * as fs from 'fs-extra'
 import * as os from 'os'
 
 import { FlashStore } from 'flash-store'
-import type { Contact, ContactPayload, InviteV4Data, Message, MessagePayload } from '../schema/index.js'
+import type { ContactPayload, InviteV4Data, Message, MessagePayload } from '../schema/index.js'
 import { logger } from '../logger/index.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
@@ -87,7 +87,7 @@ export class CacheManager {
     return cache.get(id)
   }
 
-  public async setContactOrRoomRawPayload (id: string, payload: Contact): Promise<void> {
+  public async setContactOrRoomRawPayload (id: string, payload: ContactPayload): Promise<void> {
     const cache = this.getContactOrRoomCache()
     await cache.set(id, payload)
   }
