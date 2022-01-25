@@ -63,7 +63,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   override async start (): Promise<void> {
     logger.info('onStart()')
-    await this.options.memory?.load()
     if (this.state.on()) {
       await this.state.ready('on')
       return
