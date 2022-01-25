@@ -242,6 +242,42 @@ export class Manager extends EventEmitter {
     }
   }
 
+  /*
+   * unsupported events
+   * leave logs to for futher dev
+  */
+  private async onChangeBattery (...args: any[]) {
+    logger.info(`onChangeBattery(${JSON.stringify(args)})`)
+  }
+
+  private async onChangeState (...args: any[]) {
+    logger.info(`onChangeState(${JSON.stringify(args)})`)
+  }
+
+  private async onIncomingCall (...args: any[]) {
+    logger.info(`onIncomingCall(${JSON.stringify(args)})`)
+  }
+
+  private async onMediaUploaded (...args: any[]) {
+    logger.info(`onMediaUploaded(${JSON.stringify(args)})`)
+  }
+
+  private async onMessageAck (...args: any[]) {
+    logger.info(`onMessageAck(${JSON.stringify(args)})`)
+  }
+
+  private async onMessageCreate (...args: any[]) {
+    logger.info(`onMessageCreate(${JSON.stringify(args)})`)
+  }
+
+  private async onMessageRevokeEveryone (...args: any[]) {
+    logger.info(`onMessageRevokeEveryone(${JSON.stringify(args)})`)
+  }
+
+  private async onMessageRevokeMe (...args: any[]) {
+    logger.info(`onMessageRevokeMe(${JSON.stringify(args)})`)
+  }
+
   public async initWhatsAppEvents (
     whatsapp: WhatsApp,
   ): Promise<void> {
@@ -265,6 +301,16 @@ export class Manager extends EventEmitter {
     whatsapp.on('group_leave', this.onRoomLeave.bind(this))
 
     whatsapp.on('group_update', this.onRoomUpdate.bind(this))
+
+    // unsupported events
+    whatsapp.on('change_battery', this.onChangeBattery.bind(this))
+    whatsapp.on('change_state', this.onChangeState.bind(this))
+    whatsapp.on('incoming_call', this.onIncomingCall.bind(this))
+    whatsapp.on('media_uploaded', this.onMediaUploaded.bind(this))
+    whatsapp.on('message_ack', this.onMessageAck.bind(this))
+    whatsapp.on('message_create', this.onMessageCreate.bind(this))
+    whatsapp.on('message_revoke_everyone', this.onMessageRevokeEveryone.bind(this))
+    whatsapp.on('message_revoke_me', this.onMessageRevokeMe.bind(this))
 
     const events = [
       'authenticated',
