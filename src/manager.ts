@@ -133,23 +133,36 @@ export class Manager extends EventEmitter {
     await this.options.memory?.save()
   }
 
-  private async onReady () {
+  private async onLogin () {
     const whatsapp = this.getWhatsApp()
     await this.initCache(whatsapp.info.wid._serialized)
-    logger.info('onReady()')
+    logger.info('onLogin()')
+    this.emit('login', whatsapp.info.wid._serialized)
     const contacts: Contact[] = await whatsapp.getContacts()
     const nonBroadcast = contacts.filter(c => c.id.server !== 'broadcast')
     const cacheManager = await this.getCacheManager()
     const limit = pLimit(100)
+    let friendCount = 0
+    let contactCount = 0
+    let roomCount = 0
     const all = nonBroadcast.map((contact) => {
       return limit(async () => {
         const avatar = await contact.getProfilePicUrl()
         const contactWithAvatar = Object.assign(contact, { avatar })
         await cacheManager.setContactOrRoomRawPayload(contact.id._serialized, contactWithAvatar)
+        if (contact.isGroup) {
+          roomCount++
+        } else {
+          contactCount++
+          if (contact.isMyContact) {
+            friendCount++
+          }
+        }
       })
     })
     await Promise.all(all)
-    this.emit('login', whatsapp.info.wid._serialized)
+    logger.info(`friendCount: ${friendCount} contactCount: ${contactCount} roomCount: ${roomCount}`)
+    this.emit('ready')
   }
 
   private async onLogout (reason: string = '退出登录') {
@@ -288,26 +301,26 @@ export class Manager extends EventEmitter {
 
   /**
    * unsupported events
-   * leave logs to for futher dev
+   * leave logs to for further dev
   */
   private async onChangeBattery (batteryInfo: BatteryInfo) {
-    logger.info(`onChangeBattery(${JSON.stringify(batteryInfo)})`)
+    logger.silly(`onChangeBattery(${JSON.stringify(batteryInfo)})`)
   }
 
   private async onChangeState (state: WAState) {
-    logger.info(`onChangeState(${JSON.stringify(state)})`)
+    logger.silly(`onChangeState(${JSON.stringify(state)})`)
   }
 
   private async onIncomingCall (...args: any[]) { // it is a any[] argument
-    logger.info(`onIncomingCall(${JSON.stringify(args)})`)
+    logger.silly(`onIncomingCall(${JSON.stringify(args)})`)
   }
 
   private async onMediaUploaded (message: Message) {
-    logger.info(`onMediaUploaded(${JSON.stringify(message)})`)
+    logger.silly(`onMediaUploaded(${JSON.stringify(message)})`)
   }
 
   private async onMessageAck (message: Message) {
-    logger.info(`onMessageAck(${JSON.stringify(message)})`)
+    logger.silly(`onMessageAck(${JSON.stringify(message)})`)
     if (message.id.fromMe && message.ack === 1) {
       const messageId = message.id.id
       const cacheManager = await this.getCacheManager()
@@ -317,15 +330,15 @@ export class Manager extends EventEmitter {
   }
 
   private async onMessageCreate (message: Message) {
-    logger.info(`onMessageCreate(${JSON.stringify(message)})`)
+    logger.silly(`onMessageCreate(${JSON.stringify(message)})`)
   }
 
   private async onMessageRevokeEveryone (message: Message, revokedMsg?: Message | null | undefined) {
-    logger.info(`onMessageRevokeEveryone(${JSON.stringify(message)}), ${JSON.stringify(revokedMsg)}`)
+    logger.silly(`onMessageRevokeEveryone(${JSON.stringify(message)}), ${JSON.stringify(revokedMsg)}`)
   }
 
   private async onMessageRevokeMe (message: Message) {
-    logger.info(`onMessageRevokeMe(${JSON.stringify(message)})`)
+    logger.silly(`onMessageRevokeMe(${JSON.stringify(message)})`)
   }
 
   public async initWhatsAppEvents (
@@ -340,7 +353,7 @@ export class Manager extends EventEmitter {
      */
     whatsapp.on('auth_failure', this.onAuthFailure.bind(this))
 
-    whatsapp.on('ready', this.onReady.bind(this))
+    whatsapp.on('ready', this.onLogin.bind(this))
 
     whatsapp.on('message', this.onMessage.bind(this))
 
