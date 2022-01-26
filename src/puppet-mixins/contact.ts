@@ -97,20 +97,26 @@ async function contactRawPayload (this: PuppetWhatsapp, id: string): Promise<Con
 
 async function contactRawPayloadParser (this: PuppetWhatsapp, contactPayload: ContactPayload): Promise<PUPPET.ContactPayload> {
   let type
+  if (contactPayload.isUser) {
+    type = PUPPET.ContactType.Individual
+  } else if (contactPayload.isEnterprise) {
+    type = PUPPET.ContactType.Corporation
+  } else {
+    type = PUPPET.ContactType.Unknown
+  }
+  let name
+  if (contactPayload.isMe) {
+    name = contactPayload.pushname || this.manager.whatsapp?.info.pushname
+  } else {
+    name = contactPayload.pushname || contactPayload.name
+  }
   try {
-    if (contactPayload.isUser) {
-      type = PUPPET.ContactType.Individual
-    } else if (contactPayload.isEnterprise) {
-      type = PUPPET.ContactType.Corporation
-    } else {
-      type = PUPPET.ContactType.Unknown
-    }
     return {
       avatar: contactPayload.avatar,
       friend: contactPayload.isMyContact,
       gender: PUPPET.ContactGender.Unknown,
       id: contactPayload.id._serialized,
-      name: !contactPayload.isMe ? contactPayload.pushname : contactPayload.pushname || this.manager.whatsapp?.info.pushname || '',
+      name: name || contactPayload.id._serialized,
       phone: [contactPayload.number],
       type: type,
       weixin: contactPayload.number,
