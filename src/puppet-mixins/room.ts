@@ -27,10 +27,11 @@ export async function roomRawPayload (this: PuppetWhatsapp, id: string): Promise
 export async function roomRawPayloadParser (this: PuppetWhatsapp, whatsAppPayload: ContactPayload): Promise<PUPPET.RoomPayload> {
   const chat = await this.manager.getChatById(whatsAppPayload.id._serialized) as GroupChat
   return {
-    adminIdList: chat.participants.filter(p => p.isAdmin || p.isSuperAdmin).map(p => p.id._serialized),
+    adminIdList: chat.participants.filter(m => m.isAdmin || m.isSuperAdmin).map(m => m.id._serialized),
     avatar: whatsAppPayload.avatar,
     id: whatsAppPayload.id._serialized,
-    memberIdList: chat.participants.map(p => p.id._serialized),
+    memberIdList: chat.participants.map(m => m.id._serialized),
+    ownerId: chat.owner._serialized,
     topic: whatsAppPayload.name || whatsAppPayload.pushname || '',
   }
 }

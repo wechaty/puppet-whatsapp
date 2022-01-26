@@ -151,7 +151,7 @@ export class Manager extends EventEmitter {
     this.emit('login', this.whatsapp!.info.wid._serialized)
   }
 
-  private onLogout (reason: string = '退出登录') {
+  private onLogout (reason: string = '已退出登录') {
     logger.info(`onLogout(${reason})`)
     this.emit('logout', this.whatsapp!.info.wid._serialized, reason as string)
   }
@@ -360,7 +360,7 @@ export class Manager extends EventEmitter {
     allEvents$.pipe(distinctUntilKeyChanged('event')).subscribe(({ event, value }: { event: string, value: any }) => {
       logger.info(`event: ${JSON.stringify(event)}, value: ${JSON.stringify(value)}`)
       if (event === 'disconnected' && value as string === 'NAVIGATION') {
-        this.onLogout(value as string)
+        this.onLogout('已退出登录')
       }
     })
   }
