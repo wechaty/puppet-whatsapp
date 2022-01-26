@@ -87,9 +87,9 @@ export class Manager extends EventEmitter {
     return this
   }
 
-  public async start (session: any) {
+  public async start (session?: ClientSession) {
     logger.info('start()')
-    this.whatsapp = await getWhatsApp(this.options['puppeteerOptions'] as ClientOptions, session)
+    this.whatsapp = await getWhatsApp(this.options['puppeteerOptions'], session)
     this.whatsapp
       .initialize()
       .then(() => logger.verbose('start() whatsapp.initialize() done'))
@@ -131,8 +131,6 @@ export class Manager extends EventEmitter {
     // clear sessionData -> reinit
     await this.options.memory?.delete(MEMORY_SLOT)
     await this.options.memory?.save()
-    // tmp fix restart
-    await this.start(null) // FIXME: need to restart
   }
 
   private async onReady () {
