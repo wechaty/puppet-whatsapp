@@ -182,9 +182,13 @@ export class Manager extends EventEmitter {
         return
       }
     }
-    const id = msg.id.id
+    const messageId = msg.id.id
     const cacheManager = await this.getCacheManager()
-    await cacheManager.setMessageRawPayload(id, msg)
+    const messageInCache = await cacheManager.getMessageRawPayload(messageId)
+    if (messageInCache) {
+      return
+    }
+    await cacheManager.setMessageRawPayload(messageId, msg)
 
     const contactId = msg.from
     const contact = await this.getContactById(contactId)
@@ -321,9 +325,13 @@ export class Manager extends EventEmitter {
 
   private async onMessageAck (message: Message) {
     logger.silly(`onMessageAck(${JSON.stringify(message)})`)
-    if (message.id.fromMe && message.ack === 1) {
+    if (message.id.fromMe && message.ack >= 0) {
       const messageId = message.id.id
       const cacheManager = await this.getCacheManager()
+      const messageInCache = await cacheManager.getMessageRawPayload(messageId)
+      if (messageInCache) {
+        return
+      }
       await cacheManager.setMessageRawPayload(messageId, message)
       this.emit('message', { messageId })
     }
@@ -331,6 +339,16 @@ export class Manager extends EventEmitter {
 
   private async onMessageCreate (message: Message) {
     logger.silly(`onMessageCreate(${JSON.stringify(message)})`)
+    if (message.id.fromMe && message.ack >= 0) {
+      const messageId = message.id.id
+      const cacheManager = await this.getCacheManager()
+      const messageInCache = await cacheManager.getMessageRawPayload(messageId)
+      if (messageInCache) {
+        return
+      }
+      await cacheManager.setMessageRawPayload(messageId, message)
+      this.emit('message', { messageId })
+    }
   }
 
   private async onMessageRevokeEveryone (message: Message, revokedMsg?: Message | null | undefined) {
