@@ -4,9 +4,12 @@ import * as PUPPET from 'wechaty-puppet'
 import {
   FileBox,
 } from '../compact/index.js'
+import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
+import WAError from '../exceptions/whatsapp-error.js'
 import { logger } from '../logger/index.js'
 import type { PuppetWhatsapp } from '../puppet-whatsapp.js'
 import type { ContactPayload } from '../schema/index.js'
+import { isContactId } from '../utils.js'
 
 async function contactAlias (this: PuppetWhatsapp, contactId: string)                       : Promise<string>;
 async function contactAlias (this: PuppetWhatsapp, contactId: string, alias: string | null) : Promise<void>;
@@ -66,6 +69,9 @@ async function contactAvatar (this: PuppetWhatsapp, contactId: string, file?: Fi
 
 async function contactRawPayload (this: PuppetWhatsapp, id: string): Promise<ContactPayload> {
   logger.verbose('contactRawPayload(%s)', id)
+  if (!isContactId(id)) {
+    throw new WAError(WA_ERROR_TYPE.ERR_CONTACT_NOT_FOUND, `please check contact id: ${id} again.`)
+  }
   const cacheManager = await this.manager.getCacheManager()
   const contact = await cacheManager.getContactOrRoomRawPayload(id)
   if (contact) {
@@ -79,24 +85,29 @@ async function contactRawPayload (this: PuppetWhatsapp, id: string): Promise<Con
   }
 }
 
-async function contactRawPayloadParser (this: PuppetWhatsapp, whatsAppPayload: ContactPayload): Promise<PUPPET.ContactPayload> {
+async function contactRawPayloadParser (this: PuppetWhatsapp, contactPayload: ContactPayload): Promise<PUPPET.ContactPayload> {
   let type
-  if (whatsAppPayload.isUser) {
-    type = PUPPET.ContactType.Individual
-  } else if (whatsAppPayload.isEnterprise) {
-    type = PUPPET.ContactType.Corporation
-  } else {
-    type = PUPPET.ContactType.Unknown
-  }
-  return {
-    avatar: whatsAppPayload.avatar,
-    friend: whatsAppPayload.isWAContact && whatsAppPayload.isUser && !whatsAppPayload.isMe,
-    gender: PUPPET.ContactGender.Unknown,
-    id: whatsAppPayload.id._serialized,
-    name: !whatsAppPayload.isMe ? whatsAppPayload.pushname : whatsAppPayload.pushname || this.manager.whatsapp?.info.pushname || '',
-    phone: [whatsAppPayload.number],
-    type: type,
-    weixin: whatsAppPayload.number,
+  try {
+    if (contactPayload.isUser) {
+      type = PUPPET.ContactType.Individual
+    } else if (contactPayload.isEnterprise) {
+      type = PUPPET.ContactType.Corporation
+    } else {
+      type = PUPPET.ContactType.Unknown
+    }
+    return {
+      avatar: contactPayload.avatar,
+      friend: contactPayload.isWAContact && contactPayload.isUser && !contactPayload.isMe,
+      gender: PUPPET.ContactGender.Unknown,
+      id: contactPayload.id._serialized,
+      name: !contactPayload.isMe ? contactPayload.pushname : contactPayload.pushname || this.manager.whatsapp?.info.pushname || '',
+      phone: [contactPayload.number],
+      type: type,
+      weixin: contactPayload.number,
+    }
+  } catch (error) {
+    logger.error(`contactRawPayloadParser(${contactPayload.id._serialized}) failed, error message: ${(error as Error).message}`)
+    throw new WAError(WA_ERROR_TYPE.ERR_CONTACT_NOT_FOUND, `contactRawPayloadParser(${contactPayload.id._serialized}) failed, error message: ${(error as Error).message}`)
   }
 }
 

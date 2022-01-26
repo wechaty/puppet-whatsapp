@@ -5,12 +5,16 @@ import { avatarForGroup } from '../config.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import type { PuppetWhatsapp } from '../puppet-whatsapp'
-import type { ContactPayload, InviteV4Data, GroupChat } from '../schema/index.js'
+import type { ContactPayload as RoomPayload, InviteV4Data, GroupChat } from '../schema/index.js'
 import { logger } from '../logger/index.js'
 import { contactRawPayload } from './contact.js'
+import { isRoomId } from '../utils.js'
 
-export async function roomRawPayload (this: PuppetWhatsapp, id: string): Promise<ContactPayload> {
+export async function roomRawPayload (this: PuppetWhatsapp, id: string): Promise<RoomPayload> {
   logger.verbose('roomRawPayload(%s)', id)
+  if (!isRoomId(id)) {
+    throw new WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `please check room id: ${id} again.`)
+  }
   const cacheManager = await this.manager.getCacheManager()
   const room = await cacheManager.getContactOrRoomRawPayload(id)
   if (room) {
@@ -24,15 +28,23 @@ export async function roomRawPayload (this: PuppetWhatsapp, id: string): Promise
   }
 }
 
-export async function roomRawPayloadParser (this: PuppetWhatsapp, whatsAppPayload: ContactPayload): Promise<PUPPET.RoomPayload> {
-  const chat = await this.manager.getChatById(whatsAppPayload.id._serialized) as GroupChat
-  return {
-    adminIdList: chat.participants.filter(m => m.isAdmin || m.isSuperAdmin).map(m => m.id._serialized),
-    avatar: whatsAppPayload.avatar,
-    id: whatsAppPayload.id._serialized,
-    memberIdList: chat.participants.map(m => m.id._serialized),
-    ownerId: chat.owner._serialized,
-    topic: whatsAppPayload.name || whatsAppPayload.pushname || '',
+export async function roomRawPayloadParser (this: PuppetWhatsapp, roomPayload: RoomPayload): Promise<PUPPET.RoomPayload> {
+  try {
+    const chat = await this.manager.getChatById(roomPayload.id._serialized) as GroupChat
+    if (chat.participants.length === 0) {
+      throw new WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `roomRawPayloadParser(${roomPayload.id._serialized}) can not get chat info for this room.`)
+    }
+    return {
+      adminIdList: chat.participants.filter(m => m.isAdmin || m.isSuperAdmin).map(m => m.id._serialized),
+      avatar: roomPayload.avatar,
+      id: roomPayload.id._serialized,
+      memberIdList: chat.participants.map(m => m.id._serialized),
+      ownerId: chat.owner._serialized,
+      topic: roomPayload.name || roomPayload.pushname || '',
+    }
+  } catch (error) {
+    logger.error(`roomRawPayloadParser(${roomPayload.id._serialized}) failed, error message: ${(error as Error).message}`)
+    throw new WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `roomRawPayloadParser(${roomPayload.id._serialized}) failed, error message: ${(error as Error).message}`)
   }
 }
 
@@ -132,16 +144,16 @@ export async function roomMemberList (this: PuppetWhatsapp, roomId: string): Pro
   logger.info('roomMemberList(%s)', roomId)
   const chat = await this.manager.getChatById(roomId) as GroupChat
   // FIXME: How to deal with pendingParticipants? Maybe we should find which case could has this attribute.
-  return chat.participants.map(p => p.id._serialized)
+  return chat.participants.map(m => m.id._serialized)
 }
 
 export async function roomMemberRawPayload (this: PuppetWhatsapp, roomId: string, contactId: string): Promise<PUPPET.RoomMemberPayload> {
   logger.verbose('roomMemberRawPayload(%s, %s)', roomId, contactId)
-  const contact = await contactRawPayload.call(this, contactId)
+  const member = await contactRawPayload.call(this, contactId)
   return {
-    avatar: contact.avatar,
-    id: contact.id._serialized,
-    name: contact.pushname || contact.name || '',
+    avatar: member.avatar,
+    id: member.id._serialized,
+    name: member.pushname || member.name || '',
     // roomAlias : contact.name,
   }
 }
