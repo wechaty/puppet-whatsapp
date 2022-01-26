@@ -95,7 +95,7 @@ export class Manager extends EventEmitter {
       .then(() => logger.verbose('start() whatsapp.initialize() done'))
       .catch(async e => {
         logger.error('start() whatsapp.initialize() rejection: %s', e)
-        await sleep(500)
+        await sleep(2 * 1000)
         await this.start(session)
       })
 
@@ -269,6 +269,7 @@ export class Manager extends EventEmitter {
       this.emit('room-topic', roomJoinPayload)
     }
     if (notification.type === GroupNotificationTypes.CREATE) {
+      // FIXME: how to reuse roomMemberList from room-mixin
       const roomId = (notification.id as any).remote
       const roomChat = await this.getChatById(roomId) as GroupChat
       const members = roomChat.participants.map(participant => participant.id._serialized)
@@ -305,6 +306,12 @@ export class Manager extends EventEmitter {
 
   private async onMessageAck (message: Message) {
     logger.info(`onMessageAck(${JSON.stringify(message)})`)
+    if (message.id.fromMe && message.ack === 1) {
+      const messageId = message.id.id
+      const cacheManager = await this.getCacheManager()
+      await cacheManager.setMessageRawPayload(messageId, message)
+      this.emit('message', { messageId })
+    }
   }
 
   private async onMessageCreate (message: Message) {
