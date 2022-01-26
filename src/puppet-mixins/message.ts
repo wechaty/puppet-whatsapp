@@ -262,7 +262,7 @@ export async function messageRawPayloadParser (this:PuppetWhatsapp, whatsAppPayl
   }
 
   const messagePayload = {
-    fromId: whatsAppPayload.from,
+    fromId: isRoomId(whatsAppPayload.from) ? whatsAppPayload.author! : whatsAppPayload.from,
     id: whatsAppPayload.id.id,
     mentionIdList: whatsAppPayload.mentionedIds,
     text: whatsAppPayload.body,
