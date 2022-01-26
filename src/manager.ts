@@ -151,8 +151,10 @@ export class Manager extends EventEmitter {
     this.emit('login', this.whatsapp!.info.wid._serialized)
   }
 
-  private onLogout (reason: string = '已退出登录') {
+  private async onLogout (reason: string = '退出登录') {
     logger.info(`onLogout(${reason})`)
+    await this.options.memory?.delete(MEMORY_SLOT)
+    await this.options.memory?.save()
     this.emit('logout', this.whatsapp!.info.wid._serialized, reason as string)
   }
 
