@@ -134,9 +134,10 @@ export class Manager extends EventEmitter {
   }
 
   private async onReady () {
-    await this.initCache(this.whatsapp!.info.wid._serialized)
+    const whatsapp = this.getWhatsApp()
+    await this.initCache(whatsapp.info.wid._serialized)
     logger.info('onReady()')
-    const contacts: Contact[] = await this.whatsapp!.getContacts()
+    const contacts: Contact[] = await whatsapp.getContacts()
     const nonBroadcast = contacts.filter(c => c.id.server !== 'broadcast')
     const cacheManager = await this.getCacheManager()
     const limit = pLimit(100)
@@ -148,14 +149,15 @@ export class Manager extends EventEmitter {
       })
     })
     await Promise.all(all)
-    this.emit('login', this.whatsapp!.info.wid._serialized)
+    this.emit('login', whatsapp.info.wid._serialized)
   }
 
   private async onLogout (reason: string = '退出登录') {
     logger.info(`onLogout(${reason})`)
     await this.options.memory?.delete(MEMORY_SLOT)
     await this.options.memory?.save()
-    this.emit('logout', this.whatsapp!.info.wid._serialized, reason as string)
+    const whatsapp = this.getWhatsApp()
+    this.emit('logout', whatsapp.info.wid._serialized, reason as string)
   }
 
   private async onMessage (msg: Message) {
@@ -595,6 +597,13 @@ export class Manager extends EventEmitter {
   public async setStatusMessage (nickname: string) {
     const requestManager = this.getRequestManager()
     return requestManager.setStatusMessage(nickname)
+  }
+
+  private getWhatsApp () {
+    if (!this.whatsapp) {
+      throw new WAError(WA_ERROR_TYPE.ERR_INIT, 'Not init whatsapp')
+    }
+    return this.whatsapp
   }
 
 }

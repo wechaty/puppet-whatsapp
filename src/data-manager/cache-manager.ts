@@ -112,7 +112,7 @@ export class CacheManager {
       if (!value) {
         continue
       }
-      if (!value.isGroup) {
+      if (!value.isGroup && value.id._serialized) {
         list.push(value.id._serialized)
       }
     }
@@ -127,7 +127,7 @@ export class CacheManager {
       if (!value) {
         continue
       }
-      if (value.isGroup) {
+      if (value.isGroup && value.id._serialized) {
         list.push(value.id._serialized)
       }
     }
