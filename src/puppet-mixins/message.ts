@@ -233,7 +233,11 @@ export async function messageRawPayloadParser (this:PuppetWhatsapp, whatsAppPayl
   let type: PUPPET.MessageType = PUPPET.MessageType.Unknown
   switch (whatsAppPayload.type) {
     case WhatsAppMessageType.TEXT:
-      type = PUPPET.MessageType.Text
+      if (whatsAppPayload.title || whatsAppPayload.description) {
+        type = PUPPET.MessageType.Url
+      } else {
+        type = PUPPET.MessageType.Text
+      }
       break
     case WhatsAppMessageType.STICKER:
       type = PUPPET.MessageType.Emoticon
