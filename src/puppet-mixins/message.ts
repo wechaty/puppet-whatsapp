@@ -6,6 +6,7 @@ import { MessageContent, MessageMedia, MessagePayload, MessageSendOptions, Whats
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import { logger } from '../logger/index.js'
+import { isRoomId } from '../utils.js'
 
 /**
   * Get contact message
@@ -263,7 +264,7 @@ export async function messageRawPayloadParser (this:PuppetWhatsapp, whatsAppPayl
       break
   }
 
-  return {
+  const messagePayload = {
     fromId: whatsAppPayload.from,
     id: whatsAppPayload.id.id,
     mentionIdList: whatsAppPayload.mentionedIds,
@@ -273,4 +274,10 @@ export async function messageRawPayloadParser (this:PuppetWhatsapp, whatsAppPayl
     type,
     // filename
   }
+
+  if (isRoomId(whatsAppPayload.id.remote)) {
+    (messagePayload as any).roomId = whatsAppPayload.id.remote
+  }
+
+  return messagePayload
 }
