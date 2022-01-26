@@ -131,8 +131,9 @@ export async function messageUrl (this:PuppetWhatsapp, messageId: string): Promi
   }
   try {
     return {
-      title: 'N/A',
-      url: msg.links[0]!.link,
+      description: msg.description || 'NO_DESCRIPTION',
+      title: msg.title || 'NO_TITLE',
+      url: msg.links[0]?.link || msg.body,
     }
   } catch (error) {
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_URL_LINK, `Get link message: ${messageId} failed, error: ${(error as Error).message}`)
