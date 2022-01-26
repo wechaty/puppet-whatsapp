@@ -27,8 +27,6 @@ export async function messageContact (this:PuppetWhatsapp, messageId: string): P
   }
   try {
     const vcard = parseVcard(msg.vCards[0]!)
-    // FIXME: Under current typing configuration, it is not possible to return multiple vcards that WhatsApp allows
-    // Therefore sending the first vcard only (for now?)
     if (!vcard.TEL) {
       logger.warn('vcard has not TEL field')
     }
@@ -59,7 +57,7 @@ export async function messageImage (this:PuppetWhatsapp, messageId: string, imag
   const msgIns = restoreMessage(this.manager.whatsapp!, msg)
   try {
     const media = await msgIns.downloadMedia()
-    return FileBox.fromBase64(media.data, media.filename ?? '')
+    return FileBox.fromBase64(media.data, media.filename ?? 'img.jpg')
   } catch (error) {
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_IMAGE, `Message ${messageId} does not contain any media`)
   }
@@ -133,7 +131,6 @@ export async function messageUrl (this:PuppetWhatsapp, messageId: string): Promi
   }
   try {
     return {
-      // FIXME: Link title not available in WhatsApp
       title: 'N/A',
       url: msg.links[0]!.link,
     }
@@ -167,6 +164,7 @@ export async function messageSendText (this:PuppetWhatsapp, conversationId: stri
     const contacts = await Promise.all(mentions.map((v) => (
       this.manager.getContactById(v)
     )))
+    console.log(contacts)
     return messageSend.call(this, conversationId, text, { mentions: contacts })
   } else {
     return messageSend.call(this, conversationId, text)
@@ -175,6 +173,7 @@ export async function messageSendText (this:PuppetWhatsapp, conversationId: stri
 
 export async function messageSendFile (this:PuppetWhatsapp, conversationId: string, file: FileBox, options?: MessageSendOptions): Promise<void | string> {
   logger.info('messageSendFile(%s, %s)', conversationId, file.name)
+  await file.ready()
   const msgContent = new MessageMedia(file.mimeType!, await file.toBase64(), file.name)
   return messageSend.call(this, conversationId, msgContent, options)
 }
@@ -192,7 +191,6 @@ export async function messageSendUrl (
   urlLinkPayload: PUPPET.UrlLinkPayload,
 ): Promise<string> {
   logger.info('messageSendUrl(%s, %s)', conversationId, JSON.stringify(urlLinkPayload))
-  // FIXME: Does WhatsApp really support link messages like wechat? Find out and fix this!
   return messageSend.call(this, conversationId, urlLinkPayload.url)
 }
 

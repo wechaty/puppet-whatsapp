@@ -40,6 +40,7 @@ import type { WhatsApp } from './whatsapp.js'
 
 process.on('uncaughtException', (e) => {
   console.error('process error is:', e.message)
+  console.log(e.stack)
 })
 
 export type PuppetWhatsAppOptions = PUPPET.PuppetOptions & {
