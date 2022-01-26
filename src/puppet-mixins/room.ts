@@ -131,6 +131,7 @@ export async function roomQRCode (this: PuppetWhatsapp, roomId: string): Promise
 export async function roomMemberList (this: PuppetWhatsapp, roomId: string): Promise<string[]> {
   logger.info('roomMemberList(%s)', roomId)
   const chat = await this.manager.getChatById(roomId) as GroupChat
+  // FIXME: How to deal with pendingParticipants? Maybe we should find which case could has this attribute.
   return chat.participants.map(p => p.id._serialized)
 }
 
