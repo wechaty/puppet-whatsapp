@@ -16,7 +16,7 @@ import WAError from './exceptions/whatsapp-error.js'
 import { getWhatsApp } from './whatsapp.js'
 import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
 import type {  Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification, ClientSession, GroupChat, BatteryInfo, WAState } from './schema/index.js'
-import { Client as WhatsApp, WhatsAppMessageType, GroupNotificationType } from './schema/index.js'
+import { Client as WhatsApp, WhatsAppMessageType, GroupNotificationTypes } from './schema/index.js'
 import { logger } from './logger/index.js'
 import { sleep } from './utils.js'
 
@@ -260,7 +260,7 @@ export class Manager extends EventEmitter {
       const room = Object.assign(rawRoom, { avatar })
       await cacheManager.setContactOrRoomRawPayload(notification.chatId, room)
     }
-    if (notification.type === GroupNotificationType.SUBJECT) {
+    if (notification.type === GroupNotificationTypes.SUBJECT) {
       const roomJoinPayload: PUPPET.EventRoomTopicPayload = {
         changerId: notification.author,
         newTopic: notification.body,
@@ -270,9 +270,10 @@ export class Manager extends EventEmitter {
       }
       this.emit('room-topic', roomJoinPayload)
     }
-    if (notification.type === GroupNotificationType.CREATE) {
+    if (notification.type === GroupNotificationTypes.CREATE) {
       // FIXME: how to reuse roomMemberList from room-mixin
-      const roomChat = await this.getChatById((notification.id as any).remote) as GroupChat
+      const roomId = (notification.id as any).remote
+      const roomChat = await this.getChatById(roomId) as GroupChat
       const members = roomChat.participants.map(participant => participant.id._serialized)
 
       const roomJoinPayload: PUPPET.EventRoomJoinPayload = {
