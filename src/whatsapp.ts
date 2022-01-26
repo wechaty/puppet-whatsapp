@@ -39,6 +39,7 @@ async function getWhatsApp (
 
   const whatsapp = new WhatsApp({
     puppeteer: puppeteerOptions,
+    restartOnAuthFail: true,
     session,
     ...restOptions,
   })
