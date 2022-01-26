@@ -164,7 +164,6 @@ export async function messageSendText (this:PuppetWhatsapp, conversationId: stri
     const contacts = await Promise.all(mentions.map((v) => (
       this.manager.getContactById(v)
     )))
-    console.log(contacts)
     return messageSend.call(this, conversationId, text, { mentions: contacts })
   } else {
     return messageSend.call(this, conversationId, text)
