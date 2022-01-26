@@ -4,6 +4,7 @@ import * as PUPPET from 'wechaty-puppet'
 import {
   FileBox,
 } from '../compact/index.js'
+import { avatarForContact } from '../config.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import { logger } from '../logger/index.js'
@@ -61,10 +62,19 @@ async function contactAvatar (this: PuppetWhatsapp, contactId: string, file?: Fi
   if (file) {
     return PUPPET.throwUnsupportedError()
   }
-
+  let avatar: string = ''
   const con = await this.manager.getContactById(contactId)
-  const avatar = await con.getProfilePicUrl()
-  return FileBox.fromUrl(avatar)
+  try {
+    avatar = await con.getProfilePicUrl()
+  } catch (err) {
+    logger.error('contactAvatar(%s) error:%s', contactId, (err as Error).message)
+  }
+  if (avatar) {
+    return FileBox.fromUrl(avatar)
+  } else {
+    return avatarForContact()
+  }
+
 }
 
 async function contactRawPayload (this: PuppetWhatsapp, id: string): Promise<ContactPayload> {
