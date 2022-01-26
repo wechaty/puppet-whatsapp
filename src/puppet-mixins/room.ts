@@ -20,11 +20,15 @@ export async function roomRawPayload (this: PuppetWhatsapp, id: string): Promise
   if (room) {
     return room
   } else {
-    const rawRoom = await this.manager.getContactById(id)
-    const avatar = await rawRoom.getProfilePicUrl()
-    const room = Object.assign(rawRoom, { avatar })
-    await cacheManager.setContactOrRoomRawPayload(id, room)
-    return room
+    try {
+      const rawRoom = await this.manager.getContactById(id)
+      const avatar = await rawRoom.getProfilePicUrl()
+      const room = Object.assign(rawRoom, { avatar })
+      await cacheManager.setContactOrRoomRawPayload(id, room)
+      return room
+    } catch (error) {
+      throw new WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `roomRawPayload(${id}) not found.`)
+    }
   }
 }
 

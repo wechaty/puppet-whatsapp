@@ -128,13 +128,17 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       return
     }
     this.state.off('pending')
-    this.manager.removeAllListeners()
     try {
-      await this.manager.stop()
+      await this.stopManager()
     } catch (err) {
       logger.error(`Can not stop, error: ${(err as Error).message}`)
     }
     this.state.off(true)
+  }
+
+  private async stopManager () {
+    this.manager.removeAllListeners()
+    await this.manager.stop()
   }
 
   /**

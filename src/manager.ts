@@ -38,12 +38,11 @@ type ManagerEvents = 'message'
 
 export class Manager extends EventEmitter {
 
-  options: PuppetWhatsAppOptions
   whatsapp?: WhatsApp
   requestManager?: RequestManager
   cacheManager?: CacheManager
 
-  constructor (options: PuppetWhatsAppOptions) {
+  constructor (private options: PuppetWhatsAppOptions) {
     super()
     this.options = options
   }
@@ -108,9 +107,10 @@ export class Manager extends EventEmitter {
     logger.info('stop()')
     if (this.whatsapp) {
       await this.whatsapp.destroy()
-      await this.releaseCache()
       this.whatsapp = undefined
     }
+    await this.releaseCache()
+    this.requestManager = undefined
   }
 
   private async onAuthenticated (session: ClientSession) {
