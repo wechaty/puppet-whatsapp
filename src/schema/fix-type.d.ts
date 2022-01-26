@@ -1,7 +1,20 @@
+import type { SetOptional } from 'type-fest'
 import type {  Contact, MessageMedia } from 'whatsapp-web.js'
-
 declare module 'whatsapp-web.js' {
   declare namespace WAWebJS {
+    export enum GroupNotificationTypes {
+      ADD = 'add',
+      INVITE = 'invite',
+      REMOVE = 'remove',
+      LEAVE = 'leave',
+      SUBJECT = 'subject',
+      DESCRIPTION = 'description',
+      PICTURE = 'picture',
+      ANNOUNCE = 'announce',
+      RESTRICT = 'restrict',
+      CREATE = 'create',
+    }
+
     /** Message type buttons */
     export class Buttons {
 

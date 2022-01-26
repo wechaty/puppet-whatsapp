@@ -1,14 +1,23 @@
-import type { Class } from 'type-fest'
+import type { Class, SetOptional } from 'type-fest'
 
-import WAWebJS, { Client, Contact, Message } from 'whatsapp-web.js'
+import WAWebJS, { Client, Contact, Message, GroupChat as _GroupChat } from 'whatsapp-web.js'
 
 export const WhatsWebURL = WAWebJS.WhatsWebURL
 export const DefaultOptions = WAWebJS.DefaultOptions
 export const WhatsAppMessageType = WAWebJS.MessageTypes
-export const GroupNotificationType = {
-  ...WAWebJS.GroupNotificationTypes,
-  CREATE: 'create',
+export enum GroupNotificationTypes {
+  ADD = 'add',
+  INVITE = 'invite',
+  REMOVE = 'remove',
+  LEAVE = 'leave',
+  SUBJECT = 'subject',
+  DESCRIPTION = 'description',
+  PICTURE = 'picture',
+  ANNOUNCE = 'announce',
+  RESTRICT = 'restrict',
+  CREATE = 'create',
 }
+
 export const MessageMedia = WAWebJS.MessageMedia
 // @ts-ignore
 export const ContactCls = WAWebJS.Contact as unknown as Class<Contact>
@@ -25,7 +34,6 @@ export type {
   GroupNotification,
   ChatTypes,
   Events,
-  GroupNotificationTypes,
   MessageAck,
   MessageTypes,
   Status,
@@ -51,7 +59,7 @@ export type {
   GroupParticipant,
   ChangeParticipantsPermisions,
   ChangeGroupParticipants,
-  GroupChat,
+  // GroupChat,
   ProductMetadata,
   Product,
   Order,
@@ -79,6 +87,7 @@ export function restoreMessage(client: Client, payload: MessagePayload): Message
   return msgIns
 }
 
+export type GroupChat = SetOptional<_GroupChat, 'owner'>
 export * from './event-name.js'
 
 export default WAWebJS
