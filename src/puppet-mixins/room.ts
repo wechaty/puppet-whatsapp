@@ -31,7 +31,7 @@ export async function roomRawPayloadParser (this: PuppetWhatsapp, whatsAppPayloa
     avatar: whatsAppPayload.avatar,
     id: whatsAppPayload.id._serialized,
     memberIdList: chat.participants.map(m => m.id._serialized),
-    ownerId: chat.owner._serialized,
+    ownerId: chat.owner?._serialized,
     topic: whatsAppPayload.name || whatsAppPayload.pushname || '',
   }
 }
