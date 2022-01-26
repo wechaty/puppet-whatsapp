@@ -21,3 +21,4 @@ tsconfig.cjs.json
 *.tgz
 .nyc_output/
 .eslintignore
+*.memory-card.json
