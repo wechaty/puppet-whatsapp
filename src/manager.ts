@@ -10,7 +10,7 @@ import * as PUPPET from 'wechaty-puppet'
 import pLimit from 'p-limit'
 import { RequestManager } from './request/requestManager.js'
 import { CacheManager } from './data-manager/cache-manager.js'
-import { MEMORY_SLOT } from './config.js'
+import { MEMORY_SLOT, USER_AGENT_CONFIG } from './config.js'
 import { WA_ERROR_TYPE } from './exceptions/error-type.js'
 import WAError from './exceptions/whatsapp-error.js'
 import { getWhatsApp } from './whatsapp.js'
@@ -91,7 +91,10 @@ export class Manager extends EventEmitter {
     this.whatsapp = await getWhatsApp(this.options['puppeteerOptions'], session)
     this.whatsapp
       .initialize()
-      .then(() => logger.verbose('start() whatsapp.initialize() done'))
+      .then(async () => {
+        logger.verbose(`start() whatsapp.initialize() done, and set pupPage user agent: ${USER_AGENT_CONFIG}.`)
+        return this.whatsapp!.pupPage!.setUserAgent(USER_AGENT_CONFIG)
+      })
       .catch(async e => {
         logger.error('start() whatsapp.initialize() rejection: %s', e)
         await sleep(2 * 1000)

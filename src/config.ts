@@ -18,9 +18,11 @@ function avatarForContact (): FileBox {
 }
 
 const MEMORY_SLOT = 'PUPPET_WHATSAPP'
+const USER_AGENT_CONFIG = process.env['USER_AGENT_CONFIG'] || 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3312.0 Safari/537.36'
 const PRE = 'PuppetWhatsApp'
 export {
   MEMORY_SLOT,
+  USER_AGENT_CONFIG,
   avatarForGroup,
   avatarForContact,
   VERSION,
