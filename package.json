@@ -72,7 +72,7 @@
     "type-fest": "^2.10.0",
     "vcard4-ts": "^0.4.1",
     "wechaty-puppet": "^0.41.9",
-    "whatsapp-web.js": "^1.15.3"
+    "whatsapp-web.js": "^1.15.4"
   },
   "tap": {
     "check-coverage": false
