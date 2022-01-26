@@ -39,7 +39,7 @@ export async function roomRawPayloadParser (this: PuppetWhatsapp, roomPayload: R
       avatar: roomPayload.avatar,
       id: roomPayload.id._serialized,
       memberIdList: chat.participants.map(m => m.id._serialized),
-      ownerId: chat.owner._serialized,
+      ownerId: chat.owner?._serialized,
       topic: roomPayload.name || roomPayload.pushname || '',
     }
   } catch (error) {
