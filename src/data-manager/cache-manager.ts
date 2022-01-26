@@ -97,7 +97,7 @@ export class CacheManager {
     return cache.delete(id)
   }
 
-  private getContactOrRoomCache () {
+  public getContactOrRoomCache () {
     if (!this.cacheContactOrRoomRawPayload) {
       throw new WAError(WA_ERROR_TYPE.ERR_NO_CACHE, 'getContactOrRoomCache() has no cache')
     }

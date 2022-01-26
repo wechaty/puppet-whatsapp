@@ -100,8 +100,16 @@ void (async () => {
     }
   }
 
-  function onLogin (payload: PUPPET.EventLoginPayload) {
+  async function onLogin (this: PuppetWhatsapp, payload: PUPPET.EventLoginPayload) {
     console.info(`${payload.contactId} login`)
+    const manager = await this.manager.getCacheManager()
+    const cIds = await manager.getContactIdList()
+    const gIds = await manager.getRoomIdList()
+    console.info(`contacts: ${cIds.length}`)
+    console.info(`groups: ${gIds.length}`)
+    for await (const entry of manager.getContactOrRoomCache().entries()) {
+      console.info(entry)
+    }
   }
 
   function onLogout (payload: PUPPET.EventLogoutPayload) {
@@ -131,6 +139,7 @@ void (async () => {
   text: ${msgPayload.text}
   from: ${msgPayload.fromId}
   to: ${msgPayload.toId}
+  roomId: ${msgPayload.roomId}
   =========================================
   `)
     if ((/ding/i.test(msgPayload.text || ''))) {
