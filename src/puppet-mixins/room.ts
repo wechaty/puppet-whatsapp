@@ -86,12 +86,8 @@ export async function roomTopic (
   logger.info('roomTopic(%s, %s)', roomId, topic)
 
   if (typeof topic === 'undefined') {
-    const cacheManager = await this.manager.getCacheManager()
-    const room = await cacheManager.getContactOrRoomRawPayload(roomId)
-    if (!room) {
-      throw new WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `Can not find this room: ${roomId}`)
-    }
-    return room.name
+    const payload = await this.roomPayload(roomId)
+    return payload.topic
   }
   const chat = await this.manager.getChatById(roomId) as GroupChat
   if (chat.isGroup) {
