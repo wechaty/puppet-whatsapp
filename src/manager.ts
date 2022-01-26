@@ -362,7 +362,7 @@ export class Manager extends EventEmitter {
     allEvents$.pipe(distinctUntilKeyChanged('event')).subscribe(({ event, value }: { event: string, value: any }) => {
       logger.info(`event: ${JSON.stringify(event)}, value: ${JSON.stringify(value)}`)
       if (event === 'disconnected' && value as string === 'NAVIGATION') {
-        this.onLogout('已退出登录')
+        void this.onLogout('已退出登录')
       }
     })
   }
