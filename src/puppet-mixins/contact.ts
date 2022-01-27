@@ -113,7 +113,7 @@ async function contactRawPayloadParser (this: PuppetWhatsapp, contactPayload: Co
   try {
     return {
       avatar: contactPayload.avatar,
-      friend: contactPayload.isMyContact,
+      friend: contactPayload.isWAContact && contactPayload.isUser,
       gender: PUPPET.ContactGender.Unknown,
       id: contactPayload.id._serialized,
       name: name || contactPayload.id._serialized,
