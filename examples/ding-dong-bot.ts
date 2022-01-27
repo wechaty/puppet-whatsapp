@@ -37,13 +37,24 @@ void (async () => {
   })
   await memoryCard.load()
   console.info(memoryCard.get(MEMORY_SLOT))
+  const defaultArgs = [
+    '--no-sandbox',
+    '--single-process',
+    '--disable-dev-shm-usage',
+    '--silent',
+    '--no-first-run',
+    '--cap-add=SYS_ADMIN',
+    '--mute-audio',
+    '--disable-gpu',
+    '--no-zygote']
   const puppet = new PuppetWhatsapp(
     {
       memory: memoryCard,
       puppeteerOptions: {
         // clientId: '',
         puppeteer: {
-          args: WHATSAPP_PUPPET_PROXY ? [`--proxy-server=${WHATSAPP_PUPPET_PROXY}`] : [],
+          args: WHATSAPP_PUPPET_PROXY ? [`--proxy-server=${WHATSAPP_PUPPET_PROXY}`, ...defaultArgs] : defaultArgs,
+          devtools: true,
           headless: false,
         },
       },
