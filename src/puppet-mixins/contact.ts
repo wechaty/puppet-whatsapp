@@ -88,7 +88,7 @@ async function contactRawPayload (this: PuppetWhatsapp, id: string): Promise<Con
     return contact
   } else {
     const rawContact = await this.manager.getContactById(id)
-    const avatar = await rawContact.getProfilePicUrl()
+    const avatar = await rawContact.getProfilePicUrl() || ''
     const contact = Object.assign(rawContact, { avatar })
     await cacheManager.setContactOrRoomRawPayload(id, contact)
     return contact

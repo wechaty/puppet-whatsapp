@@ -22,7 +22,7 @@ export async function roomRawPayload (this: PuppetWhatsapp, id: string): Promise
   } else {
     try {
       const rawRoom = await this.manager.getContactById(id)
-      const avatar = await rawRoom.getProfilePicUrl()
+      const avatar = await rawRoom.getProfilePicUrl() || ''
       const room = Object.assign(rawRoom, { avatar })
       await cacheManager.setContactOrRoomRawPayload(id, room)
       return room
