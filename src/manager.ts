@@ -7,7 +7,6 @@ import {
   merge,
 } from 'rxjs'
 import * as PUPPET from 'wechaty-puppet'
-import pLimit from 'p-limit'
 import { RequestManager } from './request/requestManager.js'
 import { CacheManager } from './data-manager/cache-manager.js'
 import { MEMORY_SLOT } from './config.js'
@@ -18,7 +17,7 @@ import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
 import type {  Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification, ClientSession, GroupChat, BatteryInfo, WAState } from './schema/index.js'
 import { Client as WhatsApp, WhatsAppMessageType, GroupNotificationTypes } from './schema/index.js'
 import { logger } from './logger/index.js'
-import { isContactId, isRoomId, sleep } from './utils.js'
+import { batchProcess, isContactId, isRoomId, sleep } from './utils.js'
 import { env } from 'process'
 
 const InviteLinkRegex = /^(https?:\/\/)?chat\.whatsapp\.com\/(?:invite\/)?([a-zA-Z0-9_-]{22})$/
@@ -156,18 +155,15 @@ export class Manager extends EventEmitter {
     await this.initCache(this.botId)
     const cacheManager = await this.getCacheManager()
 
-    const limit = pLimit(500)
-    const all = contactOrRoomList.map((contact) => {
-      return limit(async () => {
-        const contactInCache = await cacheManager.getContactOrRoomRawPayload(contact.id._serialized)
-        if (contactInCache) {
-          return
-        }
-        const contactWithAvatar = Object.assign(contact, { avatar: '' })
-        await cacheManager.setContactOrRoomRawPayload(contact.id._serialized, contactWithAvatar)
-      })
+    const batchSize = 500
+    await batchProcess(batchSize, contactOrRoomList, async (contact: Contact) => {
+      const contactInCache = await cacheManager.getContactOrRoomRawPayload(contact.id._serialized)
+      if (contactInCache) {
+        return
+      }
+      const contactWithAvatar = Object.assign(contact, { avatar: '' })
+      await cacheManager.setContactOrRoomRawPayload(contact.id._serialized, contactWithAvatar)
     })
-    await Promise.all(all)
 
     const botSelfInCache = await cacheManager.getContactOrRoomRawPayload(this.botId)
     if (!botSelfInCache) {
@@ -184,35 +180,34 @@ export class Manager extends EventEmitter {
 
   private async onReady (contactOrRoomList: Contact[]) {
     const cacheManager = await this.getCacheManager()
-    const limitForAvatar = pLimit(100)
     let friendCount = 0
     let contactCount = 0
     let roomCount = 0
-    const allForAvatar = contactOrRoomList.map((contact) => {
-      return limitForAvatar(async () => {
-        const avatar = await contact.getProfilePicUrl()
-        const contactWithAvatar = Object.assign(contact, { avatar })
-        if (isContactId(contact.id._serialized)) {
-          contactCount++
-          if (contact.isMyContact) {
-            friendCount++
-          }
-          await cacheManager.setContactOrRoomRawPayload(contact.id._serialized, contactWithAvatar)
-        } else if (isRoomId(contact.id._serialized)) {
-          const chat = await this.getChatById(contact.id._serialized) as GroupChat
-          const memberList = chat.participants.map(m => m.id._serialized)
-          if (memberList.length > 0) {
-            roomCount++
-            await cacheManager.setContactOrRoomRawPayload(contact.id._serialized, contactWithAvatar)
-          } else {
-            await cacheManager.deleteContactOrRoom(contact.id._serialized)
-          }
-        } else {
-          logger.warn(`Unknown contact type: ${JSON.stringify(contact)}`)
+
+    const batchSize = 100
+    await batchProcess(batchSize, contactOrRoomList, async (contact: Contact) => {
+      const avatar = await contact.getProfilePicUrl()
+      const contactWithAvatar = Object.assign(contact, { avatar })
+      if (isContactId(contact.id._serialized)) {
+        contactCount++
+        if (contact.isMyContact) {
+          friendCount++
         }
-      })
+        await cacheManager.setContactOrRoomRawPayload(contact.id._serialized, contactWithAvatar)
+      } else if (isRoomId(contact.id._serialized)) {
+        const chat = await this.getChatById(contact.id._serialized) as GroupChat
+        const memberList = chat.participants.map(m => m.id._serialized)
+        if (memberList.length > 0) {
+          roomCount++
+          await cacheManager.setContactOrRoomRawPayload(contact.id._serialized, contactWithAvatar)
+        } else {
+          await cacheManager.deleteContactOrRoom(contact.id._serialized)
+        }
+      } else {
+        logger.warn(`Unknown contact type: ${JSON.stringify(contact)}`)
+      }
     })
-    await Promise.all(allForAvatar)
+
     logger.info(`onReady() all contacts and rooms are ready, friendCount: ${friendCount} contactCount: ${contactCount} roomCount: ${roomCount}`)
     this.emit('ready')
   }
