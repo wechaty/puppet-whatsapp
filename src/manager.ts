@@ -115,6 +115,7 @@ export class Manager extends EventEmitter {
     }
     await this.releaseCache()
     this.requestManager = undefined
+    this.botId = undefined
   }
 
   private async onAuthenticated (session: ClientSession) {
