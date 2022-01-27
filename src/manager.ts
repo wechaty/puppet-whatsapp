@@ -137,7 +137,6 @@ export class Manager extends EventEmitter {
     const whatsapp = this.getWhatsApp()
     await this.initCache(whatsapp.info.wid._serialized)
     logger.info(`onLogin(${JSON.stringify(whatsapp.info)})`)
-    this.emit('login', whatsapp.info.wid._serialized)
     const contacts: Contact[] = await whatsapp.getContacts()
     const nonBroadcast = contacts.filter(c => c.id.server !== 'broadcast')
     const cacheManager = await this.getCacheManager()
@@ -161,6 +160,7 @@ export class Manager extends EventEmitter {
       })
     })
     await Promise.all(all)
+    this.emit('login', whatsapp.info.wid._serialized)
     logger.info(`friendCount: ${friendCount} contactCount: ${contactCount} roomCount: ${roomCount}`)
     this.emit('ready')
   }
@@ -403,7 +403,11 @@ export class Manager extends EventEmitter {
     allEvents$.pipe(distinctUntilKeyChanged('event')).subscribe(({ event, value }: { event: string, value: any }) => {
       logger.info(`event: ${JSON.stringify(event)}, value: ${JSON.stringify(value)}`)
       if (event === 'disconnected' && value as string === 'NAVIGATION') {
-        void this.onLogout('已退出登录')
+        if (value === 'NAVIGATION') {
+          void this.onLogout('已退出登录')
+        } else if (value === 'CONFLICT') {
+          void this.onLogout('已在其他设备上登录')
+        }
       }
     })
   }
