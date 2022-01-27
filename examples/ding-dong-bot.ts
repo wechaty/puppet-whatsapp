@@ -22,7 +22,6 @@ import qrTerm from 'qrcode-terminal'
 
 import { PuppetWhatsapp } from '../src/mod.js'
 import { MemoryCard } from 'wechaty-puppet'
-import { MEMORY_SLOT } from '../src/config.js'
 
 void (async () => {
   /**
@@ -57,6 +56,7 @@ void (async () => {
           devtools: true,
           headless: false,
         },
+        // userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3641.0 Safari/537.36',
       },
     },
   )
@@ -69,6 +69,7 @@ void (async () => {
   puppet
     .on('logout', onLogout)
     .on('login', onLogin)
+    .on('login', onReady)
     .on('scan', onScan)
     .on('error', onError)
     .on('message', onMessage)
@@ -82,7 +83,7 @@ void (async () => {
     .catch(async e => {
       console.error('Bot start() fail:', e)
       await puppet.stop()
-      process.exit(-1)
+      // process.exit(-1)
     })
 
   /**
@@ -115,7 +116,13 @@ void (async () => {
     console.info(`${payload.contactId} login`)
   }
 
-  function onLogout (payload: PUPPET.EventLogoutPayload) {
+  async function onReady () {
+    const contactList = await puppet.contactList()
+    const roomList = await puppet.roomList()
+    console.info(`ready contactList length: ${contactList.length} roomList length: ${roomList.length}`)
+  }
+
+  async function onLogout (payload: PUPPET.EventLogoutPayload) {
     console.info(`${payload.contactId} logouted`)
   }
 
@@ -142,11 +149,57 @@ void (async () => {
   text: ${msgPayload.text}
   from: ${msgPayload.fromId}
   to: ${msgPayload.toId}
+  room: ${msgPayload.roomId}
   =========================================
   `)
     if ((/ding/i.test(msgPayload.text || ''))) {
-      const messageId = await puppet.messageSendText(msgPayload.fromId!, 'dong')
+      const messageId = await puppet.messageSendText(msgPayload.roomId || msgPayload.fromId!, 'dong')
       console.info(`messageId: ${messageId}`)
+    }
+
+    if (msgPayload.text === 'room') {
+      // const roomIdA = '16505033788@c.us'
+      const roomIdB = '19085551012-1631040278@g.us'
+      const roomPayload = await puppet.roomRawPayload(roomIdB)
+      console.info(`roomPayload: ${JSON.stringify(roomPayload)}`)
+      await puppet.messageSendText(roomIdB, 'ding-ding-dong-dong')
+    }
+
+    if (msgPayload.text === 'link') {
+      await puppet.messageSendUrl(msgPayload.fromId!, {
+        title: 'www.baidu.com',
+        url: 'www.baidu.com',
+      })
+    }
+
+    // if (msgPayload.roomId) {
+    //   const roomRawPayload = await puppet.roomRawPayload(msgPayload.roomId)
+    //   console.info(`roomRawPayload: ${JSON.stringify(roomRawPayload)}`)
+    //   const roomPayload = await puppet.roomRawPayloadParser(roomRawPayload)
+    //   console.info(`roomPayload: ${JSON.stringify(roomPayload)}`)
+    //   const roomMemberList = await puppet.roomMemberList(msgPayload.roomId)
+    //   console.info(`roomMemberList: ${JSON.stringify(roomMemberList)}`)
+    // }
+
+    if (msgPayload.text === 'all rooms') {
+      const roomIdList = await puppet.roomList()
+      for (const roomId of roomIdList) {
+        const roomRawPayload = await puppet.roomRawPayload(roomId)
+        // console.info(`roomRawPayload: ${JSON.stringify(roomRawPayload)}`)
+        const roomPayload = await puppet.roomRawPayloadParser(roomRawPayload)
+        console.info(`roomPayload: ${JSON.stringify(roomPayload)}`)
+        const roomMemberList = await puppet.roomMemberList(roomId)
+        console.info(`roomMemberList length: ${roomMemberList.length} ${JSON.stringify(roomMemberList)}`)
+      }
+    }
+
+    if (msgPayload.text === 'all contacts') {
+      const contactIdList = await puppet.contactList()
+      for (const contactId of contactIdList) {
+        const contactRawPayload = await puppet.contactRawPayload(contactId)
+        const _contactRawPayload = await puppet.contactRawPayloadParser(contactRawPayload)
+        console.info(`contactRawPayload: ${JSON.stringify(_contactRawPayload)}`)
+      }
     }
   }
 
