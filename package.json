@@ -1,5 +1,5 @@
 {
-  "name": "@bung87/wechaty-puppet-whatsapp",
+  "name": "wechaty-puppet-whatsapp",
   "version": "1.11.48",
   "description": "Wechaty Puppet for WhatsApp",
   "type": "module",
@@ -27,7 +27,7 @@
     "lint:ts": "tsc --isolatedModules --noEmit",
     "lint:es": "eslint \"src/**/*.ts\" \"tests/**/*.spec.ts\" --ignore-pattern tests/fixtures/",
     "test": "npm-run-all lint test:unit",
-    "test:pack": "echo 1",
+    "test:pack": "bash -x scripts/npm-pack-testing.sh",
     "test:unit": "cross-env NODE_ENV=test tap --node-arg=--loader=ts-node/esm --node-arg=--no-warnings 'src/**/*.spec.ts' 'tests/**/*.spec.ts'",
     "prepublishOnly": "npm run dist"
   },
