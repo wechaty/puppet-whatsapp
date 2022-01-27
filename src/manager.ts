@@ -19,6 +19,7 @@ import type {  Contact, InviteV4Data, Message, MessageContent, MessageSendOption
 import { Client as WhatsApp, WhatsAppMessageType, GroupNotificationTypes } from './schema/index.js'
 import { logger } from './logger/index.js'
 import { sleep } from './utils.js'
+import { env } from 'process'
 
 const InviteLinkRegex = /^(https?:\/\/)?chat\.whatsapp\.com\/(?:invite\/)?([a-zA-Z0-9_-]{22})$/
 type ManagerEvents = 'message'
@@ -94,8 +95,11 @@ export class Manager extends EventEmitter {
       .then(() => logger.verbose('start() whatsapp.initialize() done.'))
       .catch(async e => {
         logger.error('start() whatsapp.initialize() rejection: %s', e)
-        await sleep(2 * 1000)
-        await this.start(session)
+        logger.info('env %s', env['NODE_ENV'])
+        if (env['NODE_ENV'] !== 'test') {
+          await sleep(2 * 1000)
+          await this.start(session)
+        }
       })
 
     this.requestManager = new RequestManager(this.whatsapp)
