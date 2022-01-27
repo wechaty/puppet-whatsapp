@@ -11,3 +11,12 @@ export const isRoomId = (id: string) => {
 export const isContactId = (id: string) => {
   return /@c.us$/i.test(id)
 }
+
+export const batchProcess = async (batchSize: number, list: any[], func: any) => {
+  let index = 0
+  while (batchSize * index < list.length) {
+    const curList = list.slice(batchSize * index, batchSize * (index + 1))
+    await Promise.all(curList.map(func))
+    index++
+  }
+}
