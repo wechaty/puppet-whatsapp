@@ -101,7 +101,6 @@ export class Manager extends EventEmitter {
           await this.start(session)
         }
       })
-    this.botId = this.whatsapp.info.wid._serialized
 
     this.requestManager = new RequestManager(this.whatsapp)
     await this.initWhatsAppEvents(this.whatsapp)
@@ -140,7 +139,7 @@ export class Manager extends EventEmitter {
 
   private async onWhatsAppReady () {
     const whatsapp = this.getWhatsApp()
-
+    this.botId = whatsapp.info.wid._serialized
     const contactList: Contact[] = await whatsapp.getContacts()
     const contactOrRoomList = contactList.filter(c => c.id.server !== 'broadcast')
 
