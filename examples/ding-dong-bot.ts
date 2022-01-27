@@ -35,7 +35,6 @@ void (async () => {
     storageOptions: { type: 'file' },
   })
   await memoryCard.load()
-  console.info(memoryCard.get(MEMORY_SLOT))
   const defaultArgs = [
     '--no-sandbox',
     '--single-process',
