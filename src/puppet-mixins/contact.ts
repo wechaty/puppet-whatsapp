@@ -10,7 +10,8 @@ import WAError from '../exceptions/whatsapp-error.js'
 import { logger } from '../logger/index.js'
 import type { PuppetWhatsapp } from '../puppet-whatsapp.js'
 import type { ContactPayload } from '../schema/index.js'
-import { isContactId } from '../utils.js'
+import { isContactId, isRoomId } from '../utils.js'
+import { roomRawPayload } from './room.js'
 
 async function contactAlias (this: PuppetWhatsapp, contactId: string)                       : Promise<string>;
 async function contactAlias (this: PuppetWhatsapp, contactId: string, alias: string | null) : Promise<void>;
@@ -80,6 +81,9 @@ async function contactAvatar (this: PuppetWhatsapp, contactId: string, file?: Fi
 async function contactRawPayload (this: PuppetWhatsapp, id: string): Promise<ContactPayload> {
   logger.verbose('contactRawPayload(%s)', id)
   if (!isContactId(id)) {
+    if (isRoomId(id)) {
+      return roomRawPayload.call(this, id)
+    }
     throw new WAError(WA_ERROR_TYPE.ERR_CONTACT_NOT_FOUND, `please check contact id: ${id} again.`)
   }
   const cacheManager = await this.manager.getCacheManager()
