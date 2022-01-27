@@ -18,7 +18,7 @@ import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
 import type {  Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification, ClientSession, GroupChat, BatteryInfo, WAState } from './schema/index.js'
 import { Client as WhatsApp, WhatsAppMessageType, GroupNotificationTypes } from './schema/index.js'
 import { logger } from './logger/index.js'
-import { sleep } from './utils.js'
+import { isContactId, isRoomId, sleep } from './utils.js'
 import { env } from 'process'
 
 const InviteLinkRegex = /^(https?:\/\/)?chat\.whatsapp\.com\/(?:invite\/)?([a-zA-Z0-9_-]{22})$/
@@ -192,14 +192,23 @@ export class Manager extends EventEmitter {
       return limitForAvatar(async () => {
         const avatar = await contact.getProfilePicUrl()
         const contactWithAvatar = Object.assign(contact, { avatar })
-        await cacheManager.setContactOrRoomRawPayload(contact.id._serialized, contactWithAvatar)
-        if (contact.isGroup) {
-          roomCount++
-        } else {
+        if (isContactId(contact.id._serialized)) {
           contactCount++
           if (contact.isMyContact) {
             friendCount++
           }
+          await cacheManager.setContactOrRoomRawPayload(contact.id._serialized, contactWithAvatar)
+        } else if (isRoomId(contact.id._serialized)) {
+          const chat = await this.getChatById(contact.id._serialized) as GroupChat
+          const memberList = chat.participants.map(m => m.id._serialized)
+          if (memberList.length > 0) {
+            roomCount++
+            await cacheManager.setContactOrRoomRawPayload(contact.id._serialized, contactWithAvatar)
+          } else {
+            await cacheManager.deleteContactOrRoom(contact.id._serialized)
+          }
+        } else {
+          logger.warn(`Unknown contact type: ${JSON.stringify(contact)}`)
         }
       })
     })
@@ -306,6 +315,8 @@ export class Manager extends EventEmitter {
       roomId: notification.chatId,
       timestamp: notification.timestamp,
     }
+    const cacheManager = await this.getCacheManager()
+    await cacheManager.deleteContactOrRoom(notification.chatId)
     this.emit('room-leave', roomJoinPayload)
   }
 
