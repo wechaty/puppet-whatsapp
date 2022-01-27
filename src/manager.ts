@@ -41,6 +41,7 @@ export class Manager extends EventEmitter {
   whatsapp?: WhatsApp
   requestManager?: RequestManager
   cacheManager?: CacheManager
+  botId?: string
 
   constructor (private options: PuppetWhatsAppOptions) {
     super()
@@ -97,6 +98,7 @@ export class Manager extends EventEmitter {
         await sleep(2 * 1000)
         await this.start(session)
       })
+    this.botId = this.whatsapp.info.wid._serialized
 
     this.requestManager = new RequestManager(this.whatsapp)
     await this.initWhatsAppEvents(this.whatsapp)
@@ -133,19 +135,58 @@ export class Manager extends EventEmitter {
     await this.options.memory?.save()
   }
 
-  private async onLogin () {
+  private async onWhatsAppReady () {
     const whatsapp = this.getWhatsApp()
-    await this.initCache(whatsapp.info.wid._serialized)
-    logger.info(`onLogin(${JSON.stringify(whatsapp.info)})`)
-    const contacts: Contact[] = await whatsapp.getContacts()
-    const nonBroadcast = contacts.filter(c => c.id.server !== 'broadcast')
+
+    const contactList: Contact[] = await whatsapp.getContacts()
+    const contactOrRoomList = contactList.filter(c => c.id.server !== 'broadcast')
+
+    await this.onLogin(contactOrRoomList)
+    await this.onReady(contactOrRoomList)
+  }
+
+  private async onLogin (contactOrRoomList: Contact[]) {
+    if (!this.botId) {
+      throw new WAError(WA_ERROR_TYPE.ERR_INIT, 'No login bot id.')
+    }
+
+    await this.initCache(this.botId)
     const cacheManager = await this.getCacheManager()
-    const limit = pLimit(100)
+
+    const limit = pLimit(500)
+    const all = contactOrRoomList.map((contact) => {
+      return limit(async () => {
+        const contactInCache = await cacheManager.getContactOrRoomRawPayload(contact.id._serialized)
+        if (contactInCache) {
+          return
+        }
+        const contactWithAvatar = Object.assign(contact, { avatar: '' })
+        await cacheManager.setContactOrRoomRawPayload(contact.id._serialized, contactWithAvatar)
+      })
+    })
+    await Promise.all(all)
+
+    const botSelfInCache = await cacheManager.getContactOrRoomRawPayload(this.botId)
+    if (!botSelfInCache) {
+      const botSelf = await this.getContactById(this.botId)
+      await cacheManager.setContactOrRoomRawPayload(this.botId, {
+        ...botSelf,
+        avatar: await this.getAvatarUrl(this.botId),
+      })
+    }
+
+    this.emit('login', this.botId)
+    logger.info(`onLogin(${this.botId}})`)
+  }
+
+  private async onReady (contactOrRoomList: Contact[]) {
+    const cacheManager = await this.getCacheManager()
+    const limitForAvatar = pLimit(100)
     let friendCount = 0
     let contactCount = 0
     let roomCount = 0
-    const all = nonBroadcast.map((contact) => {
-      return limit(async () => {
+    const allForAvatar = contactOrRoomList.map((contact) => {
+      return limitForAvatar(async () => {
         const avatar = await contact.getProfilePicUrl()
         const contactWithAvatar = Object.assign(contact, { avatar })
         await cacheManager.setContactOrRoomRawPayload(contact.id._serialized, contactWithAvatar)
@@ -159,9 +200,8 @@ export class Manager extends EventEmitter {
         }
       })
     })
-    await Promise.all(all)
-    this.emit('login', whatsapp.info.wid._serialized)
-    logger.info(`friendCount: ${friendCount} contactCount: ${contactCount} roomCount: ${roomCount}`)
+    await Promise.all(allForAvatar)
+    logger.info(`onReady() all contacts and rooms are ready, friendCount: ${friendCount} contactCount: ${contactCount} roomCount: ${roomCount}`)
     this.emit('ready')
   }
 
@@ -371,7 +411,7 @@ export class Manager extends EventEmitter {
      */
     whatsapp.on('auth_failure', this.onAuthFailure.bind(this))
 
-    whatsapp.on('ready', this.onLogin.bind(this))
+    whatsapp.on('ready', this.onWhatsAppReady.bind(this))
 
     whatsapp.on('message', this.onMessage.bind(this))
 
