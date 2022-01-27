@@ -95,7 +95,6 @@ export class Manager extends EventEmitter {
       .then(() => logger.verbose('start() whatsapp.initialize() done.'))
       .catch(async e => {
         logger.error('start() whatsapp.initialize() rejection: %s', e)
-        logger.info('env %s', env['NODE_ENV'])
         if (env['NODE_ENV'] !== 'test') {
           await sleep(2 * 1000)
           await this.start(session)
