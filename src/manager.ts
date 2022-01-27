@@ -155,6 +155,12 @@ export class Manager extends EventEmitter {
     await this.initCache(this.botId)
     const cacheManager = await this.getCacheManager()
 
+    const botSelf = await this.getContactById(this.botId)
+    await cacheManager.setContactOrRoomRawPayload(this.botId, {
+      ...botSelf,
+      avatar: await this.getAvatarUrl(this.botId),
+    })
+
     const batchSize = 500
     await batchProcess(batchSize, contactOrRoomList, async (contact: Contact) => {
       const contactInCache = await cacheManager.getContactOrRoomRawPayload(contact.id._serialized)
@@ -164,15 +170,6 @@ export class Manager extends EventEmitter {
       const contactWithAvatar = Object.assign(contact, { avatar: '' })
       await cacheManager.setContactOrRoomRawPayload(contact.id._serialized, contactWithAvatar)
     })
-
-    const botSelfInCache = await cacheManager.getContactOrRoomRawPayload(this.botId)
-    if (!botSelfInCache) {
-      const botSelf = await this.getContactById(this.botId)
-      await cacheManager.setContactOrRoomRawPayload(this.botId, {
-        ...botSelf,
-        avatar: await this.getAvatarUrl(this.botId),
-      })
-    }
 
     this.emit('login', this.botId)
     logger.info(`onLogin(${this.botId}})`)
