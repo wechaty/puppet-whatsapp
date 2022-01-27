@@ -15,6 +15,7 @@
     "npm": ">=7"
   },
   "scripts": {
+    "postinstall": "patch-package",
     "clean": "shx rm -fr dist/*",
     "dist": "npm-run-all clean build fixup",
     "build": "tsc && tsc -p tsconfig.cjs.json",
@@ -27,7 +28,7 @@
     "lint:es": "eslint \"src/**/*.ts\" \"tests/**/*.spec.ts\" --ignore-pattern tests/fixtures/",
     "test": "npm-run-all lint test:unit",
     "test:pack": "bash -x scripts/npm-pack-testing.sh",
-    "test:unit": "tap --node-arg=--loader=ts-node/esm --node-arg=--no-warnings 'src/**/*.spec.ts' 'tests/**/*.spec.ts'",
+    "test:unit": "cross-env NODE_ENV=test tap --node-arg=--loader=ts-node/esm --node-arg=--no-warnings 'src/**/*.spec.ts' 'tests/**/*.spec.ts'",
     "prepublishOnly": "npm run dist"
   },
   "repository": {
@@ -68,6 +69,11 @@
     "fs-extra": "^10.0.0",
     "gerror": "^1.0.16",
     "p-limit": "^3.1.0",
+    "patch-package": "^6.4.7",
+    "postinstall-postinstall": "^2.1.0",
+    "puppeteer-extra": "^3.2.3",
+    "puppeteer-extra-plugin-anonymize-ua": "^2.3.3",
+    "puppeteer-extra-plugin-stealth": "^2.9.0",
     "rxjs": "^7.5.1",
     "type-fest": "^2.10.0",
     "vcard4-ts": "^0.4.1",
