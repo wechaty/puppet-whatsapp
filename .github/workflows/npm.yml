@@ -46,7 +46,7 @@ jobs:
         run: ./scripts/generate-package-json.sh
 
       - name: Pack Testing
-        run: ./scripts/npm-pack-testing.sh
+        run: npm run test:pack
         env:
           WECHATY_PUPPET_HOSTIE_TOKEN: ${{ secrets.WECHATY_PUPPET_HOSTIE_TOKEN }}
 
