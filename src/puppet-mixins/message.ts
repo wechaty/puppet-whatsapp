@@ -232,6 +232,11 @@ export async function messageRawPayload (this:PuppetWhatsapp, id: string): Promi
 
 export async function messageRawPayloadParser (this:PuppetWhatsapp, whatsAppPayload: MessagePayload): Promise<PUPPET.MessagePayload> {
   let type: PUPPET.MessageType = PUPPET.MessageType.Unknown
+
+  if ((whatsAppPayload.type as string) === 'notification') {
+    type = PUPPET.MessageType.Text
+  }
+
   switch (whatsAppPayload.type) {
     case WhatsAppMessageType.TEXT:
       if (whatsAppPayload.title || whatsAppPayload.description) {
