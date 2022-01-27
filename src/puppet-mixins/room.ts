@@ -8,11 +8,14 @@ import type { PuppetWhatsapp } from '../puppet-whatsapp'
 import type { ContactPayload as RoomPayload, InviteV4Data, GroupChat } from '../schema/index.js'
 import { logger } from '../logger/index.js'
 import { contactRawPayload } from './contact.js'
-import { isRoomId } from '../utils.js'
+import { isContactId, isRoomId } from '../utils.js'
 
 export async function roomRawPayload (this: PuppetWhatsapp, id: string): Promise<RoomPayload> {
   logger.verbose('roomRawPayload(%s)', id)
   if (!isRoomId(id)) {
+    if (isContactId(id)) {
+      return contactRawPayload.call(this, id)
+    }
     throw new WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `please check room id: ${id} again.`)
   }
   const cacheManager = await this.manager.getCacheManager()
