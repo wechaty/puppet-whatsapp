@@ -31,16 +31,17 @@ export function parserMessageRawPayload (messagePayload: MessagePayload) {
 
 }
 
-function getMessageType (whatsAppPayload: MessagePayload): PUPPET.MessageType {
+function getMessageType (messagePayload: MessagePayload): PUPPET.MessageType {
   let type: PUPPET.MessageType = PUPPET.MessageType.Unknown
 
-  if ((whatsAppPayload.type as string) === 'notification') {
+  // @ts-ignore
+  if (messagePayload.type === 'notification') {
     type = PUPPET.MessageType.Text
   }
 
-  switch (whatsAppPayload.type) {
+  switch (messagePayload.type) {
     case WhatsAppMessageType.TEXT:
-      if (whatsAppPayload.title || whatsAppPayload.description) {
+      if (messagePayload.title || messagePayload.description) {
         type = PUPPET.MessageType.Url
       } else {
         type = PUPPET.MessageType.Text

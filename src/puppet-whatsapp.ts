@@ -244,84 +244,84 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   /**
    * ContactSelf
    */
-  contactSelfQRCode = contactSelfQRCode
-  contactSelfName = contactSelfName
-  contactSelfSignature = contactSelfSignature
+  override contactSelfQRCode = contactSelfQRCode
+  override contactSelfName = contactSelfName
+  override contactSelfSignature = contactSelfSignature
 
   /**
    * Contact
    */
-  contactAlias = contactAlias
-  contactPhone = contactPhone
-  contactCorporationRemark = contactCorporationRemark
-  contactDescription = contactDescription
-  contactList = contactList
-  contactAvatar = contactAvatar
-  contactRawPayloadParser = contactRawPayloadParser
-  contactRawPayload = contactRawPayload
+  override contactAlias = contactAlias
+  override contactPhone = contactPhone
+  override contactCorporationRemark = contactCorporationRemark
+  override contactDescription = contactDescription
+  override contactList = contactList
+  override contactAvatar = contactAvatar
+  override contactRawPayloadParser = contactRawPayloadParser
+  override contactRawPayload = contactRawPayload
 
   /**
    * Conversation
    */
-  conversationReadMark = conversationReadMark
+  override conversationReadMark = conversationReadMark
 
   /**
    * Message
    */
-  messageContact = messageContact
-  messageImage = messageImage
-  messageRecall = messageRecall
-  messageFile = messageFile
-  messageUrl = messageUrl
-  messageMiniProgram = messageMiniProgram
-  messageSendText = messageSendText
-  messageSendFile = messageSendFile
-  messageSendContact = messageSendContact
-  messageSendUrl = messageSendUrl
-  messageSendMiniProgram = messageSendMiniProgram
-  messageForward = messageForward
+  override messageContact = messageContact
+  override messageImage = messageImage
+  override messageRecall = messageRecall
+  override messageFile = messageFile
+  override messageUrl = messageUrl
+  override messageMiniProgram = messageMiniProgram
+  override messageSendText = messageSendText
+  override messageSendFile = messageSendFile
+  override messageSendContact = messageSendContact
+  override messageSendUrl = messageSendUrl
+  override messageSendMiniProgram = messageSendMiniProgram
+  override messageForward = messageForward
 
-  messageRawPayloadParser = messageRawPayloadParser
-  messageRawPayload = messageRawPayload
+  override messageRawPayloadParser = messageRawPayloadParser
+  override messageRawPayload = messageRawPayload
 
   /**
     * Room
     */
-  roomRawPayloadParser = roomRawPayloadParser
-  roomRawPayload = roomRawPayload
-  roomList = roomList
-  roomDel = roomDel
-  roomAvatar = roomAvatar
-  roomAdd = roomAdd
-  roomTopic = roomTopic
-  roomCreate = roomCreate
-  roomQuit = roomQuit
-  roomQRCode = roomQRCode
-  roomMemberList = roomMemberList
-  roomMemberRawPayload = roomMemberRawPayload
-  roomMemberRawPayloadParser = roomMemberRawPayloadParser
-  roomAnnounce = roomAnnounce
-  roomInvitationAccept = roomInvitationAccept
-  roomInvitationRawPayload =  roomInvitationRawPayload
-  roomInvitationRawPayloadParser = roomInvitationRawPayloadParser
+  override roomRawPayloadParser = roomRawPayloadParser
+  override roomRawPayload = roomRawPayload
+  override roomList = roomList
+  override roomDel = roomDel
+  override roomAvatar = roomAvatar
+  override roomAdd = roomAdd
+  override roomTopic = roomTopic
+  override roomCreate = roomCreate
+  override roomQuit = roomQuit
+  override roomQRCode = roomQRCode
+  override roomMemberList = roomMemberList
+  override roomMemberRawPayload = roomMemberRawPayload
+  override roomMemberRawPayloadParser = roomMemberRawPayloadParser
+  override roomAnnounce = roomAnnounce
+  override roomInvitationAccept = roomInvitationAccept
+  override roomInvitationRawPayload =  roomInvitationRawPayload
+  override roomInvitationRawPayloadParser = roomInvitationRawPayloadParser
 
   /**
     * Friendship
     */
-  friendshipRawPayload = friendshipRawPayload
-  friendshipRawPayloadParser = friendshipRawPayloadParser
-  friendshipSearchPhone = friendshipSearchPhone
-  friendshipSearchWeixin = friendshipSearchWeixin
-  friendshipAdd = friendshipAdd
-  friendshipAccept = friendshipAccept
+  override friendshipRawPayload = friendshipRawPayload
+  override friendshipRawPayloadParser = friendshipRawPayloadParser
+  override friendshipSearchPhone = friendshipSearchPhone
+  override friendshipSearchWeixin = friendshipSearchWeixin
+  override friendshipAdd = friendshipAdd
+  override friendshipAccept = friendshipAccept
 
   /**
     * Tag
     */
-  tagContactAdd = tagContactAdd
-  tagContactRemove = tagContactRemove
-  tagContactDelete = tagContactDelete
-  tagContactList = tagContactList
+  override tagContactAdd = tagContactAdd
+  override tagContactRemove = tagContactRemove
+  override tagContactDelete = tagContactDelete
+  override tagContactList = tagContactList
 
 }
 
