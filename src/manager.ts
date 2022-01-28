@@ -17,10 +17,9 @@ import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
 import type {  Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification, ClientSession, GroupChat, BatteryInfo, WAState } from './schema/index.js'
 import { Client as WhatsApp, WhatsAppMessageType, GroupNotificationTypes } from './schema/index.js'
 import { logger } from './logger/index.js'
-import { batchProcess, isContactId, isRoomId, sleep } from './utils.js'
+import { batchProcess, getInviteCode, isContactId, isInviteLink, isRoomId, sleep } from './utils.js'
 import { env } from 'process'
 
-const InviteLinkRegex = /^(https?:\/\/)?chat\.whatsapp\.com\/(?:invite\/)?([a-zA-Z0-9_-]{22})$/
 type ManagerEvents = 'message'
                    | 'room-join'
                    | 'room-leave'
@@ -217,24 +216,22 @@ export class Manager extends EventEmitter {
     this.emit('logout', whatsapp.info.wid._serialized, reason as string)
   }
 
-  private async onMessage (msg: Message) {
-    logger.info(`onMessage(${JSON.stringify(msg)})`)
+  private async onMessage (message: Message) {
+    logger.info(`onMessage(${JSON.stringify(message)})`)
     // @ts-ignore
-    if (msg.type === 'e2e_notification') {
-      if (msg.body === '' && msg.author === undefined) {
-        // match group join message pattern
-        return
-      }
+    if (message.type === 'e2e_notification' && message.body === '' && !message.author) {
+      // skip room join notification
+      return
     }
-    const messageId = msg.id.id
+    const messageId = message.id.id
     const cacheManager = await this.getCacheManager()
     const messageInCache = await cacheManager.getMessageRawPayload(messageId)
     if (messageInCache) {
       return
     }
-    await cacheManager.setMessageRawPayload(messageId, msg)
+    await cacheManager.setMessageRawPayload(messageId, message)
 
-    const contactId = msg.from
+    const contactId = message.from
     const contact = await this.getContactById(contactId)
     if (contact.isMyContact) {
       /*
@@ -244,42 +241,41 @@ export class Manager extends EventEmitter {
        *      2、whatsapp并非真正的好友关系，如果手机卡换了一个手机，通讯录没有他，则相当于非好友了，与传统好友的运作逻辑不符
       */
     }
-    if (msg.type !== WhatsAppMessageType.GROUP_INVITE) {
-      if (msg.links.length === 1 && InviteLinkRegex.test(msg.links[0]!.link)) {
-        const matched = msg.links[0]!.link.match(InviteLinkRegex)
-        if (matched) {
-          if (matched.length === 3) {
-            const inviteCode = matched[2]!
-            const roomInvitationPayload: PUPPET.EventRoomInvitePayload = {
-              roomInvitationId: inviteCode,
-            }
-            const rawData: Partial<InviteV4Data> = {
-              inviteCode,
-            }
-            await cacheManager.setRoomInvitationRawPayload(inviteCode, rawData)
-            this.emit('room-invite', roomInvitationPayload)
-          } else {
-            // TODO:
-          }
-        } else {
-          this.emit('message', { messageId: msg.id.id })
-        }
-      } else {
-        this.emit('message', { messageId: msg.id.id })
-      }
 
-    } else {
-      const info = msg.inviteV4
-      if (info) {
+    const needEmitMessage = await this.convertInviteLinkMessageToEvent(message)
+    if (needEmitMessage) {
+      this.emit('message', { messageId })
+    }
+  }
+
+  private async convertInviteLinkMessageToEvent (message: Message): Promise<boolean> {
+    const cacheManager = await this.getCacheManager()
+    if (message.type === WhatsAppMessageType.GROUP_INVITE) {
+      const inviteCode = message.inviteV4?.inviteCode
+      if (inviteCode) {
         const roomInvitationPayload: PUPPET.EventRoomInvitePayload = {
-          roomInvitationId: info.inviteCode,
+          roomInvitationId: inviteCode,
         }
-        await cacheManager.setRoomInvitationRawPayload(info.inviteCode, info)
+        await cacheManager.setRoomInvitationRawPayload(inviteCode, { inviteCode })
         this.emit('room-invite', roomInvitationPayload)
       } else {
-        // TODO:
+        logger.warn(`convertInviteLinkMessageToEvent can not get invite code: ${JSON.stringify(message)}`)
+      }
+      return false
+    }
+
+    if (message.type === WhatsAppMessageType.TEXT && message.links.length === 1 && isInviteLink(message.links[0]!.link)) {
+      const inviteCode = getInviteCode(message.links[0]!.link)
+      if (inviteCode) {
+        const roomInvitationPayload: PUPPET.EventRoomInvitePayload = {
+          roomInvitationId: inviteCode,
+        }
+        await cacheManager.setRoomInvitationRawPayload(inviteCode, { inviteCode })
+        this.emit('room-invite', roomInvitationPayload)
+        return false
       }
     }
+    return true
   }
 
   private onQRCode (qr: string) {
@@ -314,28 +310,36 @@ export class Manager extends EventEmitter {
 
   private async onRoomUpdate (notification: GroupNotification) {
     logger.info(`onRoomUpdate(${JSON.stringify(notification)})`)
+    const roomId = (notification.id as any).remote
     const cacheManager = await this.getCacheManager()
-    const roomInCache = await cacheManager.getContactOrRoomRawPayload(notification.chatId)
+    const roomInCache = await cacheManager.getContactOrRoomRawPayload(roomId)
 
     if (!roomInCache) {
-      const rawRoom = await this.getContactById(notification.chatId)
+      const rawRoom = await this.getContactById(roomId)
       const avatar = await rawRoom.getProfilePicUrl()
       const room = Object.assign(rawRoom, { avatar })
-      await cacheManager.setContactOrRoomRawPayload(notification.chatId, room)
+      await cacheManager.setContactOrRoomRawPayload(roomId, room)
     }
     if (notification.type === GroupNotificationTypes.SUBJECT) {
       const roomJoinPayload: PUPPET.EventRoomTopicPayload = {
         changerId: notification.author,
         newTopic: notification.body,
         oldTopic: roomInCache?.name || '',
-        roomId: notification.chatId,
+        roomId,
         timestamp: notification.timestamp,
+      }
+      if (roomInCache) {
+        roomInCache.name = notification.body
+        await cacheManager.setContactOrRoomRawPayload(roomId, roomInCache)
       }
       this.emit('room-topic', roomJoinPayload)
     }
+    if (notification.type === GroupNotificationTypes.DESCRIPTION) {
+      const roomRawPayload = await this.getChatById(roomId)
+      logger.info(`GroupNotificationTypes.DESCRIPTION changed: ${JSON.stringify((roomRawPayload as any).groupMetadata.desc)}`)
+    }
     if (notification.type === GroupNotificationTypes.CREATE) {
       // FIXME: how to reuse roomMemberList from room-mixin
-      const roomId = (notification.id as any).remote
       const roomChat = await this.getChatById(roomId) as GroupChat
       const members = roomChat.participants.map(participant => participant.id._serialized)
 
