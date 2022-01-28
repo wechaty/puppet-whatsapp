@@ -1,6 +1,6 @@
 import type { Class, SetOptional } from 'type-fest'
 
-import WAWebJS, { Client, Contact, Message, GroupChat as _GroupChat } from '@juzibot/whatsapp-web.js'
+import WAWebJS, { Client as _Client, Contact, Message, GroupChat as _GroupChat } from '@juzibot/whatsapp-web.js'
 
 export const WhatsWebURL = WAWebJS.WhatsWebURL
 export const DefaultOptions = WAWebJS.DefaultOptions
@@ -75,19 +75,20 @@ export type ContactPayload = {
 } & Omit<Contact, 'getProfilePicUrl' | 'getChat' | 'getCountryCode' | 'getFormattedNumber' | 'block' | 'unblock' | 'getAbout'>
 export type MessagePayload = Omit<Message, 'acceptGroupV4Invite' | 'delete' | 'downloadMedia' | 'getChat' | 'getContact' | 'getMentions' | 'getQuotedMessage' | 'reply' | 'forward' | 'star' | 'unstar' | 'getInfo' | 'getOrder' | 'getPayment'>
 
-export function restoreContact(client: Client, payload: ContactPayload): Contact {
+export function restoreContact(client: _Client, payload: ContactPayload): Contact {
   const contactIns = new ContactCls(client)
   Object.assign(contactIns, payload)
   return contactIns;
 }
 
-export function restoreMessage(client: Client, payload: MessagePayload): Message{
+export function restoreMessage(client: _Client, payload: MessagePayload): Message{
   const msgIns = new MessageCls(client)
   Object.assign(msgIns, payload)
   return msgIns
 }
 
 export type GroupChat = SetOptional<_GroupChat, 'owner'>
+
 export * from './event-name.js'
 
 export default WAWebJS
