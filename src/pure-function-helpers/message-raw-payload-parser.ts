@@ -4,7 +4,7 @@ import WAError from '../exceptions/whatsapp-error.js'
 import { isRoomId } from '../utils.js'
 import { MessagePayload, WhatsAppMessageType } from '../schema/index.js'
 
-export function messagePayloadParser (messagePayload: MessagePayload) {
+export function parserMessageRawPayload (messagePayload: MessagePayload) {
 
   const fromId = messagePayload.author || messagePayload.from
   const toId = isRoomId(messagePayload.to) ? undefined : messagePayload.to

@@ -1,7 +1,7 @@
 import * as PUPPET from 'wechaty-puppet'
 import { FileBox } from '../compact/index.js'
 import type { PuppetWhatsapp } from '../puppet-whatsapp.js'
-import { messagePayloadParser, parseVcard } from '../pure-function-helpers/index.js'
+import { parserMessageRawPayload, parseVcard } from '../pure-function-helpers/index.js'
 import { MessageContent, MessageMedia, MessagePayload, MessageSendOptions, WhatsAppMessageType, restoreMessage } from '../schema/index.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
@@ -230,5 +230,5 @@ export async function messageRawPayload (this:PuppetWhatsapp, id: string): Promi
 }
 
 export async function messageRawPayloadParser (this:PuppetWhatsapp, whatsAppPayload: MessagePayload): Promise<PUPPET.MessagePayload> {
-  return messagePayloadParser(whatsAppPayload)
+  return parserMessageRawPayload(whatsAppPayload)
 }
