@@ -8,52 +8,7 @@ import type { PuppetWhatsapp } from '../puppet-whatsapp'
 import type { ContactPayload as RoomPayload, InviteV4Data, GroupChat } from '../schema/index.js'
 import { logger } from '../logger/index.js'
 import { contactRawPayload } from './contact.js'
-import { isContactId, isRoomId } from '../utils.js'
-
-export async function roomRawPayload (this: PuppetWhatsapp, id: string): Promise<RoomPayload> {
-  logger.verbose('roomRawPayload(%s)', id)
-  if (!isRoomId(id)) {
-    if (isContactId(id)) {
-      return contactRawPayload.call(this, id)
-    }
-    throw new WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `please check room id: ${id} again.`)
-  }
-  const cacheManager = await this.manager.getCacheManager()
-  const room = await cacheManager.getContactOrRoomRawPayload(id)
-  if (room) {
-    return room
-  } else {
-    try {
-      const rawRoom = await this.manager.getContactById(id)
-      const avatar = await rawRoom.getProfilePicUrl() || ''
-      const room = Object.assign(rawRoom, { avatar })
-      await cacheManager.setContactOrRoomRawPayload(id, room)
-      return room
-    } catch (error) {
-      throw new WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `roomRawPayload(${id}) not found.`)
-    }
-  }
-}
-
-export async function roomRawPayloadParser (this: PuppetWhatsapp, roomPayload: RoomPayload): Promise<PUPPET.RoomPayload> {
-  try {
-    const chat = await this.manager.getChatById(roomPayload.id._serialized) as GroupChat
-    if (chat.participants.length === 0) {
-      throw new WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `roomRawPayloadParser(${roomPayload.id._serialized}) can not get chat info for this room.`)
-    }
-    return {
-      adminIdList: chat.participants.filter(m => m.isAdmin || m.isSuperAdmin).map(m => m.id._serialized),
-      avatar: roomPayload.avatar,
-      id: roomPayload.id._serialized,
-      memberIdList: chat.participants.map(m => m.id._serialized),
-      ownerId: chat.owner?._serialized,
-      topic: roomPayload.name || roomPayload.pushname || '',
-    }
-  } catch (error) {
-    logger.error(`roomRawPayloadParser(${roomPayload.id._serialized}) failed, error message: ${(error as Error).message}`)
-    throw new WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `roomRawPayloadParser(${roomPayload.id._serialized}) failed, error message: ${(error as Error).message}`)
-  }
-}
+import { isRoomId } from '../utils.js'
 
 export async function roomList (this: PuppetWhatsapp): Promise<string[]> {
   logger.verbose('roomList()')
@@ -214,4 +169,46 @@ export async function roomInvitationRawPayload (this: PuppetWhatsapp, roomInvita
 export async function roomInvitationRawPayloadParser (this: PuppetWhatsapp, rawPayload: any): Promise<PUPPET.RoomInvitationPayload> {
   logger.verbose('roomInvitationRawPayloadParser(%s)', JSON.stringify(rawPayload))
   return rawPayload
+}
+
+export async function roomRawPayload (this: PuppetWhatsapp, id: string): Promise<RoomPayload> {
+  logger.verbose('roomRawPayload(%s)', id)
+  if (!isRoomId(id)) {
+    throw new WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `please check room id: ${id} again.`)
+  }
+  const cacheManager = await this.manager.getCacheManager()
+  const room = await cacheManager.getContactOrRoomRawPayload(id)
+  if (room) {
+    return room
+  } else {
+    try {
+      const rawRoom = await this.manager.getContactById(id)
+      const avatar = await rawRoom.getProfilePicUrl() || ''
+      const room = Object.assign(rawRoom, { avatar })
+      await cacheManager.setContactOrRoomRawPayload(id, room)
+      return room
+    } catch (error) {
+      throw new WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `roomRawPayload(${id}) not found.`)
+    }
+  }
+}
+
+export async function roomRawPayloadParser (this: PuppetWhatsapp, roomPayload: RoomPayload): Promise<PUPPET.RoomPayload> {
+  try {
+    const chat = await this.manager.getChatById(roomPayload.id._serialized) as GroupChat
+    if (chat.participants.length === 0) {
+      throw new WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `roomRawPayloadParser(${roomPayload.id._serialized}) can not get chat info for this room.`)
+    }
+    return {
+      adminIdList: chat.participants.filter(m => m.isAdmin || m.isSuperAdmin).map(m => m.id._serialized),
+      avatar: roomPayload.avatar,
+      id: roomPayload.id._serialized,
+      memberIdList: chat.participants.map(m => m.id._serialized),
+      ownerId: chat.owner?._serialized,
+      topic: roomPayload.name || roomPayload.pushname || '',
+    }
+  } catch (error) {
+    logger.error(`roomRawPayloadParser(${roomPayload.id._serialized}) failed, error message: ${(error as Error).message}`)
+    throw new WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `roomRawPayloadParser(${roomPayload.id._serialized}) failed, error message: ${(error as Error).message}`)
+  }
 }
