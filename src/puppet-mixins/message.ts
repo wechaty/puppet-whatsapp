@@ -1,12 +1,11 @@
 import * as PUPPET from 'wechaty-puppet'
 import { FileBox } from '../compact/index.js'
 import type { PuppetWhatsapp } from '../puppet-whatsapp.js'
-import { parseVcard } from '../pure-function-helpers/vcard-parser.js'
+import { messagePayloadParser, parseVcard } from '../pure-function-helpers/index.js'
 import { MessageContent, MessageMedia, MessagePayload, MessageSendOptions, WhatsAppMessageType, restoreMessage } from '../schema/index.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import { logger } from '../logger/index.js'
-import { isRoomId } from '../utils.js'
 
 /**
   * Get contact message
@@ -231,60 +230,5 @@ export async function messageRawPayload (this:PuppetWhatsapp, id: string): Promi
 }
 
 export async function messageRawPayloadParser (this:PuppetWhatsapp, whatsAppPayload: MessagePayload): Promise<PUPPET.MessagePayload> {
-  let type: PUPPET.MessageType = PUPPET.MessageType.Unknown
-
-  if ((whatsAppPayload.type as string) === 'notification') {
-    type = PUPPET.MessageType.Text
-  }
-
-  switch (whatsAppPayload.type) {
-    case WhatsAppMessageType.TEXT:
-      if (whatsAppPayload.title || whatsAppPayload.description) {
-        type = PUPPET.MessageType.Url
-      } else {
-        type = PUPPET.MessageType.Text
-      }
-      break
-    case WhatsAppMessageType.STICKER:
-      type = PUPPET.MessageType.Emoticon
-      break
-    case WhatsAppMessageType.VOICE:
-      type = PUPPET.MessageType.Audio
-      break
-    case WhatsAppMessageType.IMAGE:
-      type = PUPPET.MessageType.Image
-      break
-    case WhatsAppMessageType.AUDIO:
-      type = PUPPET.MessageType.Audio
-      break
-    case WhatsAppMessageType.VIDEO:
-      type = PUPPET.MessageType.Video
-      break
-    case WhatsAppMessageType.CONTACT_CARD:
-      type = PUPPET.MessageType.Contact
-      break
-    case WhatsAppMessageType.DOCUMENT:
-      type = PUPPET.MessageType.Attachment
-      break
-    case WhatsAppMessageType.LOCATION:
-      type = PUPPET.MessageType.Location
-      break
-  }
-
-  const messagePayload = {
-    fromId: isRoomId(whatsAppPayload.from) ? whatsAppPayload.author! : whatsAppPayload.from,
-    id: whatsAppPayload.id.id,
-    mentionIdList: whatsAppPayload.mentionedIds,
-    text: whatsAppPayload.body,
-    timestamp: whatsAppPayload.timestamp,
-    toId: whatsAppPayload.to,
-    type,
-    // filename
-  }
-
-  if (isRoomId(whatsAppPayload.id.remote)) {
-    (messagePayload as any).roomId = whatsAppPayload.id.remote
-  }
-
-  return messagePayload
+  return messagePayloadParser(whatsAppPayload)
 }
