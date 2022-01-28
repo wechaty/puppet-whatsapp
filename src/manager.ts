@@ -329,6 +329,11 @@ export class Manager extends EventEmitter {
       }
       this.emit('room-topic', roomJoinPayload)
     }
+    if (notification.type === GroupNotificationTypes.DESCRIPTION) {
+      const roomId = (notification.id as any).remote
+      const roomRawPayload = await this.getChatById(roomId)
+      logger.info(`GroupNotificationTypes.DESCRIPTION changed: ${JSON.stringify((roomRawPayload as any).groupMetadata.desc)}`)
+    }
     if (notification.type === GroupNotificationTypes.CREATE) {
       // FIXME: how to reuse roomMemberList from room-mixin
       const roomId = (notification.id as any).remote
