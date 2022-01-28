@@ -7,8 +7,8 @@ import { MessagePayload, WhatsAppMessageType } from '../schema/index.js'
 export function parserMessageRawPayload (messagePayload: MessagePayload) {
 
   const fromId = messagePayload.author || messagePayload.from
-  const toId = isRoomId(messagePayload.to) ? undefined : messagePayload.to
-  const roomId = isRoomId(messagePayload.to) ? messagePayload.to : undefined
+  const toId = isRoomId(messagePayload.id.remote) ? undefined : messagePayload.to
+  const roomId = isRoomId(messagePayload.id.remote) ? messagePayload.id.remote : undefined
 
   if (!fromId) {
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, 'empty fromId!')
