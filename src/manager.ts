@@ -310,33 +310,36 @@ export class Manager extends EventEmitter {
 
   private async onRoomUpdate (notification: GroupNotification) {
     logger.info(`onRoomUpdate(${JSON.stringify(notification)})`)
+    const roomId = (notification.id as any).remote
     const cacheManager = await this.getCacheManager()
-    const roomInCache = await cacheManager.getContactOrRoomRawPayload(notification.chatId)
+    const roomInCache = await cacheManager.getContactOrRoomRawPayload(roomId)
 
     if (!roomInCache) {
-      const rawRoom = await this.getContactById(notification.chatId)
+      const rawRoom = await this.getContactById(roomId)
       const avatar = await rawRoom.getProfilePicUrl()
       const room = Object.assign(rawRoom, { avatar })
-      await cacheManager.setContactOrRoomRawPayload(notification.chatId, room)
+      await cacheManager.setContactOrRoomRawPayload(roomId, room)
     }
     if (notification.type === GroupNotificationTypes.SUBJECT) {
       const roomJoinPayload: PUPPET.EventRoomTopicPayload = {
         changerId: notification.author,
         newTopic: notification.body,
         oldTopic: roomInCache?.name || '',
-        roomId: notification.chatId,
+        roomId,
         timestamp: notification.timestamp,
+      }
+      if (roomInCache) {
+        roomInCache.name = notification.body
+        await cacheManager.setContactOrRoomRawPayload(roomId, roomInCache)
       }
       this.emit('room-topic', roomJoinPayload)
     }
     if (notification.type === GroupNotificationTypes.DESCRIPTION) {
-      const roomId = (notification.id as any).remote
       const roomRawPayload = await this.getChatById(roomId)
       logger.info(`GroupNotificationTypes.DESCRIPTION changed: ${JSON.stringify((roomRawPayload as any).groupMetadata.desc)}`)
     }
     if (notification.type === GroupNotificationTypes.CREATE) {
       // FIXME: how to reuse roomMemberList from room-mixin
-      const roomId = (notification.id as any).remote
       const roomChat = await this.getChatById(roomId) as GroupChat
       const members = roomChat.participants.map(participant => participant.id._serialized)
 
