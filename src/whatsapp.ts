@@ -8,7 +8,7 @@ import {
   Contact as WhatsappContact,
   ClientSession,
   ClientOptions,
-}                               from 'whatsapp-web.js'
+}                               from '@juzibot/whatsapp-web.js'
 import type {
   LaunchOptions,
   BrowserConnectOptions,

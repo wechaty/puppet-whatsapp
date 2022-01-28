@@ -1,4 +1,4 @@
-import type { Client as WhatsApp, Contact, InviteV4Data, MessageContent, MessageSendOptions } from 'whatsapp-web.js'
+import type { Client as WhatsApp, Contact, InviteV4Data, MessageContent, MessageSendOptions } from '@juzibot/whatsapp-web.js'
 import { RateManager } from './rateManager.js'
 
 export class RequestManager {
