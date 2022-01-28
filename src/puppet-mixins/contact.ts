@@ -10,20 +10,19 @@ import WAError from '../exceptions/whatsapp-error.js'
 import { logger } from '../logger/index.js'
 import type { PuppetWhatsapp } from '../puppet-whatsapp.js'
 import type { ContactPayload } from '../schema/index.js'
-import { isContactId, isRoomId } from '../utils.js'
-import { roomRawPayload } from './room.js'
+import { isContactId } from '../utils.js'
 
-async function contactAlias (this: PuppetWhatsapp, contactId: string)                       : Promise<string>;
-async function contactAlias (this: PuppetWhatsapp, contactId: string, alias: string | null) : Promise<void>;
-async function contactAlias (this: PuppetWhatsapp, contactId: string, alias?: string | null): Promise<void | string> {
+export async function contactAlias (this: PuppetWhatsapp, contactId: string)                       : Promise<string>;
+export async function contactAlias (this: PuppetWhatsapp, contactId: string, alias: string | null) : Promise<void>;
+export async function contactAlias (this: PuppetWhatsapp, contactId: string, alias?: string | null): Promise<void | string> {
   logger.verbose('contactAlias(%s, %s)', contactId, alias)
   return PUPPET.throwUnsupportedError()
 }
 
-async function contactPhone (this: PuppetWhatsapp, contactId: string): Promise<string[]>
-async function contactPhone (this: PuppetWhatsapp, contactId: string, phoneList: string[]): Promise<void>
+export async function contactPhone (this: PuppetWhatsapp, contactId: string): Promise<string[]>
+export async function contactPhone (this: PuppetWhatsapp, contactId: string, phoneList: string[]): Promise<void>
 
-async function contactPhone (this: PuppetWhatsapp, contactId: string, phoneList?: string[]): Promise<string[] | void> {
+export async function contactPhone (this: PuppetWhatsapp, contactId: string, phoneList?: string[]): Promise<string[] | void> {
   logger.info('contactPhone(%s, %s)', contactId, phoneList)
   if (typeof phoneList === 'undefined') {
     const cacheManager = await this.manager.getCacheManager()
@@ -37,27 +36,27 @@ async function contactPhone (this: PuppetWhatsapp, contactId: string, phoneList?
   return PUPPET.throwUnsupportedError()
 }
 
-async function  contactCorporationRemark (this: PuppetWhatsapp, contactId: string, corporationRemark: string) {
+export async function contactCorporationRemark (this: PuppetWhatsapp, contactId: string, corporationRemark: string) {
   logger.verbose('contactCorporationRemark(%s, %s)', contactId, corporationRemark)
   return PUPPET.throwUnsupportedError()
 }
 
-async function  contactDescription (this: PuppetWhatsapp, contactId: string, description: string) {
+export async function contactDescription (this: PuppetWhatsapp, contactId: string, description: string) {
   logger.verbose('contactDescription(%s, %s)', contactId, description)
   return PUPPET.throwUnsupportedError()
 }
 
-async function  contactList (this: PuppetWhatsapp): Promise<string[]> {
+export async function contactList (this: PuppetWhatsapp): Promise<string[]> {
   logger.info('contactList()')
   const cacheManager = await this.manager.getCacheManager()
   const contactIdList = await cacheManager.getContactIdList()
   return contactIdList
 }
 
-async function contactAvatar (this: PuppetWhatsapp, contactId: string)                : Promise<FileBox>
-async function contactAvatar (this: PuppetWhatsapp, contactId: string, file: FileBox) : Promise<void>
+export async function contactAvatar (this: PuppetWhatsapp, contactId: string)                : Promise<FileBox>
+export async function contactAvatar (this: PuppetWhatsapp, contactId: string, file: FileBox) : Promise<void>
 
-async function contactAvatar (this: PuppetWhatsapp, contactId: string, file?: FileBox): Promise<void | FileBox> {
+export async function contactAvatar (this: PuppetWhatsapp, contactId: string, file?: FileBox): Promise<void | FileBox> {
   logger.info('contactAvatar(%s)', contactId)
 
   if (file) {
@@ -78,12 +77,9 @@ async function contactAvatar (this: PuppetWhatsapp, contactId: string, file?: Fi
 
 }
 
-async function contactRawPayload (this: PuppetWhatsapp, id: string): Promise<ContactPayload> {
+export async function contactRawPayload (this: PuppetWhatsapp, id: string): Promise<ContactPayload> {
   logger.verbose('contactRawPayload(%s)', id)
   if (!isContactId(id)) {
-    if (isRoomId(id)) {
-      return roomRawPayload.call(this, id)
-    }
     throw new WAError(WA_ERROR_TYPE.ERR_CONTACT_NOT_FOUND, `please check contact id: ${id} again.`)
   }
   const cacheManager = await this.manager.getCacheManager()
@@ -99,7 +95,7 @@ async function contactRawPayload (this: PuppetWhatsapp, id: string): Promise<Con
   }
 }
 
-async function contactRawPayloadParser (this: PuppetWhatsapp, contactPayload: ContactPayload): Promise<PUPPET.ContactPayload> {
+export async function contactRawPayloadParser (this: PuppetWhatsapp, contactPayload: ContactPayload): Promise<PUPPET.ContactPayload> {
   let type
   if (contactPayload.isUser) {
     type = PUPPET.ContactType.Individual
@@ -129,15 +125,4 @@ async function contactRawPayloadParser (this: PuppetWhatsapp, contactPayload: Co
     logger.error(`contactRawPayloadParser(${contactPayload.id._serialized}) failed, error message: ${(error as Error).message}`)
     throw new WAError(WA_ERROR_TYPE.ERR_CONTACT_NOT_FOUND, `contactRawPayloadParser(${contactPayload.id._serialized}) failed, error message: ${(error as Error).message}`)
   }
-}
-
-export {
-  contactAlias,
-  contactPhone,
-  contactCorporationRemark,
-  contactDescription,
-  contactList,
-  contactAvatar,
-  contactRawPayloadParser,
-  contactRawPayload,
 }
