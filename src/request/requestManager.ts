@@ -1,4 +1,5 @@
-import type { Client as WhatsApp, Contact, InviteV4Data, MessageContent, MessageSendOptions } from '@juzibot/whatsapp-web.js'
+import type { Client as WhatsApp, Contact, InviteV4Data, MessageContent, MessageSendOptions } from '@juzi.bot/whatsapp-web.js'
+import type { CreateGroupResult } from '../schema/index.js'
 import { RateManager } from './rateManager.js'
 
 export class RequestManager {
@@ -31,8 +32,8 @@ export class RequestManager {
     return this.whatsapp.unarchiveChat(chatId)
   }
 
-  public createRoom (name: string, participants: Contact[] | string[]) {
-    return this.whatsapp.createGroup(name, participants)
+  public createRoom (name: string, participants: Contact[] | string[]): Promise<CreateGroupResult> {
+    return this.whatsapp.createGroup(name, participants) as unknown as Promise<CreateGroupResult>
   }
 
   public destroy () {
