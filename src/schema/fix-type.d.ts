@@ -1,6 +1,6 @@
 import type { SetOptional } from 'type-fest'
-import type {  Contact, MessageMedia } from '@juzibot/whatsapp-web.js'
-declare module '@juzibot/whatsapp-web.js' {
+import type {  Contact, MessageMedia } from '@juzi.bot/whatsapp-web.js'
+declare module '@juzi.bot/whatsapp-web.js' {
   declare namespace WAWebJS {
     export enum GroupNotificationTypes {
       ADD = 'add',
