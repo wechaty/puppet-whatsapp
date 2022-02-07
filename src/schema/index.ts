@@ -1,6 +1,6 @@
 import type { Class, SetOptional } from 'type-fest'
 
-import WAWebJS, { Client, Contact, Message, GroupChat as _GroupChat } from '@juzibot/whatsapp-web.js'
+import WAWebJS, { Client, Contact, Message, GroupChat as _GroupChat } from '@juzi.bot/whatsapp-web.js'
 
 export const WhatsWebURL = WAWebJS.WhatsWebURL
 export const DefaultOptions = WAWebJS.DefaultOptions
@@ -68,7 +68,7 @@ export type {
   Buttons,
   Row,
   List,
-} from '@juzibot/whatsapp-web.js'
+} from '@juzi.bot/whatsapp-web.js'
 
 export type ContactPayload = {
   avatar: string
@@ -88,6 +88,7 @@ export function restoreMessage(client: Client, payload: MessagePayload): Message
 }
 
 export type GroupChat = SetOptional<_GroupChat, 'owner'>
+
 export * from './event-name.js'
 
 export default WAWebJS

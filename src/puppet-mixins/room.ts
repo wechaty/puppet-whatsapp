@@ -77,8 +77,8 @@ export async function roomCreate (
 ): Promise<string> {
   logger.info('roomCreate(%s, %s)', contactIdList, topic)
   const group = await this.manager.createRoom(topic, contactIdList)
-  if (group.gid) {
-    return group.gid
+  if (group.gid._serialized) {
+    return group.gid._serialized
   } else {
     throw new WAError(WA_ERROR_TYPE.ERR_CREATE_ROOM, 'An error occurred while creating the group!')
   }
