@@ -88,6 +88,7 @@ export function restoreMessage(client: Client, payload: MessagePayload): Message
 }
 
 export type GroupChat = SetOptional<_GroupChat, 'owner'>
+
 export * from './event-name.js'
 
 export default WAWebJS

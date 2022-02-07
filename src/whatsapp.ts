@@ -2,13 +2,14 @@ import {
   log,
 }                               from 'wechaty-puppet'
 
-import {
-  Client as WhatsApp,
+import type {
   Message as WhatsappMessage,
   Contact as WhatsappContact,
   ClientSession,
   ClientOptions,
 }                               from '@juzi.bot/whatsapp-web.js'
+import { Client as WhatsApp } from '@juzi.bot/whatsapp-web.js'
+
 import type {
   LaunchOptions,
   BrowserConnectOptions,
