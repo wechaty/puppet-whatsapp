@@ -20,7 +20,7 @@ function avatarForContact (): FileBox {
 const MEMORY_SLOT = 'PUPPET_WHATSAPP'
 const PRE = 'PuppetWhatsApp'
 
-export const MIN_BATTERY_VALUE = 1
+export const MIN_BATTERY_VALUE_FOR_LOGOUT = Number(process.env['MIN_BATTERY_VALUE_FOR_LOGOUT']) || 1
 
 export {
   MEMORY_SLOT,
