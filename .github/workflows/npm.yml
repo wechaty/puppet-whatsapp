@@ -24,8 +24,8 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Test
-        run: npm test
+      # - name: Test
+      #   run: npm test
 
   pack:
     name: Pack
