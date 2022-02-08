@@ -9,7 +9,7 @@ import {
 import * as PUPPET from 'wechaty-puppet'
 import { RequestManager } from './request/requestManager.js'
 import { CacheManager } from './data-manager/cache-manager.js'
-import { MEMORY_SLOT } from './config.js'
+import { MEMORY_SLOT, MIN_BATTERY_VALUE } from './config.js'
 import { WA_ERROR_TYPE } from './exceptions/error-type.js'
 import WAError from './exceptions/whatsapp-error.js'
 import { getWhatsApp } from './whatsapp.js'
@@ -385,6 +385,13 @@ export class Manager extends EventEmitter {
   */
   private async onChangeBattery (batteryInfo: BatteryInfo) {
     logger.silly(`onChangeBattery(${JSON.stringify(batteryInfo)})`)
+    if (!this.botId) {
+      throw new WAError(WA_ERROR_TYPE.ERR_INIT, 'No login bot id.')
+    }
+
+    if (batteryInfo.battery <= MIN_BATTERY_VALUE && !batteryInfo.plugged) {
+      this.emit('logout', this.botId, '手机电量过低，即将无法继续使用WhatsApp。')
+    }
   }
 
   private async onChangeState (state: WAState) {
