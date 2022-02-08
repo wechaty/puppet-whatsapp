@@ -24,12 +24,12 @@ export async function messageContact (this:PuppetWhatsapp, messageId: string): P
     logger.error('Message %s is not contact type', messageId)
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} is not contact type`)
   }
+  if (!msg.vCards[0]) {
+    throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} has no vCards info, detail: ${JSON.stringify(msg)}`)
+  }
   try {
-    const vcard = parseVcard(msg.vCards[0]!)
-    if (!vcard.TEL) {
-      logger.warn('vcard has not TEL field')
-    }
-    return vcard.TEL ? vcard.TEL.waid : ''
+    const vcard = parseVcard(msg.vCards[0])
+    return vcard.TEL!.waid
   } catch (error) {
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_CONTACT, `Can not parse contact card from message: ${messageId}, error: ${(error as Error).message}`)
   }

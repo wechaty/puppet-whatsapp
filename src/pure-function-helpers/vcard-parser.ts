@@ -62,23 +62,25 @@ export function parseVcard (body: string): IVcard {
 
     if (element.startsWith('N:')) {
       result.N = element.replace('N:', '').split(';').filter(v => !!v)
-
     } else if (element.startsWith('FN:')) {
       result.FN = element.replace('FN:', '')
-
-    } else if (element.startsWith('item1.TEL;')) {
+    } else if (element.startsWith('item1.TEL;')) { // FIXME: vcard info contain a lot of items, e.g. item1, item2, ...
       const TELPattern = /waid=(\d*):([+ \d]*)$/m
       const match = TELPattern.exec(element)
       if (match) {
         result.TEL = {
           phone: match[2]!,
-          waid: match[1]!,
+          waid: `${match[1]}@c.us`,
         }
       }
 
     } else if (element === 'END:VCARD') {
       break
     }
+  }
+
+  if (!result.TEL) {
+    throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Card detail: ${body} can not parse TEL field`)
   }
 
   return result
