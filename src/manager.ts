@@ -9,7 +9,7 @@ import {
 import * as PUPPET from 'wechaty-puppet'
 import { RequestManager } from './request/requestManager.js'
 import { CacheManager } from './data-manager/cache-manager.js'
-import { MEMORY_SLOT, MIN_BATTERY_VALUE_FOR_LOGOUT } from './config.js'
+import { LOGOUT_REASON, MEMORY_SLOT, MIN_BATTERY_VALUE_FOR_LOGOUT } from './config.js'
 import { WA_ERROR_TYPE } from './exceptions/error-type.js'
 import WAError from './exceptions/whatsapp-error.js'
 import { getWhatsApp } from './whatsapp.js'
@@ -209,7 +209,7 @@ export class Manager extends EventEmitter {
     this.emit('ready')
   }
 
-  private async onLogout (reason: string = '退出登录') {
+  private async onLogout (reason: string = LOGOUT_REASON.DEFAULT) {
     logger.info(`onLogout(${reason})`)
     await this.options.memory?.delete(MEMORY_SLOT)
     await this.options.memory?.save()
@@ -390,7 +390,7 @@ export class Manager extends EventEmitter {
     }
 
     if (batteryInfo.battery <= MIN_BATTERY_VALUE_FOR_LOGOUT && !batteryInfo.plugged) {
-      this.emit('logout', this.botId, '手机电量过低，即将无法继续使用WhatsApp')
+      this.emit('logout', this.botId, LOGOUT_REASON.BATTERY_LOWER_IN_PHONE)
     }
   }
 
@@ -402,7 +402,7 @@ export class Manager extends EventEmitter {
 
     switch (state) {
       case WAState.TIMEOUT:
-        this.emit('logout', this.botId, '手机端网络连接异常')
+        this.emit('logout', this.botId, LOGOUT_REASON.NETWORK_TIMEOUT_IN_PHONE)
         break
       case WAState.CONNECTED:
         this.emit('login', this.botId)
