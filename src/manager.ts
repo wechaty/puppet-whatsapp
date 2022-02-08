@@ -251,7 +251,7 @@ export class Manager extends EventEmitter {
 
     // HACK: 如果和这个联系人有大于1条消息则不是新好友
     const chat = await this.getChatById(contact.id._serialized)
-    const messages = await chat.fetchMessages({ limit: 5 })
+    const messages = await chat.fetchMessages({ limit: 3 })
     console.log(`${contact.pushname} has ${messages.length} messages`)
     if (messages.length < 2) {
       this.emit("friendship", contact.id._serialized)

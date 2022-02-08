@@ -15,9 +15,9 @@ export async function friendshipSearchPhone (
   phone: string,
 ): Promise<null | string> {
   logger.verbose('friendshipSearchPhone(%s)', phone)
-  const user = this.manager.getContactById(phone)
-  if ((await user).isWAContact) {
-    return (await user).pushname
+  const user = await this.manager.getContactById(phone)
+  if (user.isWAContact) {
+    return user.pushname
   } else {
     return null
   }
