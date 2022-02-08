@@ -128,6 +128,7 @@ export class Manager extends EventEmitter {
   }
 
   private async onAuthFailure (message: string) {
+    // Unable to log in. Are the session details valid?, then restart no use exist session
     logger.warn('auth_failure: %s, then restart no use exist session', message)
     // msg -> auth_failure message
     // auth_failure due to session invalidation
@@ -264,7 +265,8 @@ export class Manager extends EventEmitter {
       return false
     }
 
-    if (message.type === WhatsAppMessageType.TEXT && message.links.length === 1 && isInviteLink(message.links[0]!.link)) {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (message.type === WhatsAppMessageType.TEXT && message.links && message.links.length === 1 && isInviteLink(message.links[0]!.link)) {
       const inviteCode = getInviteCode(message.links[0]!.link)
       if (inviteCode) {
         const roomInvitationPayload: PUPPET.EventRoomInvitePayload = {
@@ -336,7 +338,31 @@ export class Manager extends EventEmitter {
     }
     if (notification.type === GroupNotificationTypes.DESCRIPTION) {
       const roomRawPayload = await this.getChatById(roomId)
-      logger.info(`GroupNotificationTypes.DESCRIPTION changed: ${JSON.stringify((roomRawPayload as any).groupMetadata.desc)}`)
+      const roomMetadata = (roomRawPayload as any).groupMetadata
+      const description = roomMetadata.desc
+      logger.info(`GroupNotificationTypes.DESCRIPTION changed: ${description}`)
+      const genMessagePayload = {
+        ack: 2,
+        author: (notification.id as any).author,
+        body: description,
+        broadcast: false,
+        forwardingScore: 0,
+        from: (notification.id as any).participant,
+        fromMe: (notification.id as any).fromMe,
+        hasMedia: false,
+        hasQuotedMsg: false,
+        id: notification.id,
+        isForwarded: false,
+        isGif: false,
+        isStarred: false,
+        isStatus: false,
+        mentionedIds: [],
+        timestamp: Date.now(),
+        to: roomId,
+        type: WhatsAppMessageType.TEXT,
+        vCards: [],
+      } as any
+      await this.onMessage(genMessagePayload)
     }
     if (notification.type === GroupNotificationTypes.CREATE) {
       // FIXME: how to reuse roomMemberList from room-mixin
