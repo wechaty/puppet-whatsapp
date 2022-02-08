@@ -128,6 +128,7 @@ export class Manager extends EventEmitter {
   }
 
   private async onAuthFailure (message: string) {
+    // Unable to log in. Are the session details valid?, then restart no use exist session
     logger.warn('auth_failure: %s, then restart no use exist session', message)
     // msg -> auth_failure message
     // auth_failure due to session invalidation
@@ -264,7 +265,8 @@ export class Manager extends EventEmitter {
       return false
     }
 
-    if (message.type === WhatsAppMessageType.TEXT && message.links.length === 1 && isInviteLink(message.links[0]!.link)) {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (message.type === WhatsAppMessageType.TEXT && message.links && message.links.length === 1 && isInviteLink(message.links[0]!.link)) {
       const inviteCode = getInviteCode(message.links[0]!.link)
       if (inviteCode) {
         const roomInvitationPayload: PUPPET.EventRoomInvitePayload = {
@@ -336,7 +338,31 @@ export class Manager extends EventEmitter {
     }
     if (notification.type === GroupNotificationTypes.DESCRIPTION) {
       const roomRawPayload = await this.getChatById(roomId)
-      logger.info(`GroupNotificationTypes.DESCRIPTION changed: ${JSON.stringify((roomRawPayload as any).groupMetadata.desc)}`)
+      const roomMetadata = (roomRawPayload as any).groupMetadata
+      const description = roomMetadata.desc
+      logger.info(`GroupNotificationTypes.DESCRIPTION changed: ${description}`)
+      const genMessagePayload = {
+        ack: 2,
+        author: (notification.id as any).author,
+        body: description,
+        broadcast: false,
+        forwardingScore: 0,
+        from: (notification.id as any).participant,
+        fromMe: (notification.id as any).fromMe,
+        hasMedia: false,
+        hasQuotedMsg: false,
+        id: notification.id,
+        isForwarded: false,
+        isGif: false,
+        isStarred: false,
+        isStatus: false,
+        mentionedIds: [],
+        timestamp: Date.now(),
+        to: roomId,
+        type: WhatsAppMessageType.TEXT,
+        vCards: [],
+      } as any
+      await this.onMessage(genMessagePayload)
     }
     if (notification.type === GroupNotificationTypes.CREATE) {
       // FIXME: how to reuse roomMemberList from room-mixin
@@ -401,12 +427,42 @@ export class Manager extends EventEmitter {
     }
   }
 
+  /**
+   * Someone delete message in all devices. Due to they have the same message id so we generate a fake id as flash-store key.
+   * see: https://github.com/pedroslopez/whatsapp-web.js/issues/1178
+   * @param message revoke message
+   * @param revokedMsg original message, sometimes it will be null
+   */
   private async onMessageRevokeEveryone (message: Message, revokedMsg?: Message | null | undefined) {
-    logger.silly(`onMessageRevokeEveryone(${JSON.stringify(message)}), ${JSON.stringify(revokedMsg)}`)
+    logger.silly(`onMessageRevokeEveryone(newMsg: ${JSON.stringify(message)}, originalMsg: ${JSON.stringify(revokedMsg)})`)
+    const cacheManager = await this.getCacheManager()
+    const messageId = message.id.id
+    if (revokedMsg) {
+      const originalMessageId = revokedMsg.id.id
+      const recalledMessageId = this.generateFakeRecallMessageId(originalMessageId)
+      message.body = recalledMessageId
+      await cacheManager.setMessageRawPayload(recalledMessageId, revokedMsg)
+    }
+    await cacheManager.setMessageRawPayload(messageId, message)
+    this.emit('message', { messageId })
   }
 
+  /**
+   * Only delete message in bot phone will trigger this event. But the message type is chat, not revoked any more.
+   */
   private async onMessageRevokeMe (message: Message) {
     logger.silly(`onMessageRevokeMe(${JSON.stringify(message)})`)
+    const cacheManager = await this.getCacheManager()
+    const messageId = message.id.id
+    message.type = WhatsAppMessageType.REVOKED
+    message.body = messageId
+    const recalledMessageId = this.generateFakeRecallMessageId(messageId)
+    await cacheManager.setMessageRawPayload(recalledMessageId, message)
+    this.emit('message', { messageId: recalledMessageId })
+  }
+
+  private generateFakeRecallMessageId (messageId: string) {
+    return `${messageId}_revoked`
   }
 
   public async initWhatsAppEvents (
