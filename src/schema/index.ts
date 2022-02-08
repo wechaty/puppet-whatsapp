@@ -1,6 +1,7 @@
 import type { Class, SetOptional } from 'type-fest'
+import WhatsApp from '@juzi.bot/whatsapp-web.js'
 
-import WAWebJS, { Client, Contact, Message, GroupChat as _GroupChat } from '@juzi.bot/whatsapp-web.js'
+import WAWebJS, { Contact, Message, GroupChat as _GroupChat } from '@juzi.bot/whatsapp-web.js'
 
 export const WhatsWebURL = WAWebJS.WhatsWebURL
 export const DefaultOptions = WAWebJS.DefaultOptions
@@ -19,10 +20,12 @@ export enum GroupNotificationTypes {
 }
 
 export const MessageMedia = WAWebJS.MessageMedia
+
 // @ts-ignore
-export const ContactCls = WAWebJS.Contact as unknown as Class<Contact>
+export const ContactClass = WAWebJS.Contact as Class<Contact>
 // @ts-ignore
-export const MessageCls = WAWebJS.Message as unknown as Class<Message>
+export const MessageClass = WAWebJS.Message as Class<Message>
+
 export type {
   Client,
   ClientInfo,
@@ -37,7 +40,7 @@ export type {
   MessageAck,
   MessageTypes,
   Status,
-  WAState,
+  WAState as WAStateType,
   MessageInfo,
   InviteV4Data,
   Message,
@@ -70,22 +73,14 @@ export type {
   List,
 } from '@juzi.bot/whatsapp-web.js'
 
+export const {
+  WAState,
+} = WhatsApp
+
 export type ContactPayload = {
   avatar: string
 } & Omit<Contact, 'getProfilePicUrl' | 'getChat' | 'getCountryCode' | 'getFormattedNumber' | 'block' | 'unblock' | 'getAbout'>
 export type MessagePayload = Omit<Message, 'acceptGroupV4Invite' | 'delete' | 'downloadMedia' | 'getChat' | 'getContact' | 'getMentions' | 'getQuotedMessage' | 'reply' | 'forward' | 'star' | 'unstar' | 'getInfo' | 'getOrder' | 'getPayment'>
-
-export function restoreContact(client: Client, payload: ContactPayload): Contact {
-  const contactIns = new ContactCls(client)
-  Object.assign(contactIns, payload)
-  return contactIns;
-}
-
-export function restoreMessage(client: Client, payload: MessagePayload): Message{
-  const msgIns = new MessageCls(client)
-  Object.assign(msgIns, payload)
-  return msgIns
-}
 
 export type GroupChat = SetOptional<_GroupChat, 'owner'>
 

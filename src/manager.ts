@@ -9,13 +9,13 @@ import {
 import * as PUPPET from 'wechaty-puppet'
 import { RequestManager } from './request/requestManager.js'
 import { CacheManager } from './data-manager/cache-manager.js'
-import { MEMORY_SLOT } from './config.js'
+import { LOGOUT_REASON, MEMORY_SLOT, MIN_BATTERY_VALUE_FOR_LOGOUT } from './config.js'
 import { WA_ERROR_TYPE } from './exceptions/error-type.js'
 import WAError from './exceptions/whatsapp-error.js'
 import { getWhatsApp } from './whatsapp.js'
 import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
-import type {  Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification, ClientSession, GroupChat, BatteryInfo, WAState } from './schema/index.js'
-import { Client as WhatsApp, WhatsAppMessageType, GroupNotificationTypes } from './schema/index.js'
+import type {  Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification, ClientSession, GroupChat, BatteryInfo, WAStateType } from './schema/index.js'
+import { Client as WhatsApp, WhatsAppMessageType, GroupNotificationTypes, WAState } from './schema/index.js'
 import { logger } from './logger/index.js'
 import { batchProcess, getInviteCode, isContactId, isInviteLink, isRoomId, sleep } from './utils.js'
 import { env } from 'process'
@@ -209,7 +209,7 @@ export class Manager extends EventEmitter {
     this.emit('ready')
   }
 
-  private async onLogout (reason: string = '退出登录') {
+  private async onLogout (reason: string = LOGOUT_REASON.DEFAULT) {
     logger.info(`onLogout(${reason})`)
     await this.options.memory?.delete(MEMORY_SLOT)
     await this.options.memory?.save()
@@ -220,8 +220,13 @@ export class Manager extends EventEmitter {
   private async onMessage (message: Message) {
     logger.info(`onMessage(${JSON.stringify(message)})`)
     // @ts-ignore
-    if (message.type === 'e2e_notification' && message.body === '' && !message.author) {
-      // skip room join notification
+    if (
+      message.type === 'multi_vcard'
+      || (message.type === 'e2e_notification'
+      && message.body === ''
+      && !message.author)
+    ) {
+      // skip room join notification and multi_vcard message
       return
     }
     const messageId = message.id.id
@@ -385,10 +390,31 @@ export class Manager extends EventEmitter {
   */
   private async onChangeBattery (batteryInfo: BatteryInfo) {
     logger.silly(`onChangeBattery(${JSON.stringify(batteryInfo)})`)
+    if (!this.botId) {
+      throw new WAError(WA_ERROR_TYPE.ERR_INIT, 'No login bot id.')
+    }
+
+    if (batteryInfo.battery <= MIN_BATTERY_VALUE_FOR_LOGOUT && !batteryInfo.plugged) {
+      this.emit('logout', this.botId, LOGOUT_REASON.BATTERY_LOWER_IN_PHONE)
+    }
   }
 
-  private async onChangeState (state: WAState) {
+  private async onChangeState (state: WAStateType) {
     logger.silly(`onChangeState(${JSON.stringify(state)})`)
+    if (!this.botId) {
+      throw new WAError(WA_ERROR_TYPE.ERR_INIT, 'No login bot id.')
+    }
+
+    switch (state) {
+      case WAState.TIMEOUT:
+        this.emit('logout', this.botId, LOGOUT_REASON.NETWORK_TIMEOUT_IN_PHONE)
+        break
+      case WAState.CONNECTED:
+        this.emit('login', this.botId)
+        break
+      default:
+        break
+    }
   }
 
   private async onIncomingCall (...args: any[]) { // it is a any[] argument
@@ -740,7 +766,7 @@ export class Manager extends EventEmitter {
     return requestManager.setStatusMessage(nickname)
   }
 
-  private getWhatsApp () {
+  public getWhatsApp () {
     if (!this.whatsapp) {
       throw new WAError(WA_ERROR_TYPE.ERR_INIT, 'Not init whatsapp')
     }
