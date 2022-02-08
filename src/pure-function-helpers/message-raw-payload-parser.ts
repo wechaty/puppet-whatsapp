@@ -71,6 +71,9 @@ function getMessageType (messagePayload: MessagePayload): PUPPET.MessageType {
     case WhatsAppMessageType.LOCATION:
       type = PUPPET.MessageType.Location
       break
+    case WhatsAppMessageType.REVOKED:
+      type = PUPPET.MessageType.Recalled
+      break
   }
   return type
 }
