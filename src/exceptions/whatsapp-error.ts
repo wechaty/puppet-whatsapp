@@ -1,14 +1,14 @@
 import { WAErrorType, WA_ERROR_TYPE } from './error-type.js'
 import { GError } from 'gerror'
 
-export default class WAError extends GError {
+export default class WAError {
 
   constructor (
     type: WAErrorType,
     message: string,
     details?: string,
   ) {
-    super({
+    GError.from({
       code: +type,
       details,
       message,
