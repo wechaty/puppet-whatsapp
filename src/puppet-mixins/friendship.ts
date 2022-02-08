@@ -1,5 +1,6 @@
 import * as PUPPET from 'wechaty-puppet'
 import { logger } from '../logger/index.js'
+import type PuppetWhatsapp from '../puppet-whatsapp.js'
 
 export async function friendshipRawPayload (id: string): Promise<any> {
   return PUPPET.throwUnsupportedError()
@@ -10,10 +11,16 @@ export async function friendshipRawPayloadParser (rawPayload: any): Promise<PUPP
 }
 
 export async function friendshipSearchPhone (
+  this: PuppetWhatsapp,
   phone: string,
 ): Promise<null | string> {
   logger.verbose('friendshipSearchPhone(%s)', phone)
-  return PUPPET.throwUnsupportedError()
+  const user = this.manager.getContactById(phone)
+  if ((await user).isWAContact) {
+    return (await user).pushname
+  } else {
+    return null
+  }
 }
 
 export async function friendshipSearchWeixin (
@@ -24,11 +31,17 @@ export async function friendshipSearchWeixin (
 }
 
 export async function friendshipAdd (
+  this: PuppetWhatsapp,
   contactId: string,
   hello: string,
 ): Promise<void> {
   logger.verbose('friendshipAdd(%s, %s)', contactId, hello)
-  return PUPPET.throwUnsupportedError()
+  const isUser = await this.manager.isWhatsappUser(contactId)
+  if (!isUser) {
+    throw new Error('Not a registered user on WhatsApp.')
+  }
+
+  await this.messageSendText(contactId, hello)
 }
 
 export async function friendshipAccept (

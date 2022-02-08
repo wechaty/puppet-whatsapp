@@ -200,7 +200,8 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   private async onFriendship (id: string): Promise<void> {
-
+    logger.verbose(`friendship event, id: ${JSON.stringify(id)}`)
+    this.emit('friendship', { friendshipId: id })
   }
 
   private async onRoomJoin (payload: PUPPET.EventRoomJoinPayload) {
