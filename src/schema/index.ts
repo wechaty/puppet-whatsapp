@@ -1,4 +1,5 @@
 import type { Class, SetOptional } from 'type-fest'
+import WhatsApp from '@juzi.bot/whatsapp-web.js'
 
 import WAWebJS, { Contact, Message, GroupChat as _GroupChat } from '@juzi.bot/whatsapp-web.js'
 
@@ -39,7 +40,7 @@ export type {
   MessageAck,
   MessageTypes,
   Status,
-  WAState,
+  WAState as WAStateType,
   MessageInfo,
   InviteV4Data,
   Message,
@@ -71,6 +72,10 @@ export type {
   Row,
   List,
 } from '@juzi.bot/whatsapp-web.js'
+
+export const {
+  WAState,
+} = WhatsApp
 
 export type ContactPayload = {
   avatar: string

@@ -14,8 +14,8 @@ import { WA_ERROR_TYPE } from './exceptions/error-type.js'
 import WAError from './exceptions/whatsapp-error.js'
 import { getWhatsApp } from './whatsapp.js'
 import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
-import type {  Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification, ClientSession, GroupChat, BatteryInfo, WAState } from './schema/index.js'
-import { Client as WhatsApp, WhatsAppMessageType, GroupNotificationTypes } from './schema/index.js'
+import type {  Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification, ClientSession, GroupChat, BatteryInfo, WAStateType } from './schema/index.js'
+import { Client as WhatsApp, WhatsAppMessageType, GroupNotificationTypes, WAState } from './schema/index.js'
 import { logger } from './logger/index.js'
 import { batchProcess, getInviteCode, isContactId, isInviteLink, isRoomId, sleep } from './utils.js'
 import { env } from 'process'
@@ -390,12 +390,26 @@ export class Manager extends EventEmitter {
     }
 
     if (batteryInfo.battery <= MIN_BATTERY_VALUE_FOR_LOGOUT && !batteryInfo.plugged) {
-      this.emit('logout', this.botId, '手机电量过低，即将无法继续使用WhatsApp。')
+      this.emit('logout', this.botId, '手机电量过低，即将无法继续使用WhatsApp')
     }
   }
 
-  private async onChangeState (state: WAState) {
+  private async onChangeState (state: WAStateType) {
     logger.silly(`onChangeState(${JSON.stringify(state)})`)
+    if (!this.botId) {
+      throw new WAError(WA_ERROR_TYPE.ERR_INIT, 'No login bot id.')
+    }
+
+    switch (state) {
+      case WAState.TIMEOUT:
+        this.emit('logout', this.botId, '手机端网络连接异常')
+        break
+      case WAState.CONNECTED:
+        this.emit('login', this.botId)
+        break
+      default:
+        break
+    }
   }
 
   private async onIncomingCall (...args: any[]) { // it is a any[] argument
