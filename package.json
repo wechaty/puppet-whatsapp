@@ -1,6 +1,6 @@
 {
   "name": "wechaty-puppet-whatsapp",
-  "version": "1.11.62",
+  "version": "1.11.63",
   "description": "Wechaty Puppet for WhatsApp",
   "type": "module",
   "exports": {
@@ -69,7 +69,6 @@
     "gerror": "^1.0.16",
     "rxjs": "^7.5.1",
     "type-fest": "^2.10.0",
-    "vcard4-ts": "^0.4.1",
     "wechaty-puppet": "^0.41.9",
     "@juzi.bot/whatsapp-web.js": "1.15.7"
   },
