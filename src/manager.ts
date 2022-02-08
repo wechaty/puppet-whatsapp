@@ -220,8 +220,13 @@ export class Manager extends EventEmitter {
   private async onMessage (message: Message) {
     logger.info(`onMessage(${JSON.stringify(message)})`)
     // @ts-ignore
-    if (message.type === 'e2e_notification' && message.body === '' && !message.author) {
-      // skip room join notification
+    if (
+      message.type === 'multi_vcard'
+      || (message.type === 'e2e_notification'
+      && message.body === ''
+      && !message.author)
+    ) {
+      // skip room join notification and multi_vcard message
       return
     }
     const messageId = message.id.id
