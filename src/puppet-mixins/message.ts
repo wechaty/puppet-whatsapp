@@ -29,7 +29,7 @@ export async function messageContact (this:PuppetWhatsapp, messageId: string): P
   }
   try {
     const vcard = parseVcard(msg.vCards[0])
-    return vcard.TEL!.waid
+    return vcard.TEL![0]!.waid
   } catch (error) {
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_CONTACT, `Can not parse contact card from message: ${messageId}, error: ${(error as Error).message}`)
   }
