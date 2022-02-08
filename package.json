@@ -70,7 +70,7 @@
     "rxjs": "^7.5.1",
     "type-fest": "^2.10.0",
     "wechaty-puppet": "^0.41.9",
-    "@juzi.bot/whatsapp-web.js": "1.15.7"
+    "@juzi.bot/whatsapp-web.js": "1.15.10"
   },
   "tap": {
     "check-coverage": false
