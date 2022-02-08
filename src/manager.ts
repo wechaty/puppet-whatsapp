@@ -684,7 +684,7 @@ export class Manager extends EventEmitter {
     return requestManager.setStatusMessage(nickname)
   }
 
-  private getWhatsApp () {
+  public getWhatsApp () {
     if (!this.whatsapp) {
       throw new WAError(WA_ERROR_TYPE.ERR_INIT, 'Not init whatsapp')
     }

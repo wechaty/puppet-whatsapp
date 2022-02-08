@@ -1,8 +1,8 @@
 import * as PUPPET from 'wechaty-puppet'
 import { FileBox } from '../compact/index.js'
 import type { PuppetWhatsapp } from '../puppet-whatsapp.js'
-import { parserMessageRawPayload, parseVcard } from '../pure-function-helpers/index.js'
-import { MessageContent, MessageMedia, MessagePayload, MessageSendOptions, WhatsAppMessageType, restoreMessage } from '../schema/index.js'
+import { parserMessageRawPayload, parseVcard, convertMessagePayloadToClass } from '../pure-function-helpers/index.js'
+import { MessageContent, MessageMedia, MessagePayload, MessageSendOptions, WhatsAppMessageType } from '../schema/index.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import { logger } from '../logger/index.js'
@@ -53,9 +53,9 @@ export async function messageImage (this:PuppetWhatsapp, messageId: string, imag
     logger.error('Message %s does not contain any media', messageId)
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} does not contain any media`)
   }
-  const msgIns = restoreMessage(this.manager.whatsapp!, msg)
+  const msgObj = convertMessagePayloadToClass(this.manager.getWhatsApp(), msg)
   try {
-    const media = await msgIns.downloadMedia()
+    const media = await msgObj.downloadMedia()
     return FileBox.fromBase64(media.data, media.filename ?? 'img.jpg')
   } catch (error) {
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_IMAGE, `Message ${messageId} does not contain any media`)
@@ -75,9 +75,9 @@ export async function messageRecall (this:PuppetWhatsapp, messageId: string): Pr
     logger.error('Message %s not found', messageId)
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} not found`)
   }
-  const msgIns = restoreMessage(this.manager.whatsapp!, msg)
+  const msgObj = convertMessagePayloadToClass(this.manager.getWhatsApp(), msg)
   try {
-    await msgIns.delete(true)
+    await msgObj.delete(true)
     return true
   } catch (err) {
     logger.error(`Can not recall this message: ${messageId}, error: ${(err as Error).message}`)
@@ -102,9 +102,9 @@ export async function messageFile (this:PuppetWhatsapp, messageId: string): Prom
     logger.error('Message %s does not contain any media', messageId)
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} does not contain any media`)
   }
-  const msgIns = restoreMessage(this.manager.whatsapp!, msg)
+  const msgObj = convertMessagePayloadToClass(this.manager.getWhatsApp(), msg)
   try {
-    const media = await msgIns.downloadMedia()
+    const media = await msgObj.downloadMedia()
     return FileBox.fromBase64(media.data, media.filename ?? '')
   } catch (error) {
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_FILE, `Message ${messageId} does not contain any media`)
@@ -211,9 +211,9 @@ export async function messageForward (this:PuppetWhatsapp, conversationId: strin
     logger.error('Message %s not found', messageId)
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} not found`)
   }
-  const msgIns = restoreMessage(this.manager.whatsapp!, msg)
+  const msgObj = convertMessagePayloadToClass(this.manager.getWhatsApp(), msg)
   try {
-    await msgIns.forward(conversationId)
+    await msgObj.forward(conversationId)
   } catch (error) {
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_FORWARD, `Forward message: ${messageId} failed, error: ${(error as Error).message}`)
   }
