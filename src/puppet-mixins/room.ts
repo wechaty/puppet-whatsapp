@@ -17,16 +17,6 @@ export async function roomList (this: PuppetWhatsapp): Promise<string[]> {
   return roomIdList
 }
 
-export async function roomDel (
-  this: PuppetWhatsapp,
-  roomId: string,
-  contactId: string,
-): Promise<void> {
-  logger.info('roomDel(%s, %s)', roomId, contactId)
-  const chat = await this.manager.getChatById(roomId) as GroupChat
-  await chat.removeParticipants([contactId])
-}
-
 export async function roomAvatar (this: PuppetWhatsapp, roomId: string): Promise<FileBox> {
   logger.info('roomAvatar(%s)', roomId)
 
@@ -47,6 +37,20 @@ export async function roomAdd (
   logger.info('roomAdd(%s, %s)', roomId, contactId)
   const chat = await this.manager.getChatById(roomId) as GroupChat
   await chat.addParticipants([contactId])
+  const cacheManager = await this.manager.getCacheManager()
+  await cacheManager.addRoomMemberToList(roomId, contactId)
+}
+
+export async function roomDel (
+  this: PuppetWhatsapp,
+  roomId: string,
+  contactId: string,
+): Promise<void> {
+  logger.info('roomDel(%s, %s)', roomId, contactId)
+  const chat = await this.manager.getChatById(roomId) as GroupChat
+  await chat.removeParticipants([contactId])
+  const cacheManager = await this.manager.getCacheManager()
+  await cacheManager.removeRoomMemberFromList(roomId, contactId)
 }
 
 export async function roomTopic(this: PuppetWhatsapp, roomId: string): Promise<string>
