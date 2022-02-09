@@ -57,6 +57,8 @@ export async function friendshipAdd (
     throw new WAError(WA_ERROR_TYPE.ERR_CONTACT_NOT_FOUND, 'Not a registered user on WhatsApp.')
   }
 
+  await this.contactRawPayload(contactId)
+
   await this.messageSendText(contactId, hello)
 }
 
