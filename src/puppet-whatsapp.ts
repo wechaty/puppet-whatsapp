@@ -200,7 +200,10 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   private async onFriendship (id: string): Promise<void> {
-
+    const contactId = await this.messageContact(id)
+    // NOTE: this function automatically put non-contact into cache
+    await this.contactRawPayload(contactId)
+    this.emit('friendship', { friendshipId: id })
   }
 
   private async onRoomJoin (payload: PUPPET.EventRoomJoinPayload) {
