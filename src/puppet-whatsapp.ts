@@ -199,8 +199,10 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     this.emit('reset', { data: reason } as PUPPET.EventResetPayload)
   }
 
-  private async onFriendship (id: string): Promise<void> {
-    logger.verbose(`friendship event, id: ${JSON.stringify(id)}`)
+  private async onFriendship (/* message id */id: string): Promise<void> {
+    const contactId = await this.messageContact(id)
+    // NOTE: this function automatically put non-contact into cache
+    await this.contactRawPayload(contactId)
     this.emit('friendship', { friendshipId: id })
   }
 

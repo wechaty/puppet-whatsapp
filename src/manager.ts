@@ -62,6 +62,9 @@ export class Manager extends EventEmitter {
   public override emit(event: 'scan', status: PUPPET.ScanStatus, url?: string): boolean
   public override emit(event: 'login', userId: string): boolean
   public override emit(event: 'logout', userId: string, message: string): boolean
+  /**
+   * id: hello message id
+   */
   public override emit(event: 'friendship', id: string): boolean
   public override emit(event: 'reset', reason: string): boolean
   public override emit(event: 'error', error: string): boolean
@@ -242,20 +245,17 @@ export class Manager extends EventEmitter {
     await cacheManager.setMessageRawPayload(messageId, message)
 
     const contactId = message.from
-    const contact = await this.getContactById(contactId)
+    const contactIds = await cacheManager.getContactIdList()
+    const isfriend = !!contactIds.find(c => c === contactId)
+    if (!isfriend) {
+      this.emit('friendship', messageId)
+    }
     /*
      * TODO: 也许可以将非好友发来的消息作为好友事件
      * 优点：可以在秒回端复用一些好友逻辑
      * 缺点：1、可能非好友连续发多条消息导致反复推送好友事件（例如：你好？在吗？在吗？在吗）
      *      2、whatsapp并非真正的好友关系，如果手机卡换了一个手机，通讯录没有他，则相当于非好友了，与传统好友的运作逻辑不符
      */
-
-    // HACK: 如果和这个联系人有大于1条消息则不是新好友
-    const chat = await this.getChatById(contact.id._serialized)
-    const messages = await chat.fetchMessages({ limit: 3 })
-    if (messages.length < 2) {
-      this.emit('friendship', contact.id._serialized)
-    }
 
     const needEmitMessage = await this.convertInviteLinkMessageToEvent(message)
     if (needEmitMessage) {

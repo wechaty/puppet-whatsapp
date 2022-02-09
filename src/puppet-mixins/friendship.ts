@@ -1,13 +1,25 @@
 import * as PUPPET from 'wechaty-puppet'
 import { logger } from '../logger/index.js'
 import type PuppetWhatsapp from '../puppet-whatsapp.js'
+import type { MessagePayload } from '../schema/index.js'
 
-export async function friendshipRawPayload (id: string): Promise<any> {
-  return PUPPET.throwUnsupportedError()
+export async function friendshipRawPayload (this: PuppetWhatsapp, id: string): Promise<MessagePayload> {
+  const cache = await this.manager.getCacheManager()
+  const message = await cache.getMessageRawPayload(id)
+  if (!message) {
+    throw new Error('Message not found')
+  }
+  return message
 }
 
-export async function friendshipRawPayloadParser (rawPayload: any): Promise<PUPPET.FriendshipPayload> {
-  return PUPPET.throwUnsupportedError()
+export async function friendshipRawPayloadParser (rawPayload: MessagePayload): Promise<PUPPET.FriendshipPayload> {
+  return {
+    contactId: rawPayload.from,
+    hello: rawPayload.body,
+    id: rawPayload.id.id,
+    timestamp: rawPayload.timestamp,
+    type: PUPPET.FriendshipType.Confirm,
+  }
 }
 
 export async function friendshipSearchPhone (
