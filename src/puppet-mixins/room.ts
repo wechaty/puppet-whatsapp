@@ -17,16 +17,18 @@ export async function roomList (this: PuppetWhatsapp): Promise<string[]> {
   return roomIdList
 }
 
-export async function roomAvatar (this: PuppetWhatsapp, roomId: string): Promise<FileBox> {
-  logger.info('roomAvatar(%s)', roomId)
-
-  const payload = await this.roomPayload(roomId)
-
-  if (payload.avatar) {
-    return FileBox.fromUrl(payload.avatar)
+export async function roomCreate (
+  this: PuppetWhatsapp,
+  contactIdList: string[],
+  topic: string,
+): Promise<string> {
+  logger.info('roomCreate(%s, %s)', contactIdList, topic)
+  const group = await this.manager.createRoom(topic, contactIdList)
+  if (group.gid._serialized) {
+    return group.gid._serialized
+  } else {
+    throw new WAError(WA_ERROR_TYPE.ERR_CREATE_ROOM, 'An error occurred while creating the group!')
   }
-  logger.warn('roomAvatar() avatar not found, use the chatie default.')
-  return avatarForGroup()
 }
 
 export async function roomAdd (
@@ -53,6 +55,27 @@ export async function roomDel (
   await cacheManager.removeRoomMemberFromList(roomId, contactId)
 }
 
+export async function roomQuit (this: PuppetWhatsapp, roomId: string): Promise<void> {
+  logger.info('roomQuit(%s)', roomId)
+  const chat = await this.manager.getChatById(roomId) as GroupChat
+  await chat.leave()
+  const cacheManager = await this.manager.getCacheManager()
+  await cacheManager.deleteContactOrRoom(roomId)
+  await cacheManager.deleteRoomMemberIdList(roomId)
+}
+
+export async function roomAvatar (this: PuppetWhatsapp, roomId: string): Promise<FileBox> {
+  logger.info('roomAvatar(%s)', roomId)
+
+  const payload = await this.roomPayload(roomId)
+
+  if (payload.avatar) {
+    return FileBox.fromUrl(payload.avatar)
+  }
+  logger.warn('roomAvatar() avatar not found, use the chatie default.')
+  return avatarForGroup()
+}
+
 export async function roomTopic(this: PuppetWhatsapp, roomId: string): Promise<string>
 export async function roomTopic(this: PuppetWhatsapp, roomId: string, topic: string): Promise<void>
 
@@ -74,26 +97,6 @@ export async function roomTopic (
   await this.dirtyPayload(PUPPET.PayloadType.Room, roomId)
 }
 
-export async function roomCreate (
-  this: PuppetWhatsapp,
-  contactIdList: string[],
-  topic: string,
-): Promise<string> {
-  logger.info('roomCreate(%s, %s)', contactIdList, topic)
-  const group = await this.manager.createRoom(topic, contactIdList)
-  if (group.gid._serialized) {
-    return group.gid._serialized
-  } else {
-    throw new WAError(WA_ERROR_TYPE.ERR_CREATE_ROOM, 'An error occurred while creating the group!')
-  }
-}
-
-export async function roomQuit (this: PuppetWhatsapp, roomId: string): Promise<void> {
-  logger.info('roomQuit(%s)', roomId)
-  const chat = await this.manager.getChatById(roomId) as GroupChat
-  await chat.leave()
-}
-
 export async function roomQRCode (this: PuppetWhatsapp, roomId: string): Promise<string> {
   logger.info('roomQRCode(%s)', roomId)
   const con = await this.manager.getChatById(roomId) as GroupChat
@@ -102,8 +105,26 @@ export async function roomQRCode (this: PuppetWhatsapp, roomId: string): Promise
   return url
 }
 
+/**
+ * Get member id list from cache
+ * @param { PuppetWhatsapp } this whatsapp client
+ * @param { string } roomId roomId
+ * @returns { string[] } member id list
+ */
 export async function roomMemberList (this: PuppetWhatsapp, roomId: string): Promise<string[]> {
   logger.info('roomMemberList(%s)', roomId)
+  const cacheManager = await this.manager.getCacheManager()
+  const memberList = await cacheManager.getRoomMemberIdList(roomId)
+  return memberList
+}
+
+/**
+ * Get member id list from web api
+ * @param { PuppetWhatsapp } this whatsapp client
+ * @param { string } roomId roomId
+ * @returns { string[] } member id list
+ */
+export async function roomMemberListSync (this: PuppetWhatsapp, roomId: string): Promise<string[]> {
   const chat = await this.manager.getChatById(roomId) as GroupChat
   // FIXME: How to deal with pendingParticipants? Maybe we should find which case could has this attribute.
   return chat.participants.map(m => m.id._serialized)
