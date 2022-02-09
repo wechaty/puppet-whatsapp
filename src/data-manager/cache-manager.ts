@@ -175,6 +175,11 @@ export class CacheManager {
     }
   }
 
+  public async deleteRoomMemberIdList (roomId: string) {
+    const cache = this.getRoomMemberCache()
+    await cache.delete(roomId)
+  }
+
   private getRoomMemberCache () {
     if (!this.cacheRoomMemberIdList) {
       throw new WAError(WA_ERROR_TYPE.ERR_NO_CACHE, 'getRoomMemberCache() has no cache')
