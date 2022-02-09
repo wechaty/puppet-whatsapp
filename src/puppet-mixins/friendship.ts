@@ -16,7 +16,7 @@ export async function friendshipRawPayload (this: PuppetWhatsapp, id: string): P
   return message
 }
 
-export async function friendshipRawPayloadParser (rawPayload: MessagePayload): Promise<PUPPET.FriendshipPayload> {
+export async function friendshipRawPayloadParser (rawPayload: FriendshipRawPayload): Promise<PUPPET.FriendshipPayload> {
   return {
     contactId: rawPayload.from,
     hello: rawPayload.body,
