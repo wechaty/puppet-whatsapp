@@ -541,12 +541,18 @@ export class Manager extends EventEmitter {
     const eventStreams = events.map((event) => fromEvent(whatsapp, event).pipe(map((value: any) => ({ event, value }))))
     const allEvents$ = merge(...eventStreams)
     allEvents$.pipe(distinctUntilKeyChanged('event')).subscribe(({ event, value }: { event: string, value: any }) => {
-      logger.info(`event: ${JSON.stringify(event)}, value: ${JSON.stringify(value)}`)
-      if (event === 'disconnected' && value as string === 'NAVIGATION') {
-        if (value === 'NAVIGATION') {
-          void this.onLogout('已退出登录')
-        } else if (value === 'CONFLICT') {
-          void this.onLogout('已在其他设备上登录')
+      logger.info(`initWhatsAppEvents: ${JSON.stringify(event)}, value: ${JSON.stringify(value)}`)
+      if (event === 'disconnected') {
+        switch (value) {
+          case 'NAVIGATION':
+            void this.onLogout(LOGOUT_REASON.DEFAULT)
+            break
+          case 'CONFLICT':
+            void this.onLogout(LOGOUT_REASON.LOGIN_CONFLICT)
+            break
+          default:
+            void this.onLogout(LOGOUT_REASON.DEFAULT)
+            break
         }
       }
     })
