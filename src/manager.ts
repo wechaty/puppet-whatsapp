@@ -162,13 +162,14 @@ export class Manager extends EventEmitter {
     })
 
     const batchSize = 500
-    await batchProcess(batchSize, contactOrRoomList, async (contact: Contact) => {
-      const contactInCache = await cacheManager.getContactOrRoomRawPayload(contact.id._serialized)
+    await batchProcess(batchSize, contactOrRoomList, async (contactOrRoom: Contact) => {
+      const contactOrRoomId = contactOrRoom.id._serialized
+      const contactInCache = await cacheManager.getContactOrRoomRawPayload(contactOrRoomId)
       if (contactInCache) {
         return
       }
-      const contactWithAvatar = Object.assign(contact, { avatar: '' })
-      await cacheManager.setContactOrRoomRawPayload(contact.id._serialized, contactWithAvatar)
+      const contactWithAvatar = Object.assign(contactOrRoom, { avatar: '' })
+      await cacheManager.setContactOrRoomRawPayload(contactOrRoomId, contactWithAvatar)
     })
 
     this.emit('login', this.botId)
@@ -182,26 +183,29 @@ export class Manager extends EventEmitter {
     let roomCount = 0
 
     const batchSize = 100
-    await batchProcess(batchSize, contactOrRoomList, async (contact: Contact) => {
-      const avatar = await contact.getProfilePicUrl()
-      const contactWithAvatar = Object.assign(contact, { avatar })
-      if (isContactId(contact.id._serialized)) {
+    await batchProcess(batchSize, contactOrRoomList, async (contactOrRoom: Contact) => {
+      const contactOrRoomId = contactOrRoom.id._serialized
+      const avatar = await contactOrRoom.getProfilePicUrl()
+      const contactWithAvatar = Object.assign(contactOrRoom, { avatar })
+      if (isContactId(contactOrRoomId)) {
         contactCount++
-        if (contact.isMyContact) {
+        if (contactOrRoom.isMyContact) {
           friendCount++
         }
-        await cacheManager.setContactOrRoomRawPayload(contact.id._serialized, contactWithAvatar)
-      } else if (isRoomId(contact.id._serialized)) {
-        const chat = await this.getChatById(contact.id._serialized) as GroupChat
+        await cacheManager.setContactOrRoomRawPayload(contactOrRoomId, contactWithAvatar)
+      } else if (isRoomId(contactOrRoomId)) {
+        const chat = await this.getChatById(contactOrRoomId) as GroupChat
         const memberList = chat.participants.map(m => m.id._serialized)
         if (memberList.length > 0) {
           roomCount++
-          await cacheManager.setContactOrRoomRawPayload(contact.id._serialized, contactWithAvatar)
+          await cacheManager.setContactOrRoomRawPayload(contactOrRoomId, contactWithAvatar)
+          await cacheManager.setRoomMemberIdList(contactOrRoomId, memberList)
         } else {
-          await cacheManager.deleteContactOrRoom(contact.id._serialized)
+          await cacheManager.deleteContactOrRoom(contactOrRoomId)
+          await cacheManager.deleteRoomMemberIdList(contactOrRoomId)
         }
       } else {
-        logger.warn(`Unknown contact type: ${JSON.stringify(contact)}`)
+        logger.warn(`Unknown contact type: ${JSON.stringify(contactOrRoom)}`)
       }
     })
 
@@ -293,25 +297,29 @@ export class Manager extends EventEmitter {
 
   private async onRoomJoin (notification: GroupNotification) {
     logger.info(`onRoomJoin(${JSON.stringify(notification)})`)
+    const roomId = (notification.id as any).remote
     const roomJoinPayload: PUPPET.EventRoomJoinPayload = {
       inviteeIdList: notification.recipientIds,
       inviterId: notification.author,
-      roomId: notification.chatId,
+      roomId,
       timestamp: notification.timestamp,
     }
+    const cacheManager = await this.getCacheManager()
+    await cacheManager.addRoomMemberToList(roomId, notification.recipientIds)
     this.emit('room-join', roomJoinPayload)
   }
 
   private async onRoomLeave (notification: GroupNotification) {
     logger.info(`onRoomLeave(${JSON.stringify(notification)})`)
+    const roomId = (notification.id as any).remote
     const roomJoinPayload: PUPPET.EventRoomLeavePayload = {
       removeeIdList: notification.recipientIds,
       removerId: notification.author,
-      roomId: notification.chatId,
+      roomId,
       timestamp: notification.timestamp,
     }
     const cacheManager = await this.getCacheManager()
-    await cacheManager.deleteContactOrRoom(notification.chatId)
+    await cacheManager.removeRoomMemberFromList(roomId, notification.recipientIds)
     this.emit('room-leave', roomJoinPayload)
   }
 
