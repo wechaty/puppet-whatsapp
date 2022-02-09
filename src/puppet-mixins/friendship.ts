@@ -1,13 +1,17 @@
 import * as PUPPET from 'wechaty-puppet'
+import {WA_ERROR_TYPE} from '../exceptions/error-type.js'
+import WAError from '../exceptions/whatsapp-error.js'
 import { logger } from '../logger/index.js'
 import type PuppetWhatsapp from '../puppet-whatsapp.js'
 import type { MessagePayload } from '../schema/index.js'
 
-export async function friendshipRawPayload (this: PuppetWhatsapp, id: string): Promise<MessagePayload> {
+export type FriendshipRawPayload = MessagePayload
+
+export async function friendshipRawPayload (this: PuppetWhatsapp, id: string): Promise<FriendshipRawPayload> {
   const cache = await this.manager.getCacheManager()
   const message = await cache.getMessageRawPayload(id)
   if (!message) {
-    throw new Error('Message not found')
+    throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, 'Message not found')
   }
   return message
 }
@@ -29,7 +33,7 @@ export async function friendshipSearchPhone (
   logger.verbose('friendshipSearchPhone(%s)', phone)
   const user = await this.manager.getContactById(phone)
   if (user.isWAContact) {
-    return user.pushname
+    return user.id._serialized
   } else {
     return null
   }
@@ -50,7 +54,7 @@ export async function friendshipAdd (
   logger.verbose('friendshipAdd(%s, %s)', contactId, hello)
   const isUser = await this.manager.isWhatsappUser(contactId)
   if (!isUser) {
-    throw new Error('Not a registered user on WhatsApp.')
+    throw new WAError(WA_ERROR_TYPE.ERR_CONTACT_NOT_FOUND, 'Not a registered user on WhatsApp.')
   }
 
   await this.messageSendText(contactId, hello)
