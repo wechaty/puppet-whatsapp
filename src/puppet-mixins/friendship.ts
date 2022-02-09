@@ -1,5 +1,5 @@
 import * as PUPPET from 'wechaty-puppet'
-import {WA_ERROR_TYPE} from '../exceptions/error-type.js'
+import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import { logger } from '../logger/index.js'
 import type PuppetWhatsapp from '../puppet-whatsapp.js'
