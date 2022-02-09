@@ -48,6 +48,7 @@ export class CacheManager {
   // Static cache, won't change over time
   private cacheMessageRawPayload?: FlashStore<string, MessagePayload>
   private cacheContactOrRoomRawPayload?: FlashStore<string, ContactPayload>
+  private cacheRoomMemberIdList?: FlashStore<string, string[]>
   private cacheRoomInvitationRawPayload?: FlashStore<string, Partial<InviteV4Data>>
 
   /**
@@ -79,7 +80,7 @@ export class CacheManager {
 
   /**
    * -------------------------------
-   * Contact Cache Section
+   * Contact And Room Cache Section
    * --------------------------------
    */
   public async getContactOrRoomRawPayload (id: string) {
@@ -132,6 +133,58 @@ export class CacheManager {
       }
     }
     return list
+  }
+
+  /**
+   * -------------------------------
+   * Room Member Cache Section
+   * --------------------------------
+   */
+  public async getRoomMemberIdList (roomId: string) {
+    const cache = this.getRoomMemberCache()
+    const memberIdList = await cache.get(roomId)
+    return memberIdList || []
+  }
+
+  public async setRoomMemberIdList (roomId: string, list: string[]): Promise<void> {
+    const cache = this.getRoomMemberCache()
+    await cache.set(roomId, list)
+  }
+
+  public async addRoomMemberToList (roomId: string, memberIds: string | string[]): Promise<void> {
+    const memberIdListInCache = await this.getRoomMemberIdList(roomId)
+    if (Array.isArray(memberIds)) {
+      memberIds.forEach(memberId => !memberIdListInCache.includes(memberId) && memberIdListInCache.push(memberId))
+      await this.setRoomMemberIdList(roomId, memberIdListInCache)
+    } else {
+      !memberIdListInCache.includes(memberIds) && memberIdListInCache.push(memberIds)
+      await this.setRoomMemberIdList(roomId, memberIdListInCache)
+    }
+  }
+
+  public async removeRoomMemberFromList (roomId: string, memberIds: string | string[]): Promise<void> {
+    const memberIdListInCache = await this.getRoomMemberIdList(roomId)
+    if (Array.isArray(memberIds)) {
+      const memberIdList = memberIdListInCache.filter(id => !memberIds.includes(id))
+      await this.setRoomMemberIdList(roomId, memberIdList)
+    } else {
+      if (memberIdListInCache.includes(memberIds)) {
+        const memberIdList = memberIdListInCache.filter(id => id !== memberIds)
+        await this.setRoomMemberIdList(roomId, memberIdList)
+      }
+    }
+  }
+
+  public async deleteRoomMemberIdList (roomId: string) {
+    const cache = this.getRoomMemberCache()
+    await cache.delete(roomId)
+  }
+
+  private getRoomMemberCache () {
+    if (!this.cacheRoomMemberIdList) {
+      throw new WAError(WA_ERROR_TYPE.ERR_NO_CACHE, 'getRoomMemberCache() has no cache')
+    }
+    return this.cacheRoomMemberIdList
   }
 
   /**
@@ -192,6 +245,7 @@ export class CacheManager {
     this.cacheMessageRawPayload = new FlashStore(path.join(baseDir, 'message'))
     this.cacheContactOrRoomRawPayload = new FlashStore(path.join(baseDir, 'contact-or-room'))
     this.cacheRoomInvitationRawPayload = new FlashStore(path.join(baseDir, 'room-invitation'))
+    this.cacheRoomMemberIdList = new FlashStore(path.join(baseDir, 'room-member'))
 
     const messageTotal = await this.cacheMessageRawPayload.size
 
@@ -204,6 +258,7 @@ export class CacheManager {
     if (this.cacheMessageRawPayload
         && this.cacheContactOrRoomRawPayload
         && this.cacheRoomInvitationRawPayload
+        && this.cacheRoomMemberIdList
     ) {
       logger.silly('releaseCache() closing caches ...')
 
@@ -211,11 +266,13 @@ export class CacheManager {
         this.cacheMessageRawPayload.close(),
         this.cacheContactOrRoomRawPayload.close(),
         this.cacheRoomInvitationRawPayload.close(),
+        this.cacheRoomMemberIdList.close(),
       ])
 
       this.cacheMessageRawPayload = undefined
       this.cacheContactOrRoomRawPayload = undefined
       this.cacheRoomInvitationRawPayload = undefined
+      this.cacheRoomMemberIdList = undefined
 
       logger.silly('releaseCache() cache closed.')
     } else {
