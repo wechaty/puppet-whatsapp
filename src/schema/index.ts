@@ -37,7 +37,7 @@ export type {
   GroupNotification,
   ChatTypes,
   Events,
-  MessageAck,
+  MessageAck as MessageAckType,
   MessageTypes,
   Status,
   WAState as WAStateType,
@@ -75,6 +75,7 @@ export type {
 
 export const {
   WAState,
+  MessageAck,
 } = WhatsApp
 
 export type ContactPayload = {

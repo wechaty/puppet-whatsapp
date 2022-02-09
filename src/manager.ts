@@ -15,7 +15,7 @@ import WAError from './exceptions/whatsapp-error.js'
 import { getWhatsApp } from './whatsapp.js'
 import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
 import type {  Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification, ClientSession, GroupChat, BatteryInfo, WAStateType } from './schema/index.js'
-import { Client as WhatsApp, WhatsAppMessageType, GroupNotificationTypes, WAState } from './schema/index.js'
+import { Client as WhatsApp, WhatsAppMessageType, GroupNotificationTypes, WAState, MessageAck } from './schema/index.js'
 import { logger } from './logger/index.js'
 import { batchProcess, getInviteCode, isContactId, isInviteLink, isRoomId, sleep } from './utils.js'
 import { env } from 'process'
@@ -489,6 +489,10 @@ export class Manager extends EventEmitter {
    */
   private async onMessageRevokeMe (message: Message) {
     logger.silly(`onMessageRevokeMe(${JSON.stringify(message)})`)
+    if (message.ack === MessageAck.ACK_PENDING) {
+      // when the bot logout, it will receive onMessageRevokeMe event, but it's ack is MessageAck.ACK_PENDING, so let's ignore this event.
+      return
+    }
     const cacheManager = await this.getCacheManager()
     const messageId = message.id.id
     message.type = WhatsAppMessageType.REVOKED
