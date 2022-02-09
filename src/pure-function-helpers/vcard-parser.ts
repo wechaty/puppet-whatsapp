@@ -26,36 +26,45 @@ export interface IVcard {
 }
 
 const VersionPattern =  /VERSION:(\d+\.\d*)$/m
-const CheckItermTelPattern = /^item\d\.TEL/i
+const CheckItermTelPattern = /^(item\d\.TEL|TEL;)/i
 const TelPatternForContainOnePhoneNumber = /waid=(\d*):([+ \d]*)$/m
 const TelPatternForContainMultiPhoneNumbers = /[+ \d]*$/m
+
+/*
+# Case 1: One phone number in card body from ANDROID
+BEGIN:VCARD
+VERSION:3.0
+N:;[name];;;
+FN:[name]
+item1.TEL;waid=[waid]:[phone]
+item1.X-ABLabel:‎WhatsApp | 手机 | 公费电话
+END:VCARD
+
+# Case 2: One phone number in card body from IOS
+BEGIN:VCARD
+VERSION:3.0
+N:🐉;socialbear;;;
+FN:socialbear 🐉
+TEL;type=CELL;type=VOICE;waid=8613240330438:+86 132 4033 0438
+END:VCARD
+
+# Case 3: Multi phone numbers in card body
+BEGIN:VCARD
+VERSION:3.0
+N:;[name];;;
+FN:[name]
+item1.TEL;[phone]
+item1.X-ABLabel:‎WhatsApp | 手机 | 公费电话
+END:VCARD
+
+For more detail, see: https://github.com/wechaty/puppet-whatsapp/issues/136#issuecomment-1032388884
+*/
 
 /**
  * parse vcard body
  * @param body vcard body string
  */
 export function parseVcard (body: string): IVcard {
-  /**
-   * # One phone number in card body
-   * BEGIN:VCARD
-   * VERSION:3.0
-   * N:;[name];;;
-   * FN:[name]
-   * item1.TEL;waid=[waid]:[phone]
-   * item1.X-ABLabel:‎WhatsApp | 手机 | 公费电话
-   * END:VCARD
-   * # Multi phone numbers in card body
-   * BEGIN:VCARD
-   * VERSION:3.0
-   * N:;[name];;;
-   * FN:[name]
-   * item1.TEL;[phone]
-   * item1.X-ABLabel:‎WhatsApp | 手机 | 公费电话
-   * END:VCARD
-   *
-   * for detail example, see: https://github.com/wechaty/puppet-whatsapp/issues/136#issuecomment-1032388884
-   */
-
   const lines = body.split('\n')
   // vcard body must be at least 3 lines, 'BEGIN', 'VERSION' and 'END'
   if (lines.length < 2) {
