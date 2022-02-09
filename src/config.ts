@@ -24,7 +24,8 @@ export const MIN_BATTERY_VALUE_FOR_LOGOUT = Number(process.env['MIN_BATTERY_VALU
 
 export const LOGOUT_REASON = {
   BATTERY_LOWER_IN_PHONE: '手机电量过低，即将无法继续使用WhatsApp',
-  DEFAULT: '退出登录',
+  DEFAULT: '已退出登录',
+  LOGIN_CONFLICT: '已在其他设备上登录',
   NETWORK_TIMEOUT_IN_PHONE: '手机端网络连接异常',
 }
 
