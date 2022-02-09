@@ -239,6 +239,13 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     this.emit('dirty', payload)
   }
 
+  /**
+   * Other Methods
+   */
+  override async logout () {
+    await this.manager.logout()
+  }
+
   override ding (data?: string): void {
     logger.silly('ding(%s)', data || '')
     setTimeout(() => this.emit('dong', { data: data || '' }), 1000)
