@@ -108,7 +108,7 @@ export class Manager extends EventEmitter {
   public async stop () {
     logger.info('stop()')
     if (this.whatsapp) {
-      await this.whatsapp.destroy()
+      await this.whatsapp.stop()
       this.whatsapp = undefined
     }
     await this.releaseCache()
