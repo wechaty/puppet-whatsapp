@@ -435,6 +435,9 @@ export class Manager extends EventEmitter {
 
   private async onMessageAck (message: Message) {
     logger.silly(`onMessageAck(${JSON.stringify(message)})`)
+    if (message.type === 'multi_vcard') {
+      return
+    }
     if (message.id.fromMe && message.ack >= 0) {
       const messageId = message.id.id
       const cacheManager = await this.getCacheManager()
@@ -449,6 +452,9 @@ export class Manager extends EventEmitter {
 
   private async onMessageCreate (message: Message) {
     logger.silly(`onMessageCreate(${JSON.stringify(message)})`)
+    if (message.type === 'multi_vcard') {
+      return
+    }
     if (message.id.fromMe && message.ack >= 0) {
       const messageId = message.id.id
       const cacheManager = await this.getCacheManager()
