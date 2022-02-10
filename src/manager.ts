@@ -46,6 +46,7 @@ import type {
   GroupChat,
   BatteryInfo,
   WAStateType,
+  PrivateChat,
 } from './schema/whatsapp-type.js'
 
 type ManagerEvents = 'message'
@@ -65,7 +66,7 @@ type ManagerEvents = 'message'
 
 export class Manager extends EventEmitter {
 
-  whatsapp?: WhatsAppClientType
+  whatsAppClient?: WhatsAppClientType
   requestManager?: RequestManager
   cacheManager?: CacheManager
   botId?: string
@@ -116,8 +117,8 @@ export class Manager extends EventEmitter {
 
   public async start (session?: ClientSession) {
     logger.info('start()')
-    this.whatsapp = await getWhatsApp(this.options['puppeteerOptions'], session)
-    this.whatsapp
+    this.whatsAppClient = await getWhatsApp(this.options['puppeteerOptions'], session)
+    this.whatsAppClient
       .initialize()
       .then(() => logger.verbose('start() whatsapp.initialize() done.'))
       .catch(async e => {
@@ -128,16 +129,16 @@ export class Manager extends EventEmitter {
         }
       })
 
-    this.requestManager = new RequestManager(this.whatsapp)
-    await this.initWhatsAppEvents(this.whatsapp)
-    return this.whatsapp
+    this.requestManager = new RequestManager(this.whatsAppClient)
+    await this.initWhatsAppEvents(this.whatsAppClient)
+    return this.whatsAppClient
   }
 
   public async stop () {
     logger.info('stop()')
-    if (this.whatsapp) {
-      await this.whatsapp.stop()
-      this.whatsapp = undefined
+    if (this.whatsAppClient) {
+      await this.whatsAppClient.stop()
+      this.whatsAppClient = undefined
     }
     await this.releaseCache()
     this.requestManager = undefined
@@ -222,8 +223,7 @@ export class Manager extends EventEmitter {
         }
         await cacheManager.setContactOrRoomRawPayload(contactOrRoomId, contactWithAvatar)
       } else if (isRoomId(contactOrRoomId)) {
-        const chat = await this.getChatById(contactOrRoomId) as GroupChat
-        const memberList = chat.participants.map(m => m.id._serialized)
+        const memberList = await this.roomMemberListSync(contactOrRoomId)
         if (memberList.length > 0) {
           roomCount++
           await cacheManager.setContactOrRoomRawPayload(contactOrRoomId, contactWithAvatar)
@@ -375,8 +375,8 @@ export class Manager extends EventEmitter {
       this.emit('room-topic', roomJoinPayload)
     }
     if (notification.type === GroupNotificationTypes.DESCRIPTION) {
-      const roomRawPayload = await this.getChatById(roomId)
-      const roomMetadata = (roomRawPayload as any).groupMetadata
+      const roomChat = await this.getRoomChatById(roomId)
+      const roomMetadata = (roomChat as any).groupMetadata
       const description = roomMetadata.desc
       logger.info(`GroupNotificationTypes.DESCRIPTION changed: ${description}`)
       const genMessagePayload = {
@@ -404,8 +404,7 @@ export class Manager extends EventEmitter {
     }
     if (notification.type === GroupNotificationTypes.CREATE) {
       // FIXME: how to reuse roomMemberList from room-mixin
-      const roomChat = await this.getChatById(roomId) as GroupChat
-      const members = roomChat.participants.map(participant => participant.id._serialized)
+      const members = await this.roomMemberListSync(roomId)
 
       const roomJoinPayload: PUPPET.EventRoomJoinPayload = {
         inviteeIdList: members,
@@ -672,7 +671,25 @@ export class Manager extends EventEmitter {
     return requestManager.getBLockedContacts()
   }
 
-  public getChatById (chatId: string) {
+  public async getRoomChatById (roomId: string) {
+    if (isRoomId(roomId)) {
+      const roomChat = await this.getChatById(roomId)
+      return roomChat as GroupChat
+    } else {
+      throw new WAError(WA_ERROR_TYPE.ERR_GROUP_OR_CONTACT_ID, `The roomId: ${roomId} is not right.`)
+    }
+  }
+
+  public async getContactChatById (contactId: string) {
+    if (isContactId(contactId)) {
+      const roomChat = await this.getChatById(contactId)
+      return roomChat as PrivateChat
+    } else {
+      throw new WAError(WA_ERROR_TYPE.ERR_GROUP_OR_CONTACT_ID, `The contactId: ${contactId} is not right.`)
+    }
+  }
+
+  private async getChatById (chatId: string) {
     const requestManager = this.getRequestManager()
     return requestManager.getChatById(chatId)
   }
@@ -818,10 +835,22 @@ export class Manager extends EventEmitter {
   }
 
   public getWhatsApp () {
-    if (!this.whatsapp) {
+    if (!this.whatsAppClient) {
       throw new WAError(WA_ERROR_TYPE.ERR_INIT, 'Not init whatsapp')
     }
-    return this.whatsapp
+    return this.whatsAppClient
+  }
+
+  /**
+   * Get member id list from web api
+   * @param { PuppetWhatsApp } this whatsapp client
+   * @param { string } roomId roomId
+   * @returns { string[] } member id list
+   */
+  public async roomMemberListSync (roomId: string): Promise<string[]> {
+    const roomChat = await this.getRoomChatById(roomId)
+    // FIXME: How to deal with pendingParticipants? Maybe we should find which case could has this attribute.
+    return roomChat.participants.map(m => m.id._serialized)
   }
 
 }

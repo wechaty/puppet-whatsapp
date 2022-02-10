@@ -42,6 +42,7 @@ enum CONTACT_ERROR_TYPE {
 
 enum OTHER_ERROR_TYPE {
   ERR_RATE_FUNCTION_NOT_FOUND = 5001, // 队列中对象不存在
+  ERR_GROUP_OR_CONTACT_ID = 5002, // ID错误
 }
 
 export const WA_ERROR_TYPE = {
