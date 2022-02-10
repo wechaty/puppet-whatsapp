@@ -1,24 +1,52 @@
 /* eslint-disable import/no-duplicates */
 import { EventEmitter } from 'events'
+import * as PUPPET from 'wechaty-puppet'
 import {
   distinctUntilKeyChanged,
   fromEvent,
   map,
   merge,
 } from 'rxjs'
-import * as PUPPET from 'wechaty-puppet'
-import { RequestManager } from './request/requestManager.js'
-import { CacheManager } from './data-manager/cache-manager.js'
-import { LOGOUT_REASON, MEMORY_SLOT, MIN_BATTERY_VALUE_FOR_LOGOUT } from './config.js'
+import {
+  LOGOUT_REASON,
+  MEMORY_SLOT,
+  MIN_BATTERY_VALUE_FOR_LOGOUT,
+} from './config.js'
 import { WA_ERROR_TYPE } from './exceptions/error-type.js'
 import WAError from './exceptions/whatsapp-error.js'
-import { getWhatsApp } from './whatsapp.js'
-import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
-import type {  Contact, InviteV4Data, Message, MessageContent, MessageSendOptions, GroupNotification, ClientSession, GroupChat, BatteryInfo, WAStateType } from './schema/index.js'
-import { Client as WhatsApp, WhatsAppMessageType, GroupNotificationTypes, WAState, MessageAck } from './schema/index.js'
+import {
+  MessageTypes as WhatsAppMessageType,
+  GroupNotificationTypes,
+  WAState,
+  MessageAck,
+} from './schema/whatsapp-interface.js'
 import { logger } from './logger/index.js'
-import { batchProcess, getInviteCode, isContactId, isInviteLink, isRoomId, sleep } from './utils.js'
-import { env } from 'process'
+import {
+  batchProcess,
+  getInviteCode,
+  isContactId,
+  isInviteLink,
+  isRoomId,
+  sleep,
+} from './utils.js'
+import { RequestManager } from './request/requestManager.js'
+import { CacheManager } from './data-manager/cache-manager.js'
+import { getWhatsApp } from './whatsapp.js'
+
+import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
+import type {
+  WhatsAppClientType,
+  WhatsAppContact,
+  WhatsAppMessage,
+  InviteV4Data,
+  MessageContent,
+  MessageSendOptions,
+  GroupNotification,
+  ClientSession,
+  GroupChat,
+  BatteryInfo,
+  WAStateType,
+} from './schema/whatsapp-type.js'
 
 type ManagerEvents = 'message'
                    | 'room-join'
@@ -37,7 +65,7 @@ type ManagerEvents = 'message'
 
 export class Manager extends EventEmitter {
 
-  whatsapp?: WhatsApp
+  whatsapp?: WhatsAppClientType
   requestManager?: RequestManager
   cacheManager?: CacheManager
   botId?: string
@@ -94,7 +122,7 @@ export class Manager extends EventEmitter {
       .then(() => logger.verbose('start() whatsapp.initialize() done.'))
       .catch(async e => {
         logger.error('start() whatsapp.initialize() rejection: %s', e)
-        if (env['NODE_ENV'] !== 'test') {
+        if (process.env['NODE_ENV'] !== 'test') {
           await sleep(2 * 1000)
           await this.start(session)
         }
@@ -140,14 +168,14 @@ export class Manager extends EventEmitter {
   private async onWhatsAppReady () {
     const whatsapp = this.getWhatsApp()
     this.botId = whatsapp.info.wid._serialized
-    const contactList: Contact[] = await whatsapp.getContacts()
+    const contactList: WhatsAppContact[] = await whatsapp.getContacts()
     const contactOrRoomList = contactList.filter(c => c.id.server !== 'broadcast')
 
     await this.onLogin(contactOrRoomList)
     await this.onReady(contactOrRoomList)
   }
 
-  private async onLogin (contactOrRoomList: Contact[]) {
+  private async onLogin (contactOrRoomList: WhatsAppContact[]) {
     if (!this.botId) {
       throw new WAError(WA_ERROR_TYPE.ERR_INIT, 'No login bot id.')
     }
@@ -162,7 +190,7 @@ export class Manager extends EventEmitter {
     })
 
     const batchSize = 500
-    await batchProcess(batchSize, contactOrRoomList, async (contactOrRoom: Contact) => {
+    await batchProcess(batchSize, contactOrRoomList, async (contactOrRoom: WhatsAppContact) => {
       const contactOrRoomId = contactOrRoom.id._serialized
       const contactInCache = await cacheManager.getContactOrRoomRawPayload(contactOrRoomId)
       if (contactInCache) {
@@ -176,14 +204,14 @@ export class Manager extends EventEmitter {
     logger.info(`onLogin(${this.botId}})`)
   }
 
-  private async onReady (contactOrRoomList: Contact[]) {
+  private async onReady (contactOrRoomList: WhatsAppContact[]) {
     const cacheManager = await this.getCacheManager()
     let friendCount = 0
     let contactCount = 0
     let roomCount = 0
 
     const batchSize = 100
-    await batchProcess(batchSize, contactOrRoomList, async (contactOrRoom: Contact) => {
+    await batchProcess(batchSize, contactOrRoomList, async (contactOrRoom: WhatsAppContact) => {
       const contactOrRoomId = contactOrRoom.id._serialized
       const avatar = await contactOrRoom.getProfilePicUrl()
       const contactWithAvatar = Object.assign(contactOrRoom, { avatar })
@@ -221,7 +249,7 @@ export class Manager extends EventEmitter {
     this.emit('logout', whatsapp.info.wid._serialized, reason as string)
   }
 
-  private async onMessage (message: Message) {
+  private async onMessage (message: WhatsAppMessage) {
     logger.info(`onMessage(${JSON.stringify(message)})`)
     // @ts-ignore
     if (
@@ -255,7 +283,7 @@ export class Manager extends EventEmitter {
     }
   }
 
-  private async convertInviteLinkMessageToEvent (message: Message): Promise<boolean> {
+  private async convertInviteLinkMessageToEvent (message: WhatsAppMessage): Promise<boolean> {
     const cacheManager = await this.getCacheManager()
     if (message.type === WhatsAppMessageType.GROUP_INVITE) {
       const inviteCode = message.inviteV4?.inviteCode
@@ -426,11 +454,11 @@ export class Manager extends EventEmitter {
     logger.silly(`onIncomingCall(${JSON.stringify(args)})`)
   }
 
-  private async onMediaUploaded (message: Message) {
+  private async onMediaUploaded (message: WhatsAppMessage) {
     logger.silly(`onMediaUploaded(${JSON.stringify(message)})`)
   }
 
-  private async onMessageAck (message: Message) {
+  private async onMessageAck (message: WhatsAppMessage) {
     logger.silly(`onMessageAck(${JSON.stringify(message)})`)
     if (message.type === 'multi_vcard') {
       return
@@ -447,7 +475,7 @@ export class Manager extends EventEmitter {
     }
   }
 
-  private async onMessageCreate (message: Message) {
+  private async onMessageCreate (message: WhatsAppMessage) {
     logger.silly(`onMessageCreate(${JSON.stringify(message)})`)
     if (message.type === 'multi_vcard') {
       return
@@ -470,7 +498,7 @@ export class Manager extends EventEmitter {
    * @param message revoke message
    * @param revokedMsg original message, sometimes it will be null
    */
-  private async onMessageRevokeEveryone (message: Message, revokedMsg?: Message | null | undefined) {
+  private async onMessageRevokeEveryone (message: WhatsAppMessage, revokedMsg?: WhatsAppMessage | null | undefined) {
     logger.silly(`onMessageRevokeEveryone(newMsg: ${JSON.stringify(message)}, originalMsg: ${JSON.stringify(revokedMsg)})`)
     const cacheManager = await this.getCacheManager()
     const messageId = message.id.id
@@ -487,7 +515,7 @@ export class Manager extends EventEmitter {
   /**
    * Only delete message in bot phone will trigger this event. But the message type is chat, not revoked any more.
    */
-  private async onMessageRevokeMe (message: Message) {
+  private async onMessageRevokeMe (message: WhatsAppMessage) {
     logger.silly(`onMessageRevokeMe(${JSON.stringify(message)})`)
     if (message.ack === MessageAck.ACK_PENDING) {
       // when the bot logout, it will receive onMessageRevokeMe event, but it's ack is MessageAck.ACK_PENDING, so let's ignore this event.
@@ -507,7 +535,7 @@ export class Manager extends EventEmitter {
   }
 
   public async initWhatsAppEvents (
-    whatsapp: WhatsApp,
+    whatsapp: WhatsAppClientType,
   ): Promise<void> {
     logger.verbose('initWhatsAppEvents()')
 
@@ -627,7 +655,7 @@ export class Manager extends EventEmitter {
     return requestManager.unarchiveChat(chatId)
   }
 
-  public createRoom (name: string, participants: Contact[] | string[]) {
+  public createRoom (name: string, participants: WhatsAppContact[] | string[]) {
     const requestManager = this.getRequestManager()
     return requestManager.createRoom(name, participants)
   }

@@ -2,9 +2,9 @@
 
 import { test } from 'tstest'
 
-import { PuppetWhatsapp } from './puppet-whatsapp.js'
+import PuppetWhatsApp from './puppet-whatsapp.js'
 
-class PuppetWhatsAppTest extends PuppetWhatsapp {
+class PuppetWhatsAppTest extends PuppetWhatsApp {
 }
 
 test('PuppetWhatsapp perfect restart testing', async t => {
