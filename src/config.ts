@@ -2,6 +2,9 @@
 import {
   FileBox,
 } from './compact/index.js'
+import {
+  MessageTypes as WhatsAppMessageType,
+} from './schema/whatsapp-interface.js'
 import { packageJson } from './package-json.js'
 
 const VERSION = packageJson.version || '0.0.0'
@@ -28,6 +31,16 @@ export const LOGOUT_REASON = {
   LOGIN_CONFLICT: '已在其他设备上登录',
   NETWORK_TIMEOUT_IN_PHONE: '手机端网络连接异常',
 }
+
+export const SkipTypeList = [
+  WhatsAppMessageType.CONTACT_CARD_MULTI,
+  WhatsAppMessageType.AUDIO,
+  WhatsAppMessageType.VOICE,
+  WhatsAppMessageType.IMAGE,
+  WhatsAppMessageType.VIDEO,
+  WhatsAppMessageType.DOCUMENT,
+  WhatsAppMessageType.STICKER,
+]
 
 export {
   MEMORY_SLOT,
