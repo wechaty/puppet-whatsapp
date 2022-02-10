@@ -2,9 +2,16 @@ import * as PUPPET from 'wechaty-puppet'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import { isRoomId } from '../utils.js'
-import { MessagePayload, WhatsAppMessageType } from '../schema/index.js'
 
-export function parserMessageRawPayload (messagePayload: MessagePayload) {
+import {
+  MessageTypes as WhatsAppMessageType,
+} from '../schema/whatsapp-interface.js'
+
+import type {
+  WhatsAppMessagePayload,
+} from '../schema/whatsapp-type.js'
+
+export function parserMessageRawPayload (messagePayload: WhatsAppMessagePayload) {
 
   const fromId = messagePayload.author || messagePayload.from
   const toId = isRoomId(messagePayload.id.remote) ? undefined : messagePayload.to
@@ -31,7 +38,7 @@ export function parserMessageRawPayload (messagePayload: MessagePayload) {
 
 }
 
-function getMessageType (messagePayload: MessagePayload): PUPPET.MessageType {
+function getMessageType (messagePayload: WhatsAppMessagePayload): PUPPET.MessageType {
   let type: PUPPET.MessageType = PUPPET.MessageType.Unknown
 
   // @ts-ignore

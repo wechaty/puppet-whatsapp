@@ -35,8 +35,12 @@ import { tagContactAdd, tagContactRemove, tagContactDelete, tagContactList } fro
 import { Manager } from './manager.js'
 import { WA_ERROR_TYPE } from './exceptions/error-type.js'
 import WAError from './exceptions/whatsapp-error.js'
-import { ClientOptions, EventName } from './schema/index.js'
-import type { WhatsApp } from './whatsapp.js'
+import { EventName } from './schema/index.js'
+
+import type {
+  ClientOptions,
+  WhatsAppClientType,
+} from './schema/whatsapp-type.js'
 
 process.on('uncaughtException', (e) => {
   console.error('process error is:', e.message)
@@ -48,7 +52,7 @@ export type PuppetWhatsAppOptions = PUPPET.PuppetOptions & {
 }
 
 // const EVENT_LOG_PRE = 'EVENT_LOG'
-class PuppetWhatsapp extends PUPPET.Puppet {
+class PuppetWhatsApp extends PUPPET.Puppet {
 
   static override readonly VERSION = VERSION
 
@@ -69,7 +73,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     }
     this.state.on('pending')
 
-    let whatsapp: WhatsApp
+    let whatsapp: WhatsAppClientType
     try {
       whatsapp = await this.startManager(this.manager)
     } catch (err) {
@@ -335,5 +339,4 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
 }
 
-export { PuppetWhatsapp }
-export default PuppetWhatsapp
+export default PuppetWhatsApp

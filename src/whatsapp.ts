@@ -1,28 +1,28 @@
+import { logger } from './logger/index.js'
 import {
-  log,
-}                               from 'wechaty-puppet'
+  Client as WhatsApp,
+} from './schema/whatsapp-interface.js'
 
 import type {
-  Message as WhatsappMessage,
-  Contact as WhatsappContact,
+  WhatsAppClientType,
+  WhatsAppContact,
+  WhatsAppMessage,
   ClientSession,
   ClientOptions,
-}                               from '@juzi.bot/whatsapp-web.js'
-import { Client as WhatsApp } from '@juzi.bot/whatsapp-web.js'
-
+} from './schema/whatsapp-type.js'
 import type {
   LaunchOptions,
   BrowserConnectOptions,
   BrowserLaunchArgumentOptions,
-}                               from 'puppeteer'
+} from 'puppeteer'
 
 async function getWhatsApp (
   options: ClientOptions = {
     // clientId: '',
   },
   session?: ClientSession,
-): Promise<WhatsApp> {
-  log.verbose('PuppetWhatsApp', 'getWhatsApp()')
+): Promise<WhatsAppClientType> {
+  logger.verbose('PuppetWhatsApp', 'getWhatsApp()')
   const { puppeteer = {}, ...restOptions } = options
   const { args, ...restPuppeteerOptions } = puppeteer
   const puppeteerOptions: LaunchOptions & BrowserLaunchArgumentOptions & BrowserConnectOptions = {
@@ -51,8 +51,8 @@ async function getWhatsApp (
 }
 
 export type {
-  WhatsappContact,
-  WhatsappMessage,
+  WhatsAppContact as WhatsappContact,
+  WhatsAppMessage as WhatsappMessage,
 }
 export {
   WhatsApp,

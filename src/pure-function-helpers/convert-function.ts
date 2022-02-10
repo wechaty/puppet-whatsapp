@@ -1,10 +1,20 @@
-import type { Client, Contact, Message } from '@juzi.bot/whatsapp-web.js'
-import { ContactClass, ContactPayload, MessageClass, MessagePayload } from '../schema/index.js'
+import {
+  ContactClass,
+  MessageClass,
+} from '../schema/whatsapp-interface.js'
 
-export function convertContactPayloadToClass (client: Client, payload: ContactPayload): Contact {
+import type {
+  WhatsAppClientType,
+  WhatsAppContact,
+  WhatsAppMessage,
+  WhatsAppContactPayload,
+  WhatsAppMessagePayload,
+} from '../schema/whatsapp-type.js'
+
+export function convertContactPayloadToClass (client: WhatsAppClientType, payload: WhatsAppContactPayload): WhatsAppContact {
   return new ContactClass(client, payload)
 }
 
-export function convertMessagePayloadToClass (client: Client, payload: MessagePayload): Message {
+export function convertMessagePayloadToClass (client: WhatsAppClientType, payload: WhatsAppMessagePayload): WhatsAppMessage {
   return new MessageClass(client, payload)
 }

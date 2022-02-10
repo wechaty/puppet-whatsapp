@@ -2,12 +2,12 @@ import * as PUPPET from 'wechaty-puppet'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import { logger } from '../logger/index.js'
-import type PuppetWhatsapp from '../puppet-whatsapp.js'
-import type { MessagePayload } from '../schema/index.js'
+import type PuppetWhatsApp from '../puppet-whatsapp.js'
+import type { WhatsAppMessagePayload } from '../schema/whatsapp-type.js'
 
-export type FriendshipRawPayload = MessagePayload
+export type FriendshipRawPayload = WhatsAppMessagePayload
 
-export async function friendshipRawPayload (this: PuppetWhatsapp, id: string): Promise<FriendshipRawPayload> {
+export async function friendshipRawPayload (this: PuppetWhatsApp, id: string): Promise<FriendshipRawPayload> {
   const cache = await this.manager.getCacheManager()
   const message = await cache.getMessageRawPayload(id)
   if (!message) {
@@ -27,7 +27,7 @@ export async function friendshipRawPayloadParser (rawPayload: FriendshipRawPaylo
 }
 
 export async function friendshipSearchPhone (
-  this: PuppetWhatsapp,
+  this: PuppetWhatsApp,
   phone: string,
 ): Promise<null | string> {
   logger.verbose('friendshipSearchPhone(%s)', phone)
@@ -47,7 +47,7 @@ export async function friendshipSearchWeixin (
 }
 
 export async function friendshipAdd (
-  this: PuppetWhatsapp,
+  this: PuppetWhatsApp,
   contactId: string,
   hello: string,
 ): Promise<void> {

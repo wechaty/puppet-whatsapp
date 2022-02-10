@@ -1,12 +1,18 @@
 import * as path from 'path'
 import * as fs from 'fs-extra'
 import * as os from 'os'
-
 import { FlashStore } from 'flash-store'
-import type { ContactPayload, InviteV4Data, Message, MessagePayload } from '../schema/index.js'
+
 import { logger } from '../logger/index.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
+
+import type {
+  WhatsAppContactPayload,
+  InviteV4Data,
+  WhatsAppMessage,
+  WhatsAppMessagePayload,
+} from '../schema/whatsapp-type.js'
 
 export class CacheManager {
 
@@ -46,8 +52,8 @@ export class CacheManager {
    * ************************************************************************
    */
   // Static cache, won't change over time
-  private cacheMessageRawPayload?: FlashStore<string, MessagePayload>
-  private cacheContactOrRoomRawPayload?: FlashStore<string, ContactPayload>
+  private cacheMessageRawPayload?: FlashStore<string, WhatsAppMessagePayload>
+  private cacheContactOrRoomRawPayload?: FlashStore<string, WhatsAppContactPayload>
   private cacheRoomMemberIdList?: FlashStore<string, string[]>
   private cacheRoomInvitationRawPayload?: FlashStore<string, Partial<InviteV4Data>>
 
@@ -61,7 +67,7 @@ export class CacheManager {
     return cache.get(id)
   }
 
-  public async setMessageRawPayload (id: string, payload: Message): Promise<void> {
+  public async setMessageRawPayload (id: string, payload: WhatsAppMessage): Promise<void> {
     const cache = this.getMessageCache()
     await cache.set(id, payload)
   }
@@ -88,7 +94,7 @@ export class CacheManager {
     return cache.get(id)
   }
 
-  public async setContactOrRoomRawPayload (id: string, payload: ContactPayload): Promise<void> {
+  public async setContactOrRoomRawPayload (id: string, payload: WhatsAppContactPayload): Promise<void> {
     const cache = this.getContactOrRoomCache()
     await cache.set(id, payload)
   }

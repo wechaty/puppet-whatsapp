@@ -1,8 +1,16 @@
 import * as PUPPET from 'wechaty-puppet'
 import { FileBox } from '../compact/index.js'
-import type { PuppetWhatsapp } from '../puppet-whatsapp.js'
+import type PuppetWhatsApp from '../puppet-whatsapp.js'
 import { parserMessageRawPayload, parseVcard, convertMessagePayloadToClass } from '../pure-function-helpers/index.js'
-import { MessageContent, MessageMedia, MessagePayload, MessageSendOptions, WhatsAppMessageType } from '../schema/index.js'
+import type {
+  MessageContent,
+  WhatsAppMessagePayload,
+  MessageSendOptions,
+} from '../schema/whatsapp-type.js'
+import {
+  MessageMedia,
+  MessageTypes as WhatsAppMessageType,
+} from '../schema/whatsapp-interface.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import { logger } from '../logger/index.js'
@@ -12,7 +20,7 @@ import { logger } from '../logger/index.js'
   * @param messageId message Id
   * @returns contact name
   */
-export async function messageContact (this:PuppetWhatsapp, messageId: string): Promise<string> {
+export async function messageContact (this: PuppetWhatsApp, messageId: string): Promise<string> {
   logger.info('messageContact(%s)', messageId)
   const cacheManager = await this.manager.getCacheManager()
   const msg = await cacheManager.getMessageRawPayload(messageId)
@@ -41,7 +49,7 @@ export async function messageContact (this:PuppetWhatsapp, messageId: string): P
 * @param imageType image size to get (may not apply to WhatsApp)
 * @returns the image
 */
-export async function messageImage (this:PuppetWhatsapp, messageId: string, imageType: PUPPET.ImageType): Promise<FileBox> {
+export async function messageImage (this: PuppetWhatsApp, messageId: string, imageType: PUPPET.ImageType): Promise<FileBox> {
   logger.info('messageImage(%s, %s[%s])', messageId, imageType, PUPPET.ImageType[imageType])
   const cacheManager = await this.manager.getCacheManager()
   const msg = await cacheManager.getMessageRawPayload(messageId)
@@ -67,7 +75,7 @@ export async function messageImage (this:PuppetWhatsapp, messageId: string, imag
 * @param messageId message id
 * @returns { Promise<boolean> }
 */
-export async function messageRecall (this:PuppetWhatsapp, messageId: string): Promise<boolean> {
+export async function messageRecall (this: PuppetWhatsApp, messageId: string): Promise<boolean> {
   logger.info('messageRecall(%s)', messageId)
   const cacheManager = await this.manager.getCacheManager()
   const msg = await cacheManager.getMessageRawPayload(messageId)
@@ -90,7 +98,7 @@ export async function messageRecall (this:PuppetWhatsapp, messageId: string): Pr
 * @param messageId message id
 * @returns the file that attached to the message
 */
-export async function messageFile (this:PuppetWhatsapp, messageId: string): Promise<FileBox> {
+export async function messageFile (this: PuppetWhatsApp, messageId: string): Promise<FileBox> {
   logger.info('messageFile(%s)', messageId)
   const cacheManager = await this.manager.getCacheManager()
   const msg = await cacheManager.getMessageRawPayload(messageId)
@@ -116,7 +124,7 @@ export async function messageFile (this:PuppetWhatsapp, messageId: string): Prom
 * @param messageId message id
 * @returns url in the message
 */
-export async function messageUrl (this:PuppetWhatsapp, messageId: string): Promise<PUPPET.UrlLinkPayload> {
+export async function messageUrl (this: PuppetWhatsApp, messageId: string): Promise<PUPPET.UrlLinkPayload> {
   logger.info('messageUrl(%s)', messageId)
   const cacheManager = await this.manager.getCacheManager()
   const msg = await cacheManager.getMessageRawPayload(messageId)
@@ -143,12 +151,12 @@ export async function messageUrl (this:PuppetWhatsapp, messageId: string): Promi
 * Not supported for WhatsApp
 * @param messageId message id
 */
-export async function messageMiniProgram (this:PuppetWhatsapp, messageId: string): Promise<PUPPET.MiniProgramPayload> {
+export async function messageMiniProgram (this: PuppetWhatsApp, messageId: string): Promise<PUPPET.MiniProgramPayload> {
   logger.info('messageMiniProgram(%s)', messageId)
   return PUPPET.throwUnsupportedError()
 }
 
-export async function messageSend (this:PuppetWhatsapp, conversationId: string, content: MessageContent, options?: MessageSendOptions): Promise<string> {
+export async function messageSend (this: PuppetWhatsApp, conversationId: string, content: MessageContent, options?: MessageSendOptions): Promise<string> {
   logger.info('messageSend(%s, %s)', conversationId, typeof content)
 
   const msg = await this.manager.sendMessage(conversationId, content, options)
@@ -158,7 +166,7 @@ export async function messageSend (this:PuppetWhatsapp, conversationId: string, 
   return messageId
 }
 
-export async function messageSendText (this:PuppetWhatsapp, conversationId: string, text: string, mentions?: string[]): Promise<void | string> {
+export async function messageSendText (this: PuppetWhatsApp, conversationId: string, text: string, mentions?: string[]): Promise<void | string> {
   logger.info('messageSendText(%s, %s)', conversationId, text)
   if (mentions) {
     const contacts = await Promise.all(mentions.map((v) => (
@@ -170,14 +178,14 @@ export async function messageSendText (this:PuppetWhatsapp, conversationId: stri
   }
 }
 
-export async function messageSendFile (this:PuppetWhatsapp, conversationId: string, file: FileBox, options?: MessageSendOptions): Promise<void | string> {
+export async function messageSendFile (this: PuppetWhatsApp, conversationId: string, file: FileBox, options?: MessageSendOptions): Promise<void | string> {
   logger.info('messageSendFile(%s, %s)', conversationId, file.name)
   await file.ready()
   const msgContent = new MessageMedia(file.mimeType!, await file.toBase64(), file.name)
   return messageSend.call(this, conversationId, msgContent, options)
 }
 
-export async function messageSendContact (this:PuppetWhatsapp, conversationId: string, contactId: string, options?: MessageSendOptions): Promise<void> {
+export async function messageSendContact (this: PuppetWhatsApp, conversationId: string, contactId: string, options?: MessageSendOptions): Promise<void> {
   logger.info('messageSendContact(%s, %s)', conversationId, contactId)
 
   const contact = await this.manager.getContactById(contactId)
@@ -185,7 +193,7 @@ export async function messageSendContact (this:PuppetWhatsapp, conversationId: s
 }
 
 export async function messageSendUrl (
-  this:PuppetWhatsapp,
+  this: PuppetWhatsApp,
   conversationId: string,
   urlLinkPayload: PUPPET.UrlLinkPayload,
 ): Promise<string> {
@@ -193,7 +201,7 @@ export async function messageSendUrl (
   return messageSend.call(this, conversationId, urlLinkPayload.url)
 }
 
-export async function messageSendMiniProgram (this:PuppetWhatsapp, conversationId: string, miniProgramPayload: PUPPET.MiniProgramPayload): Promise<void> {
+export async function messageSendMiniProgram (this: PuppetWhatsApp, conversationId: string, miniProgramPayload: PUPPET.MiniProgramPayload): Promise<void> {
   logger.verbose(
     'PuppetWhatsApp',
     'messageSendMiniProgram(%s, %s)',
@@ -203,7 +211,7 @@ export async function messageSendMiniProgram (this:PuppetWhatsapp, conversationI
   return PUPPET.throwUnsupportedError()
 }
 
-export async function messageForward (this:PuppetWhatsapp, conversationId: string, messageId: string): Promise<void> {
+export async function messageForward (this: PuppetWhatsApp, conversationId: string, messageId: string): Promise<void> {
   logger.info('messageForward(%s, %s)', conversationId, messageId)
   const cacheManager = await this.manager.getCacheManager()
   const msg = await cacheManager.getMessageRawPayload(messageId)
@@ -219,7 +227,7 @@ export async function messageForward (this:PuppetWhatsapp, conversationId: strin
   }
 }
 
-export async function messageRawPayload (this:PuppetWhatsapp, id: string): Promise<MessagePayload> {
+export async function messageRawPayload (this: PuppetWhatsApp, id: string): Promise<WhatsAppMessagePayload> {
   logger.info('messageRawPayload(%s)', id)
   const cacheManager = await this.manager.getCacheManager()
   const msg = await cacheManager.getMessageRawPayload(id)
@@ -229,6 +237,6 @@ export async function messageRawPayload (this:PuppetWhatsapp, id: string): Promi
   return msg
 }
 
-export async function messageRawPayloadParser (this:PuppetWhatsapp, whatsAppPayload: MessagePayload): Promise<PUPPET.MessagePayload> {
+export async function messageRawPayloadParser (this: PuppetWhatsApp, whatsAppPayload: WhatsAppMessagePayload): Promise<PUPPET.MessagePayload> {
   return parserMessageRawPayload(whatsAppPayload)
 }
