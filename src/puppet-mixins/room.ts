@@ -46,6 +46,33 @@ async function checkRoomMember (this: PuppetWhatsApp, memberIdList: string[]) {
   }
 }
 
+export async function updateRoomRawPayloadToCache (
+  this: PuppetWhatsApp,
+  roomId: string,
+  params: {
+    name?: string,
+    avatar?: string,
+    memberIdList?: string[],
+  },
+): Promise<RoomPayload | undefined> {
+  const { name, avatar, memberIdList } = params
+  const cacheManager = await this.manager.getCacheManager()
+  const roomInCache = await cacheManager.getContactOrRoomRawPayload(roomId)
+  if (roomInCache) {
+    if (name) {
+      roomInCache.name = name
+    }
+    if (avatar) {
+      roomInCache.avatar = avatar
+    }
+    if (memberIdList && memberIdList.length > 0) {
+      await cacheManager.setRoomMemberIdList(roomId, memberIdList)
+    }
+    await cacheManager.setContactOrRoomRawPayload(roomId, roomInCache)
+  }
+  return roomInCache
+}
+
 export async function roomCreate (
   this: PuppetWhatsApp,
   contactIdList: string[],
@@ -55,11 +82,15 @@ export async function roomCreate (
   const { friendsList, nonFriendsList } = await checkRoomMember.call(this, contactIdList)
   const group = await this.manager.createRoom(topic, friendsList)
   const roomId = group.gid._serialized
-  await roomAdd.call(this, roomId, nonFriendsList)
   if (roomId) {
+    await roomAdd.call(this, roomId, nonFriendsList)
+    await updateRoomRawPayloadToCache.call(this, roomId, {
+      memberIdList: contactIdList,
+      name: topic,
+    })
     return roomId
   } else {
-    throw new WAError(WA_ERROR_TYPE.ERR_CREATE_ROOM, 'An error occurred while creating the group!')
+    throw new WAError(WA_ERROR_TYPE.ERR_CREATE_ROOM, `An error occurred while creating the group, detail: ${contactIdList}, topic: ${topic}`)
   }
 }
 
