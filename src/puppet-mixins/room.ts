@@ -12,7 +12,6 @@ import type PuppetWhatsApp from '../puppet-whatsapp'
 import type {
   WhatsAppContactPayload as RoomPayload,
   InviteV4Data,
-  GroupChat,
 } from '../schema/whatsapp-type.js'
 
 export async function roomList (this: PuppetWhatsApp): Promise<string[]> {
@@ -108,9 +107,9 @@ async function addMemberListToRoom (
   roomId: string,
   contactIds: string | string[],
 ) {
-  const chat = await this.manager.getChatById(roomId) as GroupChat
+  const roomChat = await this.manager.getRoomChatById(roomId)
   const contactIdList = Array.isArray(contactIds) ? contactIds : [contactIds]
-  await chat.addParticipants(contactIdList)
+  await roomChat.addParticipants(contactIdList)
   const cacheManager = await this.manager.getCacheManager()
   await cacheManager.addRoomMemberToList(roomId, contactIds)
 }
@@ -121,16 +120,16 @@ export async function roomDel (
   contactId: string,
 ): Promise<void> {
   logger.info('roomDel(%s, %s)', roomId, contactId)
-  const chat = await this.manager.getChatById(roomId) as GroupChat
-  await chat.removeParticipants([contactId])
+  const roomChat = await this.manager.getRoomChatById(roomId)
+  await roomChat.removeParticipants([contactId])
   const cacheManager = await this.manager.getCacheManager()
   await cacheManager.removeRoomMemberFromList(roomId, contactId)
 }
 
 export async function roomQuit (this: PuppetWhatsApp, roomId: string): Promise<void> {
   logger.info('roomQuit(%s)', roomId)
-  const chat = await this.manager.getChatById(roomId) as GroupChat
-  await chat.leave()
+  const roomChat = await this.manager.getRoomChatById(roomId)
+  await roomChat.leave()
   const cacheManager = await this.manager.getCacheManager()
   await cacheManager.deleteContactOrRoom(roomId)
   await cacheManager.deleteRoomMemberIdList(roomId)
@@ -162,17 +161,17 @@ export async function roomTopic (
     const payload = await this.roomPayload(roomId)
     return payload.topic
   }
-  const chat = await this.manager.getChatById(roomId) as GroupChat
-  if (chat.isGroup) {
-    await chat.setSubject(topic)
+  const roomChat = await this.manager.getRoomChatById(roomId)
+  if (roomChat.isGroup) {
+    await roomChat.setSubject(topic)
   }
   await this.dirtyPayload(PUPPET.PayloadType.Room, roomId)
 }
 
 export async function roomQRCode (this: PuppetWhatsApp, roomId: string): Promise<string> {
   logger.info('roomQRCode(%s)', roomId)
-  const con = await this.manager.getChatById(roomId) as GroupChat
-  const code = await con.getInviteCode()
+  const roomChat = await this.manager.getRoomChatById(roomId)
+  const code = await roomChat.getInviteCode()
   const url = `https://chat.whatsapp.com/${code}`
   return url
 }
@@ -187,19 +186,10 @@ export async function roomMemberList (this: PuppetWhatsApp, roomId: string): Pro
   logger.info('roomMemberList(%s)', roomId)
   const cacheManager = await this.manager.getCacheManager()
   const memberList = await cacheManager.getRoomMemberIdList(roomId)
+  if (memberList.length === 0) {
+    return this.manager.roomMemberListSync(roomId)
+  }
   return memberList
-}
-
-/**
- * Get member id list from web api
- * @param { PuppetWhatsApp } this whatsapp client
- * @param { string } roomId roomId
- * @returns { string[] } member id list
- */
-export async function roomMemberListSync (this: PuppetWhatsApp, roomId: string): Promise<string[]> {
-  const chat = await this.manager.getChatById(roomId) as GroupChat
-  // FIXME: How to deal with pendingParticipants? Maybe we should find which case could has this attribute.
-  return chat.participants.map(m => m.id._serialized)
 }
 
 export async function roomMemberRawPayload (this: PuppetWhatsApp, roomId: string, contactId: string): Promise<PUPPET.RoomMemberPayload> {
@@ -291,21 +281,22 @@ export async function roomRawPayload (this: PuppetWhatsApp, id: string): Promise
 }
 
 export async function roomRawPayloadParser (this: PuppetWhatsApp, roomPayload: RoomPayload): Promise<PUPPET.RoomPayload> {
+  const roomId = roomPayload.id._serialized
   try {
-    const chat = await this.manager.getChatById(roomPayload.id._serialized) as GroupChat
-    if (chat.participants.length === 0) {
-      throw new WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `roomRawPayloadParser(${roomPayload.id._serialized}) can not get chat info for this room.`)
+    const roomChat = await this.manager.getRoomChatById(roomId)
+    if (roomChat.participants.length === 0) {
+      throw new WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `roomRawPayloadParser(${roomId}) can not get chat info for this room.`)
     }
     return {
-      adminIdList: chat.participants.filter(m => m.isAdmin || m.isSuperAdmin).map(m => m.id._serialized),
+      adminIdList: roomChat.participants.filter(m => m.isAdmin || m.isSuperAdmin).map(m => m.id._serialized),
       avatar: roomPayload.avatar,
-      id: roomPayload.id._serialized,
-      memberIdList: chat.participants.map(m => m.id._serialized),
-      ownerId: chat.owner?._serialized,
+      id: roomId,
+      memberIdList: roomChat.participants.map(m => m.id._serialized),
+      ownerId: roomChat.owner?._serialized,
       topic: roomPayload.name || roomPayload.pushname || '',
     }
   } catch (error) {
-    logger.error(`roomRawPayloadParser(${roomPayload.id._serialized}) failed, error message: ${(error as Error).message}`)
-    throw new WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `roomRawPayloadParser(${roomPayload.id._serialized}) failed, error message: ${(error as Error).message}`)
+    logger.error(`roomRawPayloadParser(${roomId}) failed, error message: ${(error as Error).message}`)
+    throw new WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `roomRawPayloadParser(${roomId}) failed, error message: ${(error as Error).message}`)
   }
 }
