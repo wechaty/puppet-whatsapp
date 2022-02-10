@@ -22,15 +22,42 @@ export async function roomList (this: PuppetWhatsApp): Promise<string[]> {
   return roomIdList
 }
 
+/**
+ * Filter friend list and non-friend list from member id list
+ * @param { PuppetWhatsApp } this
+ * @param { string[] } memberIdList
+ * @returns { friendsList: string[]; nonFriendsList: string[]; }
+ */
+async function checkRoomMember (this: PuppetWhatsApp, memberIdList: string[]) {
+  const friendsList = []
+  const nonFriendsList = []
+  for (const memberId of memberIdList) {
+    const memberPayload = await this.manager.getContactById(memberId)
+    if (memberPayload.isMyContact) {
+      friendsList.push(memberId)
+    } else {
+      nonFriendsList.push(memberId)
+    }
+  }
+
+  return {
+    friendsList,
+    nonFriendsList,
+  }
+}
+
 export async function roomCreate (
   this: PuppetWhatsApp,
   contactIdList: string[],
   topic: string,
 ): Promise<string> {
   logger.info('roomCreate(%s, %s)', contactIdList, topic)
-  const group = await this.manager.createRoom(topic, contactIdList)
-  if (group.gid._serialized) {
-    return group.gid._serialized
+  const { friendsList, nonFriendsList } = await checkRoomMember.call(this, contactIdList)
+  const group = await this.manager.createRoom(topic, friendsList)
+  const roomId = group.gid._serialized
+  await roomAdd.call(this, roomId, nonFriendsList)
+  if (roomId) {
+    return roomId
   } else {
     throw new WAError(WA_ERROR_TYPE.ERR_CREATE_ROOM, 'An error occurred while creating the group!')
   }
@@ -39,13 +66,17 @@ export async function roomCreate (
 export async function roomAdd (
   this: PuppetWhatsApp,
   roomId: string,
-  contactId: string,
+  contactIds: string | string[],
 ): Promise<void> {
-  logger.info('roomAdd(%s, %s)', roomId, contactId)
+  logger.info('roomAdd(%s, %s)', roomId, contactIds)
   const chat = await this.manager.getChatById(roomId) as GroupChat
-  await chat.addParticipants([contactId])
+  if (Array.isArray(contactIds)) {
+    await chat.addParticipants(contactIds)
+  } else {
+    await chat.addParticipants([contactIds])
+  }
   const cacheManager = await this.manager.getCacheManager()
-  await cacheManager.addRoomMemberToList(roomId, contactId)
+  await cacheManager.addRoomMemberToList(roomId, contactIds)
 }
 
 export async function roomDel (
