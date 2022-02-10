@@ -18,7 +18,6 @@ import {
   MessageTypes as WhatsAppMessageType,
   GroupNotificationTypes,
   WAState,
-  MessageAck,
 } from './schema/whatsapp-interface.js'
 import { logger } from './logger/index.js'
 import {
@@ -517,6 +516,7 @@ export class Manager extends EventEmitter {
    */
   private async onMessageRevokeMe (message: WhatsAppMessage) {
     logger.silly(`onMessageRevokeMe(${JSON.stringify(message)})`)
+    /*
     if (message.ack === MessageAck.ACK_PENDING) {
       // when the bot logout, it will receive onMessageRevokeMe event, but it's ack is MessageAck.ACK_PENDING, so let's ignore this event.
       return
@@ -528,6 +528,7 @@ export class Manager extends EventEmitter {
     const recalledMessageId = this.generateFakeRecallMessageId(messageId)
     await cacheManager.setMessageRawPayload(recalledMessageId, message)
     this.emit('message', { messageId: recalledMessageId })
+    */
   }
 
   private generateFakeRecallMessageId (messageId: string) {
