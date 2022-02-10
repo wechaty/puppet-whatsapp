@@ -22,17 +22,75 @@ export async function roomList (this: PuppetWhatsApp): Promise<string[]> {
   return roomIdList
 }
 
+/**
+ * Filter friend list and non-friend list from member id list
+ * @param { PuppetWhatsApp } this
+ * @param { string[] } memberIdList
+ * @returns { friendsList: string[]; nonFriendsList: string[]; }
+ */
+async function checkRoomMember (this: PuppetWhatsApp, memberIdList: string[]) {
+  const friendsList = []
+  const nonFriendsList = []
+  for (const memberId of memberIdList) {
+    const memberPayload = await this.manager.getContactById(memberId)
+    if (memberPayload.isMyContact) {
+      friendsList.push(memberId)
+    } else {
+      nonFriendsList.push(memberId)
+    }
+  }
+
+  return {
+    friendsList,
+    nonFriendsList,
+  }
+}
+
+export async function updateRoomRawPayloadToCache (
+  this: PuppetWhatsApp,
+  roomId: string,
+  params: {
+    name?: string,
+    avatar?: string,
+    memberIdList?: string[],
+  },
+): Promise<RoomPayload | undefined> {
+  const { name, avatar, memberIdList } = params
+  const cacheManager = await this.manager.getCacheManager()
+  const roomInCache = await cacheManager.getContactOrRoomRawPayload(roomId)
+  if (roomInCache) {
+    if (name) {
+      roomInCache.name = name
+    }
+    if (avatar) {
+      roomInCache.avatar = avatar
+    }
+    if (memberIdList && memberIdList.length > 0) {
+      await cacheManager.setRoomMemberIdList(roomId, memberIdList)
+    }
+    await cacheManager.setContactOrRoomRawPayload(roomId, roomInCache)
+  }
+  return roomInCache
+}
+
 export async function roomCreate (
   this: PuppetWhatsApp,
   contactIdList: string[],
   topic: string,
 ): Promise<string> {
   logger.info('roomCreate(%s, %s)', contactIdList, topic)
-  const group = await this.manager.createRoom(topic, contactIdList)
-  if (group.gid._serialized) {
-    return group.gid._serialized
+  const { friendsList, nonFriendsList } = await checkRoomMember.call(this, contactIdList)
+  const group = await this.manager.createRoom(topic, friendsList)
+  const roomId = group.gid._serialized
+  if (roomId) {
+    await addMemberListToRoom.call(this, roomId, nonFriendsList)
+    await updateRoomRawPayloadToCache.call(this, roomId, {
+      memberIdList: contactIdList,
+      name: topic,
+    })
+    return roomId
   } else {
-    throw new WAError(WA_ERROR_TYPE.ERR_CREATE_ROOM, 'An error occurred while creating the group!')
+    throw new WAError(WA_ERROR_TYPE.ERR_CREATE_ROOM, `An error occurred while creating the group, detail: ${contactIdList}, topic: ${topic}`)
   }
 }
 
@@ -42,10 +100,19 @@ export async function roomAdd (
   contactId: string,
 ): Promise<void> {
   logger.info('roomAdd(%s, %s)', roomId, contactId)
+  await addMemberListToRoom.call(this, roomId, contactId)
+}
+
+async function addMemberListToRoom (
+  this: PuppetWhatsApp,
+  roomId: string,
+  contactIds: string | string[],
+) {
   const chat = await this.manager.getChatById(roomId) as GroupChat
-  await chat.addParticipants([contactId])
+  const contactIdList = Array.isArray(contactIds) ? contactIds : [contactIds]
+  await chat.addParticipants(contactIdList)
   const cacheManager = await this.manager.getCacheManager()
-  await cacheManager.addRoomMemberToList(roomId, contactId)
+  await cacheManager.addRoomMemberToList(roomId, contactIds)
 }
 
 export async function roomDel (
