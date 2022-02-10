@@ -83,7 +83,7 @@ export async function roomCreate (
   const group = await this.manager.createRoom(topic, friendsList)
   const roomId = group.gid._serialized
   if (roomId) {
-    await roomAdd.call(this, roomId, nonFriendsList)
+    await addMemberListToRoom.call(this, roomId, nonFriendsList)
     await updateRoomRawPayloadToCache.call(this, roomId, {
       memberIdList: contactIdList,
       name: topic,
@@ -97,15 +97,20 @@ export async function roomCreate (
 export async function roomAdd (
   this: PuppetWhatsApp,
   roomId: string,
-  contactIds: string | string[],
+  contactId: string,
 ): Promise<void> {
-  logger.info('roomAdd(%s, %s)', roomId, contactIds)
+  logger.info('roomAdd(%s, %s)', roomId, contactId)
+  await addMemberListToRoom.call(this, roomId, contactId)
+}
+
+async function addMemberListToRoom (
+  this: PuppetWhatsApp,
+  roomId: string,
+  contactIds: string | string[],
+) {
   const chat = await this.manager.getChatById(roomId) as GroupChat
-  if (Array.isArray(contactIds)) {
-    await chat.addParticipants(contactIds)
-  } else {
-    await chat.addParticipants([contactIds])
-  }
+  const contactIdList = Array.isArray(contactIds) ? contactIds : [contactIds]
+  await chat.addParticipants(contactIdList)
   const cacheManager = await this.manager.getCacheManager()
   await cacheManager.addRoomMemberToList(roomId, contactIds)
 }
