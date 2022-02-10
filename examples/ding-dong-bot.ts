@@ -20,7 +20,7 @@ import type * as PUPPET from 'wechaty-puppet'
 
 import qrTerm from 'qrcode-terminal'
 
-import { PuppetWhatsapp } from '../src/mod.js'
+import PuppetWhatsApp from '../src/mod.js'
 import { MemoryCard } from 'wechaty-puppet'
 
 void (async () => {
@@ -45,7 +45,7 @@ void (async () => {
     '--mute-audio',
     '--disable-gpu',
     '--no-zygote']
-  const puppet = new PuppetWhatsapp(
+  const puppet = new PuppetWhatsApp(
     {
       memory: memoryCard,
       puppeteerOptions: {
