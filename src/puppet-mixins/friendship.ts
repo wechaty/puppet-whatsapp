@@ -35,7 +35,7 @@ export async function friendshipSearchPhone (
 ): Promise<null | string> {
   logger.verbose('friendshipSearchPhone(%s)', phone)
   const user = await this.manager.getContactById(phone)
-  if (user.isWAContact) {
+  if (user.isMyContact) {
     return user.id._serialized
   } else {
     return null

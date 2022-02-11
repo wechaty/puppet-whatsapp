@@ -115,7 +115,7 @@ export async function contactRawPayloadParser (this: PuppetWhatsApp, contactPayl
   try {
     return {
       avatar: contactPayload.avatar,
-      friend: contactPayload.isWAContact && contactPayload.isUser,
+      friend: contactPayload.isMyContact && contactPayload.isUser,
       gender: PUPPET.ContactGender.Unknown,
       id: contactPayload.id._serialized,
       name: name || contactPayload.id._serialized,
