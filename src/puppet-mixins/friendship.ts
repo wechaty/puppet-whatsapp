@@ -1,5 +1,5 @@
 import * as PUPPET from 'wechaty-puppet'
-import { PRE } from '../config.js'
+import { LANGUAGE, PRE, STRINGS } from '../config.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import { withPrefix } from '../logger/index.js'
@@ -52,9 +52,18 @@ export async function friendshipSearchWeixin (
 export async function friendshipAdd (
   this: PuppetWhatsApp,
   contactId: string,
-  hello: string,
+  option?: PUPPET.FriendshipAddOptions,
 ): Promise<void> {
-  logger.verbose('friendshipAdd(%s, %s)', contactId, hello)
+  let hello: string = ''
+  if (typeof (option) === 'object') {
+    hello = option.hello || ''
+  } else {
+    hello = option || ''
+  }
+  if (hello.length === 0) {
+    hello = STRINGS[LANGUAGE].DEFAULT_HELLO_MESSAGE
+  }
+  logger.verbose('friendshipAdd(%s, %s)', contactId, JSON.stringify(option))
   const isUser = await this.manager.isWhatsappUser(contactId)
   if (!isUser) {
     throw new WAError(WA_ERROR_TYPE.ERR_CONTACT_NOT_FOUND, 'Not a registered user on WhatsApp.', `contactId: ${contactId}`)

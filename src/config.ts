@@ -49,3 +49,16 @@ export {
   VERSION,
   PRE,
 }
+
+export const STRINGS = {
+  en_US: {
+    DEFAULT_HELLO_MESSAGE: 'Hello, I\'m your new WhatsApp friend!',
+  },
+  zh_CN: {
+    DEFAULT_HELLO_MESSAGE: '你好，我是你的新WhatsApp好友！',
+  },
+}
+
+type LangCodes = keyof typeof STRINGS
+
+export const LANGUAGE: LangCodes = process.env['LANGUAGE'] as LangCodes | undefined || 'zh_CN'
