@@ -1,4 +1,5 @@
 import * as PUPPET from 'wechaty-puppet'
+import mime from 'mime'
 import { FileBox } from '../compact/index.js'
 import type PuppetWhatsApp from '../puppet-whatsapp.js'
 import { parserMessageRawPayload, parseVcard, convertMessagePayloadToClass } from '../pure-function-helpers/index.js'
@@ -88,8 +89,7 @@ export async function messageImage (this: PuppetWhatsApp, messageId: string, ima
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} does not contain any media`)
   }
   try {
-    const media = await downloadMedia.call(this, msg)
-    return FileBox.fromBase64(media.data, media.filename ?? 'img.jpg')
+    return downloadMedia.call(this, msg)
   } catch (error) {
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_IMAGE, `Message ${messageId} does not contain any media`)
   }
@@ -113,8 +113,7 @@ export async function messageFile (this: PuppetWhatsApp, messageId: string): Pro
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} does not contain any media`)
   }
   try {
-    const media = await downloadMedia.call(this, msg)
-    return FileBox.fromBase64(media.data, media.filename ?? '')
+    return downloadMedia.call(this, msg)
   } catch (error) {
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_FILE, `Message ${messageId} does not contain any media`)
   }
@@ -123,7 +122,11 @@ export async function messageFile (this: PuppetWhatsApp, messageId: string): Pro
 async function downloadMedia (this: PuppetWhatsApp, msg: WhatsAppMessagePayload) {
   const msgObj = convertMessagePayloadToClass(this.manager.getWhatsApp(), msg)
   msgObj.hasMedia = true // FIXME: workaround for make media could be downloaded. see: https://github.com/wechaty/puppet-whatsapp/issues/165
-  return msgObj.downloadMedia()
+  const media = await msgObj.downloadMedia()
+  const filenameExtension = mime.getExtension(media.mimetype)
+  const fileBox = FileBox.fromBase64(media.data, media.filename ?? `unknown_name.${filenameExtension}`)
+  fileBox.mimeType = media.mimetype
+  return fileBox
 }
 
 /**
