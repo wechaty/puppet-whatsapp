@@ -49,3 +49,14 @@ export {
   VERSION,
   PRE,
 }
+
+export const STRINGS = {
+  en_US: {
+    DEFAULT_HELLO_MESSAGE: 'Hello, I\'m your new WhatsApp friend!',
+  },
+  zh_CN: {
+    DEFAULT_HELLO_MESSAGE: '你好，我是你的新WhatsApp好友！',
+  },
+} as any
+
+export const LANGUAGE = process.env['LANGUAGE'] || 'zh_CN'

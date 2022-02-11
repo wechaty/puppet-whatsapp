@@ -1,5 +1,5 @@
 import * as PUPPET from 'wechaty-puppet'
-import { PRE } from '../config.js'
+import { LANGUAGE, PRE, STRINGS } from '../config.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import { withPrefix } from '../logger/index.js'
@@ -61,7 +61,7 @@ export async function friendshipAdd (
     hello = option || ''
   }
   if (hello.length === 0) {
-    throw new WAError(WA_ERROR_TYPE.ERR_NO_HELLO_MSG, 'Must send a hello message for whatsapp new friend')
+    hello = STRINGS[LANGUAGE].DEFAULT_HELLO_MESSAGE
   }
   logger.verbose('friendshipAdd(%s, %s)', contactId, JSON.stringify(option))
   const isUser = await this.manager.isWhatsappUser(contactId)
