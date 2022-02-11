@@ -4,13 +4,15 @@ import * as PUPPET from 'wechaty-puppet'
 import {
   FileBox,
 } from '../compact/index.js'
-import { avatarForContact } from '../config.js'
+import { avatarForContact, PRE } from '../config.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
-import { logger } from '../logger/index.js'
+import { withPrefix } from '../logger/index.js'
 import type PuppetWhatsApp from '../puppet-whatsapp.js'
 import type { WhatsAppContactPayload } from '../schema/whatsapp-type.js'
 import { isContactId } from '../utils.js'
+
+const logger = withPrefix(`${PRE} contact`)
 
 export async function contactAlias (this: PuppetWhatsApp, contactId: string)                       : Promise<string>;
 export async function contactAlias (this: PuppetWhatsApp, contactId: string, alias: string | null) : Promise<void>;

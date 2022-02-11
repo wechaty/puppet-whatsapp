@@ -11,6 +11,7 @@ import {
   LOGOUT_REASON,
   MEMORY_SLOT,
   MIN_BATTERY_VALUE_FOR_LOGOUT,
+  PRE,
   SkipTypeList,
 } from './config.js'
 import { WA_ERROR_TYPE } from './exceptions/error-type.js'
@@ -20,7 +21,7 @@ import {
   GroupNotificationTypes,
   WAState,
 } from './schema/whatsapp-interface.js'
-import { logger } from './logger/index.js'
+import { withPrefix } from './logger/index.js'
 import {
   batchProcess,
   getInviteCode,
@@ -48,6 +49,8 @@ import type {
   WAStateType,
   PrivateChat,
 } from './schema/whatsapp-type.js'
+
+const logger = withPrefix(`${PRE} Manager`)
 
 type ManagerEvents = 'message'
                    | 'room-join'

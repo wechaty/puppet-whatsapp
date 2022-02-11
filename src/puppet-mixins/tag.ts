@@ -1,5 +1,8 @@
 import * as PUPPET from 'wechaty-puppet'
-import { logger } from '../logger/index.js'
+import { PRE } from '../config.js'
+import { withPrefix } from '../logger/index.js'
+
+const logger = withPrefix(`${PRE} tag`)
 
 export async function tagContactAdd (
   tagId: string,
