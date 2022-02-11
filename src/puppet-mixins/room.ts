@@ -39,13 +39,18 @@ async function checkRoomMember (this: PuppetWhatsApp, memberIdList: string[]) {
     }
   }
 
+  const botId = this.manager.getBotId()
+  if (!friendsList.includes(botId)) {
+    friendsList.push(botId)
+  }
+
   return {
     friendsList,
     nonFriendsList,
   }
 }
 
-export async function updateRoomRawPayloadToCache (
+async function updateRoomRawPayloadToCache (
   this: PuppetWhatsApp,
   roomId: string,
   params: {
