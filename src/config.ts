@@ -57,6 +57,8 @@ export const STRINGS = {
   zh_CN: {
     DEFAULT_HELLO_MESSAGE: '你好，我是你的新WhatsApp好友！',
   },
-} as any
+}
 
-export const LANGUAGE = process.env['LANGUAGE'] || 'zh_CN'
+type LangCodes = keyof typeof STRINGS
+
+export const LANGUAGE: LangCodes = process.env['LANGUAGE'] as LangCodes | undefined || 'zh_CN'
