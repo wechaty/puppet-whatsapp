@@ -841,6 +841,13 @@ export class Manager extends EventEmitter {
     return this.whatsAppClient
   }
 
+  public getBotId () {
+    if (!this.botId) {
+      throw new WAError(WA_ERROR_TYPE.ERR_INIT, 'this bot is not login')
+    }
+    return this.botId
+  }
+
   /**
    * Get member id list from web api
    * @param { PuppetWhatsApp } this whatsapp client
