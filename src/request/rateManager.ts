@@ -2,7 +2,10 @@ import { EventEmitter } from 'events'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import { sleep } from '../utils.js'
-import { logger } from '../logger/index.js'
+import { withPrefix } from '../logger/index.js'
+import { PRE } from '../config.js'
+
+const logger = withPrefix(`${PRE} RateManager`)
 
 interface FunctionObj {
   func: () => any,

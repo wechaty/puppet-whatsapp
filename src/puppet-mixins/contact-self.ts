@@ -1,6 +1,9 @@
 import * as PUPPET from 'wechaty-puppet'
-import { logger } from '../logger/index.js'
+import { PRE } from '../config.js'
+import { withPrefix } from '../logger/index.js'
 import type PuppetWhatsApp from '../puppet-whatsapp'
+
+const logger = withPrefix(`${PRE} contact-self`)
 
 export async function  contactSelfQRCode (this: PuppetWhatsApp): Promise<string> {
   logger.verbose('contactSelfQRCode()')

@@ -15,3 +15,18 @@ export const logger = {
   verbose,
   warn,
 }
+
+export function withPrefix (pre: string) {
+  const verbose = (...args: any[]) => log.verbose(pre, ...args)
+  const info = (...args: any[]) => log.info(pre, ...args)
+  const warn = (...args: any[]) => log.warn(pre, ...args)
+  const error = (...args: any[]) => log.error(pre, ...args)
+  const silly = (...args: any[]) => log.silly(pre, ...args)
+  return {
+    error,
+    info,
+    silly,
+    verbose,
+    warn,
+  }
+}

@@ -3,7 +3,7 @@ import * as fs from 'fs-extra'
 import * as os from 'os'
 import { FlashStore } from 'flash-store'
 
-import { logger } from '../logger/index.js'
+import { withPrefix } from '../logger/index.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 
@@ -13,6 +13,9 @@ import type {
   WhatsAppMessage,
   WhatsAppMessagePayload,
 } from '../schema/whatsapp-type.js'
+import { PRE } from '../config.js'
+
+const logger = withPrefix(`${PRE} CacheManager`)
 
 export class CacheManager {
 

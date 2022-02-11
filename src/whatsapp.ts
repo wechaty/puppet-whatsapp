@@ -1,4 +1,4 @@
-import { logger } from './logger/index.js'
+import { withPrefix } from './logger/index.js'
 import {
   Client as WhatsApp,
 } from './schema/whatsapp-interface.js'
@@ -15,6 +15,9 @@ import type {
   BrowserConnectOptions,
   BrowserLaunchArgumentOptions,
 } from 'puppeteer'
+import { PRE } from './config.js'
+
+const logger = withPrefix(`${PRE} whatsapp`)
 
 async function getWhatsApp (
   options: ClientOptions = {
@@ -22,7 +25,7 @@ async function getWhatsApp (
   },
   session?: ClientSession,
 ): Promise<WhatsAppClientType> {
-  logger.verbose('PuppetWhatsApp', 'getWhatsApp()')
+  logger.verbose('getWhatsApp()')
   const { puppeteer = {}, ...restOptions } = options
   const { args, ...restPuppeteerOptions } = puppeteer
   const puppeteerOptions: LaunchOptions & BrowserLaunchArgumentOptions & BrowserConnectOptions = {

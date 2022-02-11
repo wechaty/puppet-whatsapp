@@ -13,7 +13,10 @@ import {
 } from '../schema/whatsapp-interface.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
-import { logger } from '../logger/index.js'
+import { withPrefix } from '../logger/index.js'
+import { PRE } from '../config.js'
+
+const logger = withPrefix(`${PRE} message`)
 
 /**
   * Get contact message

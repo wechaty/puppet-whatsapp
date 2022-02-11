@@ -1,7 +1,9 @@
+import { PRE } from '../config.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
-import { logger } from '../logger/index.js'
+import { withPrefix } from '../logger/index.js'
 
+const logger = withPrefix(`${PRE} vcard-parser`)
 export interface IVcard {
   /**
    * VERSION: X.X

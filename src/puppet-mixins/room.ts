@@ -1,10 +1,10 @@
 /* eslint-disable no-redeclare */
 import * as PUPPET from 'wechaty-puppet'
 import { FileBox } from '../compact/index.js'
-import { avatarForGroup } from '../config.js'
+import { avatarForGroup, PRE } from '../config.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
-import { logger } from '../logger/index.js'
+import { withPrefix } from '../logger/index.js'
 import { isRoomId } from '../utils.js'
 import { contactRawPayload } from './contact.js'
 
@@ -13,6 +13,8 @@ import type {
   WhatsAppContactPayload as RoomPayload,
   InviteV4Data,
 } from '../schema/whatsapp-type.js'
+
+const logger = withPrefix(`${PRE} room`)
 
 export async function roomList (this: PuppetWhatsApp): Promise<string[]> {
   logger.verbose('roomList()')

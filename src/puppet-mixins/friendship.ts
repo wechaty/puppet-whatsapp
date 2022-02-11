@@ -1,9 +1,12 @@
 import * as PUPPET from 'wechaty-puppet'
+import { PRE } from '../config.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
-import { logger } from '../logger/index.js'
+import { withPrefix } from '../logger/index.js'
 import type PuppetWhatsApp from '../puppet-whatsapp.js'
 import type { WhatsAppMessagePayload } from '../schema/whatsapp-type.js'
+
+const logger = withPrefix(`${PRE} friendship`)
 
 export type FriendshipRawPayload = WhatsAppMessagePayload
 
