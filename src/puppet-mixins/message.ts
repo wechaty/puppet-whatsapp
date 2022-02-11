@@ -241,5 +241,7 @@ export async function messageRawPayload (this: PuppetWhatsApp, id: string): Prom
 }
 
 export async function messageRawPayloadParser (this: PuppetWhatsApp, whatsAppPayload: WhatsAppMessagePayload): Promise<PUPPET.MessagePayload> {
-  return parserMessageRawPayload(whatsAppPayload)
+  const result = parserMessageRawPayload(whatsAppPayload)
+  logger.verbose('messageRawPayloadParser whatsAppPayload(%s) result(%s)', JSON.stringify(whatsAppPayload), JSON.stringify(result))
+  return result
 }
