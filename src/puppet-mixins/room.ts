@@ -90,7 +90,9 @@ export async function roomCreate (
   const group = await this.manager.createRoom(topic, friendsList)
   const roomId = group.gid._serialized
   if (roomId) {
-    await addMemberListToRoom.call(this, roomId, nonFriendsList)
+    if (nonFriendsList.length > 0) {
+      await addMemberListToRoom.call(this, roomId, nonFriendsList)
+    }
     await updateRoomRawPayloadToCache.call(this, roomId, {
       memberIdList: contactIdList,
       name: topic,
