@@ -50,6 +50,6 @@ export type {
 export type WhatsAppContactPayload = {
   avatar: string
 } & Omit<WhatsApp.Contact, 'getProfilePicUrl' | 'getChat' | 'getCountryCode' | 'getFormattedNumber' | 'block' | 'unblock' | 'getAbout'>
-export type WhatsAppMessagePayload = Omit<WhatsApp.Message, 'acceptGroupV4Invite' | 'delete' | 'downloadMedia' | 'getChat' | 'getContact' | 'getMentions' | 'getQuotedMessage' | 'reply' | 'forward' | 'star' | 'unstar' | 'getInfo' | 'getOrder' | 'getPayment'>
+export type WhatsAppMessagePayload = Omit<WhatsApp.Message, 'acceptGroupV4Invite' | 'delete' | 'downloadMedia' | 'getChat' | 'getContact' | 'getMentions' | 'getQuotedMessage' | 'reply' | 'forward' | 'star' | 'unstar' | 'getInfo' | 'getOrder' | 'getPayment' | 'broadcast' | 'location' | 'orderId'>
 
 export type GroupChat = SetOptional<WhatsApp.GroupChat, 'owner'>
