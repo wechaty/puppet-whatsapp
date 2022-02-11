@@ -32,7 +32,8 @@ async function checkRoomMember (this: PuppetWhatsApp, memberIdList: string[]) {
   const nonFriendsList = []
   for (const memberId of memberIdList) {
     const memberPayload = await this.manager.getContactById(memberId)
-    if (memberPayload.isMyContact) {
+    // FIXME: Due to android users don't have reliable isMyContact, use isWAContact here, see https://github.com/wechaty/puppet-whatsapp/issues/170
+    if (memberPayload.isWAContact) {
       friendsList.push(memberId)
     } else {
       nonFriendsList.push(memberId)
