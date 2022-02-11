@@ -47,33 +47,6 @@ export async function messageContact (this: PuppetWhatsApp, messageId: string): 
 }
 
 /**
-* Get image from message
-* @param messageId message id
-* @param imageType image size to get (may not apply to WhatsApp)
-* @returns the image
-*/
-export async function messageImage (this: PuppetWhatsApp, messageId: string, imageType: PUPPET.ImageType): Promise<FileBox> {
-  logger.info('messageImage(%s, %s[%s])', messageId, imageType, PUPPET.ImageType[imageType])
-  const cacheManager = await this.manager.getCacheManager()
-  const msg = await cacheManager.getMessageRawPayload(messageId)
-  if (!msg) {
-    logger.error('Message %s not found', messageId)
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} Not Found`)
-  }
-  if (msg.type !== WhatsAppMessageType.IMAGE || !msg.hasMedia) {
-    logger.error('Message %s does not contain any media', messageId)
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} does not contain any media`)
-  }
-  const msgObj = convertMessagePayloadToClass(this.manager.getWhatsApp(), msg)
-  try {
-    const media = await msgObj.downloadMedia()
-    return FileBox.fromBase64(media.data, media.filename ?? 'img.jpg')
-  } catch (error) {
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_IMAGE, `Message ${messageId} does not contain any media`)
-  }
-}
-
-/**
 * Recall message
 * @param messageId message id
 * @returns { Promise<boolean> }
@@ -97,6 +70,34 @@ export async function messageRecall (this: PuppetWhatsApp, messageId: string): P
 }
 
 /**
+* Get image from message
+* @param messageId message id
+* @param imageType image size to get (may not apply to WhatsApp)
+* @returns the image
+*/
+export async function messageImage (this: PuppetWhatsApp, messageId: string, imageType: PUPPET.ImageType): Promise<FileBox> {
+  logger.info('messageImage(%s, %s[%s])', messageId, imageType, PUPPET.ImageType[imageType])
+  const cacheManager = await this.manager.getCacheManager()
+  const msg = await cacheManager.getMessageRawPayload(messageId)
+  if (!msg) {
+    logger.error('Message %s not found', messageId)
+    throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} Not Found`)
+  }
+  if (msg.type !== WhatsAppMessageType.IMAGE || !msg.hasMedia) {
+    logger.error('Message %s does not contain any media', messageId)
+    throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} does not contain any media`)
+  }
+  try {
+    const msgObj = convertMessagePayloadToClass(this.manager.getWhatsApp(), msg)
+    msgObj.hasMedia = true // FIXME: workaround for make media could be downloaded. see: https://github.com/wechaty/puppet-whatsapp/issues/165
+    const media = await msgObj.downloadMedia()
+    return FileBox.fromBase64(media.data, media.filename ?? 'img.jpg')
+  } catch (error) {
+    throw new WAError(WA_ERROR_TYPE.ERR_MSG_IMAGE, `Message ${messageId} does not contain any media`)
+  }
+}
+
+/**
 * Get the file attached to the message
 * @param messageId message id
 * @returns the file that attached to the message
@@ -113,9 +114,10 @@ export async function messageFile (this: PuppetWhatsApp, messageId: string): Pro
     logger.error('Message %s does not contain any media', messageId)
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} does not contain any media`)
   }
-  const msgObj = convertMessagePayloadToClass(this.manager.getWhatsApp(), msg)
   try {
-    const media = await msgObj.downloadMedia()
+    const msgObj = convertMessagePayloadToClass(this.manager.getWhatsApp(), msg)
+    msgObj.hasMedia = true // FIXME: workaround for make media could be downloaded. see: https://github.com/wechaty/puppet-whatsapp/issues/165
+    const media = await (msg as any).downloadMedia()
     return FileBox.fromBase64(media.data, media.filename ?? '')
   } catch (error) {
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_FILE, `Message ${messageId} does not contain any media`)
