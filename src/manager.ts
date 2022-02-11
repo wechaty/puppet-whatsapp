@@ -11,6 +11,7 @@ import {
   LOGOUT_REASON,
   MEMORY_SLOT,
   MIN_BATTERY_VALUE_FOR_LOGOUT,
+  SkipTypeList,
 } from './config.js'
 import { WA_ERROR_TYPE } from './exceptions/error-type.js'
 import WAError from './exceptions/whatsapp-error.js'
@@ -458,7 +459,7 @@ export class Manager extends EventEmitter {
 
   private async onMessageAck (message: WhatsAppMessage) {
     logger.silly(`onMessageAck(${JSON.stringify(message)})`)
-    if (message.type === 'multi_vcard') {
+    if (SkipTypeList.includes(message.type) && !message.hasMedia) {
       return
     }
     if (message.id.fromMe && message.ack >= 0) {
@@ -475,7 +476,7 @@ export class Manager extends EventEmitter {
 
   private async onMessageCreate (message: WhatsAppMessage) {
     logger.silly(`onMessageCreate(${JSON.stringify(message)})`)
-    if (message.type === 'multi_vcard') {
+    if (SkipTypeList.includes(message.type)) {
       return
     }
     if (message.id.fromMe && message.ack >= 0) {
