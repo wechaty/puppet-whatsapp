@@ -117,6 +117,9 @@ async function addMemberListToRoom (
 ) {
   const roomChat = await this.manager.getRoomChatById(roomId)
   const contactIdList = Array.isArray(contactIds) ? contactIds : [contactIds]
+  if (contactIdList.length === 0) {
+    return
+  }
   await roomChat.addParticipants(contactIdList)
   const cacheManager = await this.manager.getCacheManager()
   await cacheManager.addRoomMemberToList(roomId, contactIds)
