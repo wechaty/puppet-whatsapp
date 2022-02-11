@@ -406,13 +406,11 @@ export class Manager extends EventEmitter {
       await this.onMessage(genMessagePayload)
     }
     if (notification.type === GroupNotificationTypes.CREATE) {
-      // FIXME: how to reuse roomMemberList from room-mixin
       const members = await this.roomMemberListSync(roomId)
-
       const roomJoinPayload: PUPPET.EventRoomJoinPayload = {
         inviteeIdList: members,
         inviterId: notification.author,
-        roomId: notification.chatId,
+        roomId,
         timestamp: notification.timestamp,
       }
       this.emit('room-join', roomJoinPayload)
