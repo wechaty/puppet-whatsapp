@@ -1,9 +1,7 @@
 /* eslint-disable sort-keys */
 import { test } from 'tstest'
 import { parserMessageRawPayload } from './message-raw-payload-parser.js'
-import type {
-  WhatsAppMessagePayload,
-} from '../schema/whatsapp-type.js'
+import { MessageTypes } from '../schema/whatsapp-interface.js'
 
 test('message parser for room message which send from bot by web ', async t => {
   const roomMessageFromBotByWeb = {
@@ -16,7 +14,7 @@ test('message parser for room message which send from bot by web ', async t => {
     ack: 0,
     hasMedia: false,
     body: 'ding',
-    type: 'chat',
+    type: MessageTypes.TEXT,
     timestamp: 1644563786,
     from: '8613126768525@c.us',
     to: '120363039010379837@g.us',
@@ -25,6 +23,7 @@ test('message parser for room message which send from bot by web ', async t => {
     forwardingScore: 0,
     isStatus: false,
     isStarred: false,
+    broadcast: false,
     fromMe: true,
     hasQuotedMsg: false,
     vCards: [],
@@ -32,7 +31,7 @@ test('message parser for room message which send from bot by web ', async t => {
     isGif: false,
     isEphemeral: false,
     links: [],
-  } as WhatsAppMessagePayload
+  }
   const messagePayload = parserMessageRawPayload(roomMessageFromBotByWeb)
   t.ok(
     messagePayload.toId === undefined
@@ -57,12 +56,14 @@ test('message parser for room message which send from bot by api ', async t => {
     ack: 0,
     hasMedia: false,
     body: 'dong',
-    type: 'chat',
+    type: MessageTypes.TEXT,
     timestamp: 1644563785,
     from: '8613126768525@c.us',
     to: '120363039010379837@g.us',
     deviceType: 'android',
     isForwarded: false,
+    isStatus: false,
+    broadcast: false,
     forwardingScore: 0,
     isStarred: false,
     fromMe: true,
@@ -70,7 +71,9 @@ test('message parser for room message which send from bot by api ', async t => {
     vCards: [],
     mentionedIds: [],
     isGif: false,
-  } as any
+    isEphemeral: false,
+    links: [],
+  }
   const messagePayload = parserMessageRawPayload(roomMessageFromBotByApi)
   t.ok(
     messagePayload.toId === undefined
@@ -92,7 +95,7 @@ test('message parser for room message which send from other contact ', async t =
     ack: 0,
     hasMedia: false,
     body: 'hello',
-    type: 'chat',
+    type: MessageTypes.TEXT,
     timestamp: 1644565075,
     from: '120363039010379837@g.us',
     to: '8613126768525@c.us',
@@ -110,7 +113,7 @@ test('message parser for room message which send from other contact ', async t =
     isGif: false,
     isEphemeral: false,
     links: [],
-  } as WhatsAppMessagePayload
+  }
   const messagePayload = parserMessageRawPayload(roomMessageFromOtherContact)
   t.ok(
     messagePayload.toId === undefined
@@ -131,7 +134,7 @@ test('message parser for contact message which send from bot by web ', async t =
     ack: 0,
     hasMedia: false,
     body: 'ding',
-    type: 'chat',
+    type: MessageTypes.TEXT,
     timestamp: 1644564200,
     from: '8613126768525@c.us',
     to: '8618710175700@c.us',
@@ -140,6 +143,7 @@ test('message parser for contact message which send from bot by web ', async t =
     forwardingScore: 0,
     isStatus: false,
     isStarred: false,
+    broadcast: false,
     fromMe: true,
     hasQuotedMsg: false,
     vCards: [],
@@ -147,7 +151,7 @@ test('message parser for contact message which send from bot by web ', async t =
     isGif: false,
     isEphemeral: false,
     links: [],
-  } as WhatsAppMessagePayload
+  }
   const messagePayload = parserMessageRawPayload(contactMessageFromBotByWeb)
   t.ok(
     messagePayload.toId === '8618710175700@c.us'
@@ -168,7 +172,7 @@ test('message parser for contact message which send from bot by api ', async t =
     ack: 0,
     hasMedia: false,
     body: 'dong',
-    type: 'chat',
+    type: MessageTypes.TEXT,
     timestamp: 1644570007,
     from: '8613126768525@c.us',
     to: '8613811286503@c.us',
@@ -177,6 +181,7 @@ test('message parser for contact message which send from bot by api ', async t =
     forwardingScore: 0,
     isStatus: false,
     isStarred: false,
+    broadcast: false,
     fromMe: true,
     hasQuotedMsg: false,
     vCards: [],
@@ -184,7 +189,7 @@ test('message parser for contact message which send from bot by api ', async t =
     isGif: false,
     isEphemeral: false,
     links: [],
-  } as WhatsAppMessagePayload
+  }
   const messagePayload = parserMessageRawPayload(contactMessageFromBotByApi)
   t.ok(
     messagePayload.toId === '8613811286503@c.us'
@@ -205,7 +210,7 @@ test('message parser for contact message which send from other contact', async t
     ack: 0,
     hasMedia: false,
     body: 'hola',
-    type: 'chat',
+    type: MessageTypes.TEXT,
     timestamp: 1644565052,
     from: '8618500946096@c.us',
     to: '8613126768525@c.us',
@@ -222,7 +227,7 @@ test('message parser for contact message which send from other contact', async t
     isGif: false,
     isEphemeral: false,
     links: [],
-  } as WhatsAppMessagePayload
+  }
   const messagePayload = parserMessageRawPayload(contactMessageFromOtherContact)
   t.ok(
     messagePayload.toId === '8613126768525@c.us'
