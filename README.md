@@ -63,7 +63,7 @@ Wechaty Puppet Whatsapp is built on top of [whatsapp-web.js](https://github.com/
 ## MAINTAINERS
 
 1. [@univerone](https://wechaty.js.org/contributors/univerone) Shanshan JIANG
-1. [@su-chang](https://wechaty.js.org/contributors/su-chang/)
+1. [@su-chang](https://wechaty.js.org/contributors/su-chang/) Chang SU
 
 ## COPYRIGHT & LICENSE
 
