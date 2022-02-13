@@ -72,7 +72,9 @@ export class CacheManager {
 
   public async setMessageRawPayload (id: string, payload: WhatsAppMessage): Promise<void> {
     const cache = this.getMessageCache()
-    await cache.set(id, payload)
+    // @ts-ignore client is in implementation but not in interface
+    const { client, ...rest } = payload
+    await cache.set(id, rest)
   }
 
   public deleteMessage (id: string) {
@@ -99,6 +101,8 @@ export class CacheManager {
 
   public async setContactOrRoomRawPayload (id: string, payload: WhatsAppContactPayload): Promise<void> {
     const cache = this.getContactOrRoomCache()
+    // @ts-ignore client is in implementation but not in interface
+    const { client, ...rest } = payload
     await cache.set(id, payload)
   }
 
