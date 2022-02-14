@@ -213,7 +213,7 @@ export async function roomMemberRawPayload (this: PuppetWhatsApp, roomId: string
 }
 
 export async function roomMemberRawPayloadParser (this: PuppetWhatsApp, rawPayload: PUPPET.RoomMemberPayload): Promise<PUPPET.RoomMemberPayload> {
-  logger.verbose('roomMemberRawPayloadParser(%O)', rawPayload)
+  logger.verbose('roomMemberRawPayloadParser(%s)', JSON.stringify(rawPayload))
   return rawPayload
 }
 
