@@ -10,7 +10,6 @@ import WAError from '../exceptions/whatsapp-error.js'
 import type {
   WhatsAppContactPayload,
   InviteV4Data,
-  WhatsAppMessage,
   WhatsAppMessagePayload,
 } from '../schema/whatsapp-type.js'
 import { PRE } from '../config.js'
