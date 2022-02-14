@@ -103,7 +103,7 @@ export class CacheManager {
     const cache = this.getContactOrRoomCache()
     // @ts-ignore client is in implementation but not in interface
     const { client, ...rest } = payload
-    await cache.set(id, payload)
+    await cache.set(id, rest)
   }
 
   public deleteContactOrRoom (id: string) {
