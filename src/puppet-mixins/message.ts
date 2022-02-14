@@ -77,19 +77,34 @@ export async function messageRecall (this: PuppetWhatsApp, messageId: string): P
 * @returns the image
 */
 export async function messageImage (this: PuppetWhatsApp, messageId: string, imageType: PUPPET.ImageType): Promise<FileBox> {
-  logger.info('messageImage(%s, %s[%s])', messageId, imageType, PUPPET.ImageType[imageType])
+  logger.info('messageImage(%s, %s)', messageId, PUPPET.ImageType[imageType])
   const cacheManager = await this.manager.getCacheManager()
   const msg = await cacheManager.getMessageRawPayload(messageId)
   if (!msg) {
     logger.error('Message %s not found', messageId)
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} Not Found`)
   }
-  if (msg.type !== WhatsAppMessageType.IMAGE || !msg.hasMedia) {
+  if (msg.type !== WhatsAppMessageType.IMAGE || (!msg.hasMedia && !msg.body)) {
     logger.error('Message %s does not contain any media', messageId)
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} does not contain any media`)
   }
+  if (!msg.body) {
+    throw new WAError(WA_ERROR_TYPE.ERR_MSG_IMAGE_WITHOUT_BODY, `Message ${messageId} does not contain thumbnail data`)
+  }
   try {
-    return downloadMedia.call(this, msg)
+    switch (imageType) {
+      case PUPPET.ImageType.Thumbnail:
+        return FileBox.fromBase64(msg.body, 'thumbnail.jpg')
+      case PUPPET.ImageType.Artwork:
+      case PUPPET.ImageType.HD:
+        if (msg.hasMedia) {
+          return downloadMedia.call(this, msg)
+        } else {
+          return FileBox.fromBase64(msg.body, 'thumbnail.jpg')
+        }
+      default:
+        return FileBox.fromBase64(msg.body, 'thumbnail.jpg')
+    }
   } catch (error) {
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_IMAGE, `Message ${messageId} does not contain any media`)
   }
