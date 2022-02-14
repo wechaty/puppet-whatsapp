@@ -1,3 +1,4 @@
+/* eslint-disable no-case-declarations */
 /* eslint-disable import/no-duplicates */
 import { EventEmitter } from 'events'
 import * as PUPPET from 'wechaty-puppet'
@@ -49,6 +50,11 @@ import type {
   WAStateType,
   PrivateChat,
 } from './schema/whatsapp-type.js'
+import {
+  genRoomAnnounce,
+  genRoomJoinEvent,
+  genRoomTopicEvent,
+} from './pure-function-helpers/room-event-generator.js'
 
 const logger = withPrefix(`${PRE} Manager`)
 
@@ -355,65 +361,34 @@ export class Manager extends EventEmitter {
     logger.info(`onRoomUpdate(${JSON.stringify(notification)})`)
     const roomId = (notification.id as any).remote
     const cacheManager = await this.getCacheManager()
-    const roomInCache = await cacheManager.getContactOrRoomRawPayload(roomId)
+    let roomPayload = await cacheManager.getContactOrRoomRawPayload(roomId)
 
-    if (!roomInCache) {
+    if (!roomPayload) {
       const rawRoom = await this.getContactById(roomId)
       const avatar = await rawRoom.getProfilePicUrl()
-      const room = Object.assign(rawRoom, { avatar })
-      await cacheManager.setContactOrRoomRawPayload(roomId, room)
+      roomPayload = Object.assign(rawRoom, { avatar })
+      await cacheManager.setContactOrRoomRawPayload(roomId, roomPayload)
     }
-    if (notification.type === GroupNotificationTypes.SUBJECT) {
-      const roomJoinPayload: PUPPET.EventRoomTopicPayload = {
-        changerId: notification.author,
-        newTopic: notification.body,
-        oldTopic: roomInCache?.name || '',
-        roomId,
-        timestamp: notification.timestamp,
-      }
-      if (roomInCache) {
-        roomInCache.name = notification.body
-        await cacheManager.setContactOrRoomRawPayload(roomId, roomInCache)
-      }
-      this.emit('room-topic', roomJoinPayload)
-    }
-    if (notification.type === GroupNotificationTypes.DESCRIPTION) {
-      const roomChat = await this.getRoomChatById(roomId)
-      const roomMetadata = (roomChat as any).groupMetadata
-      const description = roomMetadata.desc
-      logger.info(`GroupNotificationTypes.DESCRIPTION changed: ${description}`)
-      const genMessagePayload = {
-        ack: 2,
-        author: (notification.id as any).author,
-        body: description,
-        broadcast: false,
-        forwardingScore: 0,
-        from: (notification.id as any).participant,
-        fromMe: (notification.id as any).fromMe,
-        hasMedia: false,
-        hasQuotedMsg: false,
-        id: notification.id,
-        isForwarded: false,
-        isGif: false,
-        isStarred: false,
-        isStatus: false,
-        mentionedIds: [],
-        timestamp: Date.now(),
-        to: roomId,
-        type: WhatsAppMessageType.TEXT,
-        vCards: [],
-      } as any
-      await this.onMessage(genMessagePayload)
-    }
-    if (notification.type === GroupNotificationTypes.CREATE) {
-      const members = await this.roomMemberListSync(roomId)
-      const roomJoinPayload: PUPPET.EventRoomJoinPayload = {
-        inviteeIdList: members,
-        inviterId: notification.author,
-        roomId,
-        timestamp: notification.timestamp,
-      }
-      this.emit('room-join', roomJoinPayload)
+    const type = notification.type
+    switch (type) {
+      case GroupNotificationTypes.SUBJECT:
+        const roomTopicPayload = genRoomTopicEvent(notification, roomPayload)
+        roomPayload.name = notification.body
+        await cacheManager.setContactOrRoomRawPayload(roomId, roomPayload)
+        this.emit('room-topic', roomTopicPayload)
+        break
+      case GroupNotificationTypes.DESCRIPTION:
+        const roomChat = await this.getRoomChatById(roomId)
+        const roomMetadata = (roomChat as any).groupMetadata
+        const description = roomMetadata.desc
+        const msgPayload = genRoomAnnounce(notification, description)
+        await this.onMessage(msgPayload)
+        break
+      case GroupNotificationTypes.CREATE:
+        const members = await this.roomMemberListSync(roomId)
+        const roomJoinPayload = genRoomJoinEvent(notification, members)
+        this.emit('room-join', roomJoinPayload)
+        break
     }
   }
 
