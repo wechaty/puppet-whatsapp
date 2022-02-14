@@ -221,7 +221,13 @@ export async function roomAnnounce(this: PuppetWhatsApp, roomId: string): Promis
 export async function roomAnnounce(this: PuppetWhatsApp, roomId: string, text: string): Promise<void>
 
 export async function roomAnnounce (this: PuppetWhatsApp, roomId: string, text?: string): Promise<void | string> {
-  return PUPPET.throwUnsupportedError()
+  if (typeof text === 'undefined') {
+    const roomChat = await this.manager.getRoomChatById(roomId)
+    return roomChat.description
+  }
+  const roomChat = await this.manager.getRoomChatById(roomId)
+  await roomChat.setDescription(text)
+  await this.dirtyPayload(PUPPET.PayloadType.Room, roomId)
 }
 
 /**
