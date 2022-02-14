@@ -498,6 +498,10 @@ export class Manager extends EventEmitter {
   private async onMessageCreate (message: WhatsAppMessage) {
     logger.silly(`onMessageCreate(${JSON.stringify(message)})`)
     await this.updateImageToCache(message)
+    if (SkipTypeList.includes(message.type)) {
+      logger.silly(`onMessageCreate() do not emit this message: ${message.id.id}`)
+      return
+    }
     if (message.id.fromMe && message.ack >= 0) {
       const messageId = message.id.id
       const cacheManager = await this.getCacheManager()
