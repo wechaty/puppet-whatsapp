@@ -49,6 +49,7 @@ import type {
   BatteryInfo,
   WAStateType,
   PrivateChat,
+  WhatsAppMessagePayload,
 } from './schema/whatsapp-type.js'
 import {
   genRoomAnnounce,
@@ -258,7 +259,7 @@ export class Manager extends EventEmitter {
     this.emit('logout', whatsapp.info.wid._serialized, reason as string)
   }
 
-  private async onMessage (message: WhatsAppMessage) {
+  private async onMessage (message: WhatsAppMessage | WhatsAppMessagePayload) {
     logger.info(`onMessage(${JSON.stringify(message)})`)
     // @ts-ignore
     if (
@@ -292,7 +293,7 @@ export class Manager extends EventEmitter {
     }
   }
 
-  private async convertInviteLinkMessageToEvent (message: WhatsAppMessage): Promise<boolean> {
+  private async convertInviteLinkMessageToEvent (message: WhatsAppMessage | WhatsAppMessagePayload): Promise<boolean> {
     const cacheManager = await this.getCacheManager()
     if (message.type === WhatsAppMessageType.GROUP_INVITE) {
       const inviteCode = message.inviteV4?.inviteCode
