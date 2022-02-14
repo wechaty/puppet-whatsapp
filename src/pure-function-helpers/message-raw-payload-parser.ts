@@ -11,14 +11,15 @@ import type {
   WhatsAppMessagePayload,
 } from '../schema/whatsapp-type.js'
 
-export function parserMessageRawPayload (messagePayload: WhatsAppMessagePayload) {
+export function parserMessageRawPayload (messagePayload: WhatsAppMessagePayload): PUPPET.MessagePayload {
   const fromId = messagePayload.author || messagePayload.from
   let toId: string | undefined
   let roomId: string | undefined
 
   if (typeof messagePayload.id.remote === 'object') {
-    roomId = isRoomId((messagePayload.id.remote as any)._serialized) ? (messagePayload.id.remote as any)._serialized : undefined
-    toId = isRoomId((messagePayload.id.remote as any)._serialized) ? undefined : messagePayload.to
+    const { _serialized } = messagePayload.id.remote
+    roomId = isRoomId(_serialized) ? _serialized : undefined
+    toId = isRoomId(_serialized) ? undefined : messagePayload.to
   } else {
     roomId = isRoomId(messagePayload.id.remote) ? messagePayload.id.remote : undefined
     toId = isRoomId(messagePayload.id.remote) ? undefined : messagePayload.to
