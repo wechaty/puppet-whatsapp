@@ -456,13 +456,13 @@ export class Manager extends EventEmitter {
 
   private async onMediaUploaded (message: WhatsAppMessage) {
     logger.silly(`onMediaUploaded(${JSON.stringify(message)})`)
-    await this.updateImageToCache(message)
+    await this.createOrUpdateImageMessage(message)
     if (!message.hasMedia) {
       logger.warn(`onMediaUploaded() can not upload media for message: ${message.id.id}`)
     }
   }
 
-  private async updateImageToCache (message: WhatsAppMessage) {
+  private async createOrUpdateImageMessage (message: WhatsAppMessage) {
     if (message.type === WhatsAppMessageType.IMAGE) {
       const messageId = message.id.id
       const cacheManager = await this.getCacheManager()
@@ -478,7 +478,7 @@ export class Manager extends EventEmitter {
 
   private async onMessageAck (message: WhatsAppMessage) {
     logger.silly(`onMessageAck(${JSON.stringify(message)})`)
-    await this.updateImageToCache(message)
+    await this.createOrUpdateImageMessage(message)
     if (SkipTypeList.includes(message.type) && !message.hasMedia && !message.body) {
       logger.silly(`onMessageAck() do not emit this message: ${message.id.id}`)
       return
@@ -497,7 +497,7 @@ export class Manager extends EventEmitter {
 
   private async onMessageCreate (message: WhatsAppMessage) {
     logger.silly(`onMessageCreate(${JSON.stringify(message)})`)
-    await this.updateImageToCache(message)
+    await this.createOrUpdateImageMessage(message)
     if (SkipTypeList.includes(message.type)) {
       logger.silly(`onMessageCreate() do not emit this message: ${message.id.id}`)
       return
