@@ -72,6 +72,7 @@ export interface GroupNotificationId {
   fromMe: boolean,
   remote: string,
   id: string,
+  participant?: string,
   _serialized: string,
 }
 
