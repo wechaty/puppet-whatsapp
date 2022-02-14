@@ -121,7 +121,6 @@ export async function messageFile (this: PuppetWhatsApp, messageId: string): Pro
 
 async function downloadMedia (this: PuppetWhatsApp, msg: WhatsAppMessagePayload) {
   const msgObj = convertMessagePayloadToClass(this.manager.getWhatsApp(), msg)
-  msgObj.hasMedia = true // FIXME: workaround for make media could be downloaded. see: https://github.com/wechaty/puppet-whatsapp/issues/165
   const media = await msgObj.downloadMedia()
   const filenameExtension = mime.getExtension(media.mimetype)
   const fileBox = FileBox.fromBase64(media.data, media.filename ?? `unknown_name.${filenameExtension}`)

@@ -12,9 +12,13 @@ import type {
 } from '../schema/whatsapp-type.js'
 
 export function convertContactPayloadToClass (client: WhatsAppClientType, payload: WhatsAppContactPayload): WhatsAppContact {
-  return new ContactClass(client, payload)
+  const contactIns = new ContactClass(client)
+  Object.assign(contactIns, payload)
+  return contactIns
 }
 
 export function convertMessagePayloadToClass (client: WhatsAppClientType, payload: WhatsAppMessagePayload): WhatsAppMessage {
-  return new MessageClass(client, payload)
+  const messageIns = new MessageClass(client)
+  Object.assign(messageIns, payload)
+  return messageIns
 }
