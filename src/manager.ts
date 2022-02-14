@@ -280,11 +280,12 @@ export class Manager extends EventEmitter {
     await cacheManager.setMessageRawPayload(messageId, message)
 
     const contactId = message.from
-
-    const contactIds = await cacheManager.getContactIdList()
-    const notFriend = !contactIds.find(c => c === contactId)
-    if (notFriend) {
-      this.emit('friendship', messageId)
+    if (contactId) {
+      const contactIds = await cacheManager.getContactIdList()
+      const notFriend = !contactIds.find(c => c === contactId)
+      if (notFriend) {
+        this.emit('friendship', messageId)
+      }
     }
 
     const needEmitMessage = await this.convertInviteLinkMessageToEvent(message)
