@@ -379,7 +379,7 @@ export class Manager extends EventEmitter {
         break
       case GroupNotificationTypes.DESCRIPTION:
         const roomChat = await this.getRoomChatById(roomId)
-        const roomMetadata = (roomChat as any).groupMetadata
+        const roomMetadata = roomChat.groupMetadata
         const description = roomMetadata.desc
         const msgPayload = genRoomAnnounce(notification, description)
         await this.onMessage(msgPayload)

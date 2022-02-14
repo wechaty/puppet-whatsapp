@@ -9,7 +9,7 @@ import {
 } from '../schema/whatsapp-interface.js'
 
 export function genRoomTopicEvent (notification: GroupNotification, roomPayload: WhatsAppContactPayload) {
-  const roomIdObj = notification.id as any
+  const roomIdObj = notification.id
   const roomId = roomIdObj.remote
   const roomTopicPayload: PUPPET.EventRoomTopicPayload = {
     changerId: notification.author,
@@ -22,7 +22,7 @@ export function genRoomTopicEvent (notification: GroupNotification, roomPayload:
 }
 
 export function genRoomJoinEvent (notification: GroupNotification, members: string[]) {
-  const roomIdObj = notification.id as any
+  const roomIdObj = notification.id
   const roomId = roomIdObj.remote
   const roomJoinPayload: PUPPET.EventRoomJoinPayload = {
     inviteeIdList: members,
@@ -34,7 +34,7 @@ export function genRoomJoinEvent (notification: GroupNotification, members: stri
 }
 
 export function genRoomAnnounce (notification: GroupNotification, description: string) {
-  const roomIdObj = notification.id as any
+  const roomIdObj = notification.id
   const roomId = roomIdObj.remote
   const genMessagePayload = {
     ack: 2,
@@ -56,6 +56,6 @@ export function genRoomAnnounce (notification: GroupNotification, description: s
     to: roomId,
     type: WhatsAppMessageType.TEXT,
     vCards: [],
-  } as any
+  }
   return genMessagePayload
 }
