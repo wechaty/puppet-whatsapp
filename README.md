@@ -39,7 +39,7 @@ Learn how to run Wechaty bot from <https://github.com/wechaty/wechaty-getting-st
 
 ## HISTORY
 
-### master v1.0 (Oct 30, 2021)
+### main v1.0 (Oct 30, 2021)
 
 Release 1.0 of Wechaty Puppet Whatsapp.
 
