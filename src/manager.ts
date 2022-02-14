@@ -456,18 +456,38 @@ export class Manager extends EventEmitter {
 
   private async onMediaUploaded (message: WhatsAppMessage) {
     logger.silly(`onMediaUploaded(${JSON.stringify(message)})`)
+    await this.updateImageToCache(message)
+    if (!message.hasMedia) {
+      logger.warn(`onMediaUploaded() can not upload media for message: ${message.id.id}`)
+    }
+  }
+
+  private async updateImageToCache (message: WhatsAppMessage) {
+    if (message.type === WhatsAppMessageType.IMAGE) {
+      const messageId = message.id.id
+      const cacheManager = await this.getCacheManager()
+      const messageInCache = await cacheManager.getMessageRawPayload(messageId)
+      if (messageInCache) {
+        message.body = messageInCache.body || message.body
+        await cacheManager.setMessageRawPayload(messageId, message)
+        return
+      }
+      await cacheManager.setMessageRawPayload(messageId, message)
+    }
   }
 
   private async onMessageAck (message: WhatsAppMessage) {
     logger.silly(`onMessageAck(${JSON.stringify(message)})`)
-    if (SkipTypeList.includes(message.type) && !message.hasMedia) {
+    await this.updateImageToCache(message)
+    if (SkipTypeList.includes(message.type) && !message.hasMedia && !message.body) {
+      logger.silly(`onMessageAck() do not emit this message: ${message.id.id}`)
       return
     }
     if (message.id.fromMe && message.ack >= 0) {
       const messageId = message.id.id
       const cacheManager = await this.getCacheManager()
       const messageInCache = await cacheManager.getMessageRawPayload(messageId)
-      if (messageInCache) {
+      if (messageInCache && message.type !== WhatsAppMessageType.IMAGE) {
         return
       }
       await cacheManager.setMessageRawPayload(messageId, message)
@@ -477,9 +497,7 @@ export class Manager extends EventEmitter {
 
   private async onMessageCreate (message: WhatsAppMessage) {
     logger.silly(`onMessageCreate(${JSON.stringify(message)})`)
-    if (SkipTypeList.includes(message.type)) {
-      return
-    }
+    await this.updateImageToCache(message)
     if (message.id.fromMe && message.ack >= 0) {
       const messageId = message.id.id
       const cacheManager = await this.getCacheManager()
