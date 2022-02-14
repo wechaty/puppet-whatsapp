@@ -1,3 +1,4 @@
+import type { Location } from '@juzi.bot/whatsapp-web.js'
 import type WhatsApp from '@juzi.bot/whatsapp-web.js'
 import type { SetOptional } from 'type-fest'
 
@@ -18,7 +19,7 @@ export type {
   MessageInfo,
   InviteV4Data,
   Message as WhatsAppMessage,
-  MessageId,
+  // MessageId,
   Location,
   Label,
   MessageSendOptions,
@@ -47,9 +48,20 @@ export type {
   List,
 } from '@juzi.bot/whatsapp-web.js'
 
+export interface MessageId {
+  fromMe: boolean,
+  remote: string | {
+    server: string
+    user: string
+    _serialized: string,
+  },
+  id: string,
+  _serialized: string,
+}
+
 export type WhatsAppContactPayload = {
   avatar: string
 } & Omit<WhatsApp.Contact, 'getProfilePicUrl' | 'getChat' | 'getCountryCode' | 'getFormattedNumber' | 'block' | 'unblock' | 'getAbout'>
-export type WhatsAppMessagePayload = Omit<WhatsApp.Message, 'acceptGroupV4Invite' | 'delete' | 'downloadMedia' | 'getChat' | 'getContact' | 'getMentions' | 'getQuotedMessage' | 'reply' | 'forward' | 'star' | 'unstar' | 'getInfo' | 'getOrder' | 'getPayment' | 'broadcast' | 'location' | 'orderId'>
+export type WhatsAppMessagePayload = {mentionedIds: string[], location?:Location, orderId?: string, id: MessageId} & Omit<WhatsApp.Message, 'id' | 'orderId' | 'location' | 'mentionedIds' | 'acceptGroupV4Invite' | 'delete' | 'downloadMedia' | 'getChat' | 'getContact' | 'getMentions' | 'getQuotedMessage' | 'reply' | 'forward' | 'star' | 'unstar' | 'getInfo' | 'getOrder' | 'getPayment'>
 
 export type GroupChat = SetOptional<WhatsApp.GroupChat, 'owner'>
