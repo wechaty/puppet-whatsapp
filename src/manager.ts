@@ -325,7 +325,7 @@ export class Manager extends EventEmitter {
 
   private async onRoomJoin (notification: GroupNotification) {
     logger.info(`onRoomJoin(${JSON.stringify(notification)})`)
-    const roomId = (notification.id as any).remote
+    const roomId = notification.id.remote
     const roomJoinPayload: PUPPET.EventRoomJoinPayload = {
       inviteeIdList: notification.recipientIds,
       inviterId: notification.author,
@@ -339,7 +339,7 @@ export class Manager extends EventEmitter {
 
   private async onRoomLeave (notification: GroupNotification) {
     logger.info(`onRoomLeave(${JSON.stringify(notification)})`)
-    const roomId = (notification.id as any).remote
+    const roomId = notification.id.remote
     const roomJoinPayload: PUPPET.EventRoomLeavePayload = {
       removeeIdList: notification.recipientIds,
       removerId: notification.author,
@@ -353,7 +353,7 @@ export class Manager extends EventEmitter {
 
   private async onRoomUpdate (notification: GroupNotification) {
     logger.info(`onRoomUpdate(${JSON.stringify(notification)})`)
-    const roomId = (notification.id as any).remote
+    const roomId = notification.id.remote
     const cacheManager = await this.getCacheManager()
     const roomInCache = await cacheManager.getContactOrRoomRawPayload(roomId)
 
@@ -379,7 +379,8 @@ export class Manager extends EventEmitter {
     }
     if (notification.type === GroupNotificationTypes.DESCRIPTION) {
       const roomChat = await this.getRoomChatById(roomId)
-      const roomMetadata = (roomChat as any).groupMetadata
+      logger.info(`GroupNotificationTypes.DESCRIPTION roomChat: ${JSON.stringify(roomChat)}`)
+      const roomMetadata = roomChat.groupMetadata
       const description = roomMetadata.desc
       logger.info(`GroupNotificationTypes.DESCRIPTION changed: ${description}`)
       const genMessagePayload = {
