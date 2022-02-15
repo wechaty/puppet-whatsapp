@@ -88,22 +88,22 @@ export async function messageImage (this: PuppetWhatsApp, messageId: string, ima
     logger.error('Message %s does not contain any media', messageId)
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} does not contain any media`)
   }
-  if (!msg.body) {
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_IMAGE_WITHOUT_BODY, `Message ${messageId} does not contain thumbnail data`)
-  }
   try {
     switch (imageType) {
-      case PUPPET.ImageType.Thumbnail:
-        return FileBox.fromBase64(msg.body, 'thumbnail.jpg')
-      case PUPPET.ImageType.Artwork:
       case PUPPET.ImageType.HD:
+      case PUPPET.ImageType.Artwork:
         if (msg.hasMedia) {
           return downloadMedia.call(this, msg)
         } else {
           return FileBox.fromBase64(msg.body, 'thumbnail.jpg')
         }
+      case PUPPET.ImageType.Thumbnail:
       default:
-        return FileBox.fromBase64(msg.body, 'thumbnail.jpg')
+        if (msg.body) {
+          return FileBox.fromBase64(msg.body, 'thumbnail.jpg')
+        } else {
+          return downloadMedia.call(this, msg)
+        }
     }
   } catch (error) {
     throw new WAError(WA_ERROR_TYPE.ERR_MSG_IMAGE, `Message ${messageId} does not contain any media`)
