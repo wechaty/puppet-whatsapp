@@ -280,7 +280,7 @@ export class Manager extends EventEmitter {
     await cacheManager.setMessageRawPayload(messageId, message)
 
     const contactId = message.from
-    if (contactId) {
+    if (contactId && isContactId(contactId)) {
       const contactIds = await cacheManager.getContactIdList()
       const notFriend = !contactIds.find(c => c === contactId)
       if (notFriend) {
