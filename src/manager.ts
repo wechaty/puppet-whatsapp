@@ -49,6 +49,7 @@ import type {
   BatteryInfo,
   WAStateType,
   PrivateChat,
+  WhatsAppMessagePayload,
 } from './schema/whatsapp-type.js'
 import {
   genRoomAnnounce,
@@ -258,7 +259,7 @@ export class Manager extends EventEmitter {
     this.emit('logout', whatsapp.info.wid._serialized, reason as string)
   }
 
-  private async onMessage (message: WhatsAppMessage) {
+  private async onMessage (message: WhatsAppMessage | WhatsAppMessagePayload) {
     logger.info(`onMessage(${JSON.stringify(message)})`)
     // @ts-ignore
     if (
@@ -293,7 +294,7 @@ export class Manager extends EventEmitter {
     }
   }
 
-  private async convertInviteLinkMessageToEvent (message: WhatsAppMessage): Promise<boolean> {
+  private async convertInviteLinkMessageToEvent (message: WhatsAppMessage | WhatsAppMessagePayload): Promise<boolean> {
     const cacheManager = await this.getCacheManager()
     if (message.type === WhatsAppMessageType.GROUP_INVITE) {
       const inviteCode = message.inviteV4?.inviteCode
@@ -332,7 +333,7 @@ export class Manager extends EventEmitter {
 
   private async onRoomJoin (notification: GroupNotification) {
     logger.info(`onRoomJoin(${JSON.stringify(notification)})`)
-    const roomId = (notification.id as any).remote
+    const roomId = notification.id.remote
     const roomJoinPayload: PUPPET.EventRoomJoinPayload = {
       inviteeIdList: notification.recipientIds,
       inviterId: notification.author,
@@ -346,7 +347,7 @@ export class Manager extends EventEmitter {
 
   private async onRoomLeave (notification: GroupNotification) {
     logger.info(`onRoomLeave(${JSON.stringify(notification)})`)
-    const roomId = (notification.id as any).remote
+    const roomId = notification.id.remote
     const roomJoinPayload: PUPPET.EventRoomLeavePayload = {
       removeeIdList: notification.recipientIds,
       removerId: notification.author,
@@ -360,7 +361,7 @@ export class Manager extends EventEmitter {
 
   private async onRoomUpdate (notification: GroupNotification) {
     logger.info(`onRoomUpdate(${JSON.stringify(notification)})`)
-    const roomId = (notification.id as any).remote
+    const roomId = notification.id.remote
     const cacheManager = await this.getCacheManager()
     let roomPayload = await cacheManager.getContactOrRoomRawPayload(roomId)
 
@@ -380,7 +381,7 @@ export class Manager extends EventEmitter {
         break
       case GroupNotificationTypes.DESCRIPTION:
         const roomChat = await this.getRoomChatById(roomId)
-        const roomMetadata = (roomChat as any).groupMetadata
+        const roomMetadata = roomChat.groupMetadata
         const description = roomMetadata.desc
         const msgPayload = genRoomAnnounce(notification, description)
         await this.onMessage(msgPayload)

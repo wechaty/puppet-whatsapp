@@ -10,7 +10,6 @@ import WAError from '../exceptions/whatsapp-error.js'
 import type {
   WhatsAppContactPayload,
   InviteV4Data,
-  WhatsAppMessage,
   WhatsAppMessagePayload,
 } from '../schema/whatsapp-type.js'
 import { PRE } from '../config.js'
@@ -70,7 +69,7 @@ export class CacheManager {
     return cache.get(id)
   }
 
-  public async setMessageRawPayload (id: string, payload: WhatsAppMessage): Promise<void> {
+  public async setMessageRawPayload (id: string, payload: WhatsAppMessagePayload): Promise<void> {
     const cache = this.getMessageCache()
     // @ts-ignore client is in implementation but not in interface
     const { client, ...rest } = payload

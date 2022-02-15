@@ -10,7 +10,7 @@ export type {
   ClientSession,
   BatteryInfo,
   CreateGroupResult,
-  GroupNotification,
+  // GroupNotification,
   ChatTypes,
   Events,
   MessageAck as MessageAckType,
@@ -58,10 +58,22 @@ export interface MessageId {
   id: string,
   _serialized: string,
 }
-
 export type WhatsAppContactPayload = {
   avatar: string
 } & Omit<WhatsApp.Contact, 'getProfilePicUrl' | 'getChat' | 'getCountryCode' | 'getFormattedNumber' | 'block' | 'unblock' | 'getAbout'>
 export type WhatsAppMessagePayload = {mentionedIds: string[], location?:Location, orderId?: string, id: MessageId} & Omit<WhatsApp.Message, 'id' | 'orderId' | 'location' | 'mentionedIds' | 'acceptGroupV4Invite' | 'delete' | 'downloadMedia' | 'getChat' | 'getContact' | 'getMentions' | 'getQuotedMessage' | 'reply' | 'forward' | 'star' | 'unstar' | 'getInfo' | 'getOrder' | 'getPayment'>
+export interface GroupMetadata {
+  desc: string
+  owner: WhatsApp.ContactId
+  participants: WhatsApp.GroupParticipant[]
+}
+export type GroupChat = {groupMetadata:GroupMetadata} & SetOptional<WhatsApp.GroupChat, 'owner'>
+export interface GroupNotificationId {
+  fromMe: boolean,
+  remote: string,
+  id: string,
+  participant?: string,
+  _serialized: string,
+}
 
-export type GroupChat = SetOptional<WhatsApp.GroupChat, 'owner'>
+export type GroupNotification = {id: GroupNotificationId} & Omit<WhatsApp.GroupNotification, 'id'>
