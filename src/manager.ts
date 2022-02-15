@@ -451,7 +451,7 @@ export class Manager extends EventEmitter {
   }
 
   /**
-   * This event only for message which sent by bot (web / phone)
+   * This event only for the message which sent by bot (web / phone)
    * @param {WhatsAppMessage} message message detail info
    * @returns
    */
@@ -472,8 +472,19 @@ export class Manager extends EventEmitter {
     }
   }
 
+  /**
+   * This event only for the message which sent by bot (web / phone) and to the bot self
+   * @param {WhatsAppMessage} message message detail info
+   * @returns
+   */
   private async onMessageCreate (message: WhatsAppMessage) {
     logger.silly(`onMessageCreate(${JSON.stringify(message)})`)
+    if (message.id.fromMe && message.to === this.getBotId()) {
+      const messageId = message.id.id
+      const cacheManager = await this.getCacheManager()
+      await cacheManager.setMessageRawPayload(messageId, message)
+      this.emit('message', { messageId })
+    }
   }
 
   /**
