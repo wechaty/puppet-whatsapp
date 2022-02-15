@@ -34,7 +34,7 @@ export async function friendshipSearchPhone (
   phone: string,
 ): Promise<null | string> {
   logger.verbose('friendshipSearchPhone(%s)', phone)
-  return phone
+  return `${phone}@c.us`
 }
 
 export async function friendshipSearchWeixin (
