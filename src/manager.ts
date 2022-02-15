@@ -13,7 +13,6 @@ import {
   MEMORY_SLOT,
   MIN_BATTERY_VALUE_FOR_LOGOUT,
   PRE,
-  SkipTypeList,
 } from './config.js'
 import { WA_ERROR_TYPE } from './exceptions/error-type.js'
 import WAError from './exceptions/whatsapp-error.js'
@@ -21,6 +20,7 @@ import {
   MessageTypes as WhatsAppMessageType,
   GroupNotificationTypes,
   WAState,
+  MessageAck,
 } from './schema/whatsapp-interface.js'
 import { withPrefix } from './logger/index.js'
 import {
@@ -181,7 +181,7 @@ export class Manager extends EventEmitter {
     this.botId = whatsapp.info.wid._serialized
     const contactList: WhatsAppContact[] = await whatsapp.getContacts()
     const contactOrRoomList = contactList.filter(c => c.id.server !== 'broadcast')
-
+    logger.info(`WhatsApp Client Version: ${await whatsapp.getWWebVersion()}`)
     await this.onLogin(contactOrRoomList)
     await this.onReady(contactOrRoomList)
   }
@@ -434,9 +434,6 @@ export class Manager extends EventEmitter {
   private async onMediaUploaded (message: WhatsAppMessage) {
     logger.silly(`onMediaUploaded(${JSON.stringify(message)})`)
     await this.createOrUpdateImageMessage(message)
-    if (!message.hasMedia) {
-      logger.warn(`onMediaUploaded() can not upload media for message: ${message.id.id}`)
-    }
   }
 
   private async createOrUpdateImageMessage (message: WhatsAppMessage) {
@@ -453,39 +450,38 @@ export class Manager extends EventEmitter {
     }
   }
 
+  /**
+   * This event only for the message which sent by bot (web / phone)
+   * @param {WhatsAppMessage} message message detail info
+   * @returns
+   */
   private async onMessageAck (message: WhatsAppMessage) {
     logger.silly(`onMessageAck(${JSON.stringify(message)})`)
-    await this.createOrUpdateImageMessage(message)
-    if (SkipTypeList.includes(message.type) && !message.hasMedia && !message.body) {
-      logger.silly(`onMessageAck() do not emit this message: ${message.id.id}`)
-      return
-    }
-    if (message.id.fromMe && message.ack >= 0) {
+
+    /**
+     * if message ack equal MessageAck.ACK_DEVICE, we could regard it as has already send success.
+     *
+     * FIXME: if the ack is not consecutive, and without MessageAck.ACK_DEVICE, then we could not receive this message.
+     */
+    if (message.id.fromMe && message.ack === MessageAck.ACK_DEVICE) {
+      logger.info(`onMessageAck(${JSON.stringify(message)})`)
       const messageId = message.id.id
       const cacheManager = await this.getCacheManager()
-      const messageInCache = await cacheManager.getMessageRawPayload(messageId)
-      if (messageInCache && message.type !== WhatsAppMessageType.IMAGE) {
-        return
-      }
       await cacheManager.setMessageRawPayload(messageId, message)
       this.emit('message', { messageId })
     }
   }
 
+  /**
+   * This event only for the message which sent by bot (web / phone) and to the bot self
+   * @param {WhatsAppMessage} message message detail info
+   * @returns
+   */
   private async onMessageCreate (message: WhatsAppMessage) {
     logger.silly(`onMessageCreate(${JSON.stringify(message)})`)
-    await this.createOrUpdateImageMessage(message)
-    if (SkipTypeList.includes(message.type)) {
-      logger.silly(`onMessageCreate() do not emit this message: ${message.id.id}`)
-      return
-    }
-    if (message.id.fromMe && message.ack >= 0) {
+    if (message.id.fromMe && message.to === this.getBotId()) {
       const messageId = message.id.id
       const cacheManager = await this.getCacheManager()
-      const messageInCache = await cacheManager.getMessageRawPayload(messageId)
-      if (messageInCache) {
-        return
-      }
       await cacheManager.setMessageRawPayload(messageId, message)
       this.emit('message', { messageId })
     }
