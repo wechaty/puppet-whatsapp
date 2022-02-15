@@ -42,7 +42,7 @@ export function genRoomAnnounce (notification: GroupNotification, description: s
     body: description,
     broadcast: false,
     forwardingScore: 0,
-    from: roomIdObj.participant || '',
+    from: roomIdObj.participant || notification.author,
     fromMe: roomIdObj.fromMe,
     hasMedia: false,
     hasQuotedMsg: false,
