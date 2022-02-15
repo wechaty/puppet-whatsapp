@@ -34,12 +34,7 @@ export async function friendshipSearchPhone (
   phone: string,
 ): Promise<null | string> {
   logger.verbose('friendshipSearchPhone(%s)', phone)
-  const user = await this.manager.getContactById(phone)
-  if (user.isMyContact) {
-    return user.id._serialized
-  } else {
-    return null
-  }
+  return `${phone}@c.us`
 }
 
 export async function friendshipSearchWeixin (
