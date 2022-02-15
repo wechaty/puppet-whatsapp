@@ -94,7 +94,7 @@ export class Manager extends EventEmitter {
   public override emit (event: 'scan', status: PUPPET.ScanStatus, url?: string): boolean
   public override emit (event: 'login', userId: string): boolean
   public override emit (event: 'logout', userId: string, message: string): boolean
-  public override emit (event: 'friendship', id: string): boolean
+  public override emit (event: 'friendship', payload: PUPPET.EventFriendshipPayload): boolean
   public override emit (event: 'reset', reason: string): boolean
   public override emit (event: 'error', error: string): boolean
   public override emit (event: 'heartbeat', data: string): boolean
@@ -284,7 +284,7 @@ export class Manager extends EventEmitter {
       const contactIds = await cacheManager.getContactIdList()
       const notFriend = !contactIds.find(c => c === contactId)
       if (notFriend) {
-        this.emit('friendship', messageId)
+        this.emit('friendship', { friendshipId: messageId })
       }
     }
 
