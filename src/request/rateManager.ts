@@ -87,7 +87,7 @@ export class RateManager extends EventEmitter {
 
     const funcObj = queue.shift()
     if (!funcObj) {
-      throw new WAError(WA_ERROR_TYPE.ERR_RATE_FUNCTION_NOT_FOUND, `can not get funcObj from queue with id: ${queueId}.`)
+      throw WAError(WA_ERROR_TYPE.ERR_RATE_FUNCTION_NOT_FOUND, `can not get funcObj from queue with id: ${queueId}.`)
     }
     const { delayAfter, delayBefore, func, resolve, reject, uniqueKey } = funcObj
     await sleep(delayBefore)

@@ -70,15 +70,15 @@ export function parseVcard (body: string): IVcard {
   const lines = body.split('\n')
   // vcard body must be at least 3 lines, 'BEGIN', 'VERSION' and 'END'
   if (lines.length < 2) {
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_CONTACT, `Invalid Vcard body: invalid length, detail: ${body}`)
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_CONTACT, `Invalid Vcard body: invalid length, detail: ${body}`)
   }
   if (lines[0] !== 'BEGIN:VCARD') {
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_CONTACT, `Invalid Vcard body: begin not found, detail: ${body}`)
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_CONTACT, `Invalid Vcard body: begin not found, detail: ${body}`)
   }
 
   const versionMatch = VersionPattern.exec(lines[1]!)
   if (!versionMatch) {
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_CONTACT, `Invalid Vcard body: version field not found, detail: ${body}`)
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_CONTACT, `Invalid Vcard body: version field not found, detail: ${body}`)
   }
   const result: IVcard = {
     TEL: [],
@@ -118,7 +118,7 @@ export function parseVcard (body: string): IVcard {
 
   if (result.TEL!.length !== 1) {
     logger.error(`This card contains more than 1 phone number, detail: ${JSON.stringify(result.TEL)}`)
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_CONTACT, `This card contains more than 1 phone number, detail: ${JSON.stringify(result.TEL)}`)
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_CONTACT, `This card contains more than 1 phone number, detail: ${JSON.stringify(result.TEL)}`)
   }
 
   return result

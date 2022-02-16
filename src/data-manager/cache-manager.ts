@@ -27,7 +27,7 @@ export class CacheManager {
 
   public static get Instance () {
     if (!this._instance) {
-      throw new WAError(WA_ERROR_TYPE.ERR_NO_CACHE, 'no instance')
+      throw WAError(WA_ERROR_TYPE.ERR_NO_CACHE, 'no instance')
     }
     return this._instance
   }
@@ -84,7 +84,7 @@ export class CacheManager {
 
   private getMessageCache () {
     if (!this.cacheMessageRawPayload) {
-      throw new WAError(WA_ERROR_TYPE.ERR_NO_CACHE, 'getMessageCache() has no cache')
+      throw WAError(WA_ERROR_TYPE.ERR_NO_CACHE, 'getMessageCache() has no cache')
     }
     return this.cacheMessageRawPayload
   }
@@ -113,7 +113,7 @@ export class CacheManager {
 
   private getContactOrRoomCache () {
     if (!this.cacheContactOrRoomRawPayload) {
-      throw new WAError(WA_ERROR_TYPE.ERR_NO_CACHE, 'getContactOrRoomCache() has no cache')
+      throw WAError(WA_ERROR_TYPE.ERR_NO_CACHE, 'getContactOrRoomCache() has no cache')
     }
     return this.cacheContactOrRoomRawPayload
   }
@@ -195,7 +195,7 @@ export class CacheManager {
 
   private getRoomMemberCache () {
     if (!this.cacheRoomMemberIdList) {
-      throw new WAError(WA_ERROR_TYPE.ERR_NO_CACHE, 'getRoomMemberCache() has no cache')
+      throw WAError(WA_ERROR_TYPE.ERR_NO_CACHE, 'getRoomMemberCache() has no cache')
     }
     return this.cacheRoomMemberIdList
   }
@@ -222,7 +222,7 @@ export class CacheManager {
 
   private getRoomInvitationCache () {
     if (!this.cacheRoomInvitationRawPayload) {
-      throw new WAError(WA_ERROR_TYPE.ERR_NO_CACHE, 'getRoomInvitationCache() has no cache')
+      throw WAError(WA_ERROR_TYPE.ERR_NO_CACHE, 'getRoomInvitationCache() has no cache')
     }
     return this.cacheRoomInvitationRawPayload
   }
@@ -244,7 +244,7 @@ export class CacheManager {
 
   private getLatestMessageTimestampForChatCache () {
     if (!this.cacheLatestMessageTimestampForChat) {
-      throw new WAError(WA_ERROR_TYPE.ERR_NO_CACHE, 'getLatestMessageTimestampForChatCache() has no cache')
+      throw WAError(WA_ERROR_TYPE.ERR_NO_CACHE, 'getLatestMessageTimestampForChatCache() has no cache')
     }
     return this.cacheLatestMessageTimestampForChat
   }
@@ -260,7 +260,7 @@ export class CacheManager {
   ): Promise<void> {
 
     if (this.cacheMessageRawPayload) {
-      throw new WAError(WA_ERROR_TYPE.ERR_INIT, 'cacheMessageRawPayload does not exist.')
+      throw WAError(WA_ERROR_TYPE.ERR_INIT, 'cacheMessageRawPayload does not exist.')
     }
 
     const baseDir = path.join(

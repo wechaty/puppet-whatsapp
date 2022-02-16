@@ -26,11 +26,11 @@ export function parserMessageRawPayload (messagePayload: WhatsAppMessagePayload)
   }
 
   if (!fromId) {
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, 'empty fromId!')
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, 'empty fromId!')
   }
 
   if (!roomId && !toId) {
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, 'empty roomId and empty toId!')
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, 'empty roomId and empty toId!')
   }
 
   return {

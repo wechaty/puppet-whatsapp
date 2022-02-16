@@ -82,7 +82,7 @@ export async function contactAvatar (this: PuppetWhatsApp, contactId: string, fi
 export async function contactRawPayload (this: PuppetWhatsApp, id: string): Promise<WhatsAppContactPayload> {
   logger.verbose('contactRawPayload(%s)', id)
   if (!isContactId(id)) {
-    throw new WAError(WA_ERROR_TYPE.ERR_CONTACT_NOT_FOUND, `please check contact id: ${id} again.`)
+    throw WAError(WA_ERROR_TYPE.ERR_CONTACT_NOT_FOUND, `please check contact id: ${id} again.`)
   }
   const cacheManager = await this.manager.getCacheManager()
   const contact = await cacheManager.getContactOrRoomRawPayload(id)
@@ -125,6 +125,6 @@ export async function contactRawPayloadParser (this: PuppetWhatsApp, contactPayl
     }
   } catch (error) {
     logger.error(`contactRawPayloadParser(${contactPayload.id._serialized}) failed, error message: ${(error as Error).message}`)
-    throw new WAError(WA_ERROR_TYPE.ERR_CONTACT_NOT_FOUND, `contactRawPayloadParser(${contactPayload.id._serialized}) failed, error message: ${(error as Error).message}`)
+    throw WAError(WA_ERROR_TYPE.ERR_CONTACT_NOT_FOUND, `contactRawPayloadParser(${contactPayload.id._serialized}) failed, error message: ${(error as Error).message}`)
   }
 }

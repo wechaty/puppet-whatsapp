@@ -30,20 +30,20 @@ export async function messageContact (this: PuppetWhatsApp, messageId: string): 
   const msg = await cacheManager.getMessageRawPayload(messageId)
   if (!msg) {
     logger.error('Message %s not found', messageId)
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} not found`)
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} not found`)
   }
   if (msg.type !== WhatsAppMessageType.CONTACT_CARD) {
     logger.error('Message %s is not contact type', messageId)
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} is not contact type`)
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} is not contact type`)
   }
   if (!msg.vCards[0]) {
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} has no vCards info, detail: ${JSON.stringify(msg)}`)
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} has no vCards info, detail: ${JSON.stringify(msg)}`)
   }
   try {
     const vcard = parseVcard(msg.vCards[0])
     return vcard.TEL![0]!.waid
   } catch (error) {
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_CONTACT, `Can not parse contact card from message: ${messageId}, error: ${(error as Error).message}`)
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_CONTACT, `Can not parse contact card from message: ${messageId}, error: ${(error as Error).message}`)
   }
 }
 
@@ -58,7 +58,7 @@ export async function messageRecall (this: PuppetWhatsApp, messageId: string): P
   const msg = await cacheManager.getMessageRawPayload(messageId)
   if (!msg) {
     logger.error('Message %s not found', messageId)
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} not found`)
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} not found`)
   }
   const msgObj = convertMessagePayloadToClass(this.manager.getWhatsApp(), msg)
   try {
@@ -82,11 +82,11 @@ export async function messageImage (this: PuppetWhatsApp, messageId: string, ima
   const msg = await cacheManager.getMessageRawPayload(messageId)
   if (!msg) {
     logger.error('Message %s not found', messageId)
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} Not Found`)
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} Not Found`)
   }
   if (msg.type !== WhatsAppMessageType.IMAGE || (!msg.hasMedia && !msg.body)) {
     logger.error('Message %s does not contain any media', messageId)
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} does not contain any media`)
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} does not contain any media`)
   }
   try {
     switch (imageType) {
@@ -106,7 +106,7 @@ export async function messageImage (this: PuppetWhatsApp, messageId: string, ima
         }
     }
   } catch (error) {
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_IMAGE, `Message ${messageId} does not contain any media`)
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_IMAGE, `Message ${messageId} does not contain any media`)
   }
 }
 
@@ -121,16 +121,16 @@ export async function messageFile (this: PuppetWhatsApp, messageId: string): Pro
   const msg = await cacheManager.getMessageRawPayload(messageId)
   if (!msg) {
     logger.error('Message %s not found', messageId)
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} Not Found`)
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} Not Found`)
   }
   if (!msg.hasMedia) {
     logger.error('Message %s does not contain any media', messageId)
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} does not contain any media`)
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} does not contain any media`)
   }
   try {
     return downloadMedia.call(this, msg)
   } catch (error) {
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_FILE, `Message ${messageId} does not contain any media`)
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_FILE, `Message ${messageId} does not contain any media`)
   }
 }
 
@@ -154,11 +154,11 @@ export async function messageUrl (this: PuppetWhatsApp, messageId: string): Prom
   const msg = await cacheManager.getMessageRawPayload(messageId)
   if (!msg) {
     logger.error('Message %s not found', messageId)
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} Not Found`)
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} Not Found`)
   }
   if (msg.links.length === 0) {
     logger.error('Message %s is does not contain links', messageId)
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} does not contain any link message.`)
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} does not contain any link message.`)
   }
   try {
     return {
@@ -167,7 +167,7 @@ export async function messageUrl (this: PuppetWhatsApp, messageId: string): Prom
       url: msg.links[0]?.link || msg.body,
     }
   } catch (error) {
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_URL_LINK, `Get link message: ${messageId} failed, error: ${(error as Error).message}`)
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_URL_LINK, `Get link message: ${messageId} failed, error: ${(error as Error).message}`)
   }
 }
 
@@ -241,13 +241,13 @@ export async function messageForward (this: PuppetWhatsApp, conversationId: stri
   const msg = await cacheManager.getMessageRawPayload(messageId)
   if (!msg) {
     logger.error('Message %s not found', messageId)
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} not found`)
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} not found`)
   }
   const msgObj = convertMessagePayloadToClass(this.manager.getWhatsApp(), msg)
   try {
     await msgObj.forward(conversationId)
   } catch (error) {
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_FORWARD, `Forward message: ${messageId} failed, error: ${(error as Error).message}`)
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_FORWARD, `Forward message: ${messageId} failed, error: ${(error as Error).message}`)
   }
 }
 
@@ -256,7 +256,7 @@ export async function messageRawPayload (this: PuppetWhatsApp, id: string): Prom
   const cacheManager = await this.manager.getCacheManager()
   const msg = await cacheManager.getMessageRawPayload(id)
   if (!msg) {
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Can not find this message: ${id}`)
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Can not find this message: ${id}`)
   }
   return msg
 }
