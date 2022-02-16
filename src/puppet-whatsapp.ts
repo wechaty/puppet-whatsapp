@@ -41,6 +41,7 @@ import type {
   ClientOptions,
   WhatsAppClientType,
 } from './schema/whatsapp-type.js'
+import { RequestPool } from './request/requestPool.js'
 
 process.on('uncaughtException', (e) => {
   console.error('process error is:', e.message)
