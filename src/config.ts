@@ -64,5 +64,7 @@ type LangCodes = keyof typeof STRINGS
 export const LANGUAGE: LangCodes = process.env['LANGUAGE'] as LangCodes | undefined || 'zh_CN'
 
 export const DEFAULT_TIMEOUT = {
-  MESSAGE_SEND: 15 * 60 * 1000, // should allow long waiting time since connection breaks a log (maybe even no timeout limit?)
+  MESSAGE_SEND: 20 * 1000, // should allow long waiting time since connection breaks a log (maybe even no timeout limit?)
+  MESSAGE_SEND_FILE: 15 * 60 * 1000,
+  MESSAGE_SEND_TEXT: 20 * 1000,
 }
