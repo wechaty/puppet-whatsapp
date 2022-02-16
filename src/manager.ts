@@ -415,16 +415,18 @@ export class Manager extends EventEmitter {
 
   private async onRoomLeave (notification: GroupNotification) {
     logger.info(`onRoomLeave(${JSON.stringify(notification)})`)
-    const roomId = notification.id.remote
-    const roomJoinPayload: PUPPET.EventRoomLeavePayload = {
+    const { id, recipientIds } = notification
+    const roomId = id.remote
+    const isLeaveSelf = id.fromMe && recipientIds.length === 1 &&  recipientIds[0] === this.getBotId()
+    const roomLeavePayload: PUPPET.EventRoomLeavePayload = {
       removeeIdList: notification.recipientIds,
-      removerId: notification.author,
+      removerId: notification.author || isLeaveSelf ? this.getBotId() : '',
       roomId,
       timestamp: notification.timestamp,
     }
     const cacheManager = await this.getCacheManager()
     await cacheManager.removeRoomMemberFromList(roomId, notification.recipientIds)
-    this.emit('room-leave', roomJoinPayload)
+    this.emit('room-leave', roomLeavePayload)
   }
 
   private async onRoomUpdate (notification: GroupNotification) {
