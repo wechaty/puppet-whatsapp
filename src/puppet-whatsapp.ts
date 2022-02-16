@@ -177,6 +177,9 @@ class PuppetWhatsApp extends PUPPET.Puppet {
 
     this.id = undefined
 
+    const requestPool = RequestPool.Instance
+    requestPool.clearPool()
+
     this.emit('logout', { contactId: wxid, data: message })
   }
 

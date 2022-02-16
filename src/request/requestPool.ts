@@ -36,4 +36,8 @@ export class RequestPool {
     delete this.poolMap[id]
   }
 
+  public clearPool () {
+    this.poolMap = {}
+  }
+
 }
