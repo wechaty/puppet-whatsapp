@@ -13,13 +13,15 @@ export class RequestPool {
     return this._instance
   }
 
-  public pushRequest (id: string, timeout: number) {
+  public pushRequest (id: string, timeout?: number) {
     const callback = new Promise<void>((resolve, reject) => {
       if (!this.poolMap[id]) {
         this.poolMap[id] = []
       }
       this.poolMap[id]!.push(resolve)
-      setTimeout(reject, timeout)
+      if (timeout) {
+        setTimeout(reject, timeout)
+      }
     }).catch(() => {
       delete this.poolMap[id]
       throw WAError(WA_ERROR_TYPE.ERR_REQUEST_TIMEOUT, `TIMEOUT when processing request :${id}`)
