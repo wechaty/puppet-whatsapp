@@ -15,7 +15,7 @@ import {
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import { withPrefix } from '../logger/index.js'
-import { PRE } from '../config.js'
+import { DEFAULT_TIMEOUT, PRE } from '../config.js'
 import { RequestPool } from '../request/requestPool.js'
 
 const logger = withPrefix(`${PRE} message`)
@@ -181,7 +181,7 @@ export async function messageMiniProgram (this: PuppetWhatsApp, messageId: strin
   return PUPPET.throwUnsupportedError()
 }
 
-export async function messageSend (this: PuppetWhatsApp, conversationId: string, content: MessageContent, options?: MessageSendOptions): Promise<string> {
+export async function messageSend (this: PuppetWhatsApp, conversationId: string, content: MessageContent, options?: MessageSendOptions, timeout = DEFAULT_TIMEOUT.MESSAGE_SEND): Promise<string> {
   logger.info('messageSend(%s, %s)', conversationId, typeof content)
 
   const msg = await this.manager.sendMessage(conversationId, content, options)
@@ -190,7 +190,7 @@ export async function messageSend (this: PuppetWhatsApp, conversationId: string,
   await cacheManager.setMessageRawPayload(messageId, msg)
 
   const requestPool = RequestPool.Instance
-  await requestPool.pushRequest(messageId, 10 * 1000)
+  await requestPool.pushRequest(messageId, timeout)
   return messageId
 }
 
