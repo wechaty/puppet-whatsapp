@@ -15,7 +15,8 @@ import {
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import { withPrefix } from '../logger/index.js'
-import { PRE } from '../config.js'
+import { DEFAULT_TIMEOUT, PRE } from '../config.js'
+import { RequestPool } from '../request/requestPool.js'
 
 const logger = withPrefix(`${PRE} message`)
 
@@ -180,13 +181,16 @@ export async function messageMiniProgram (this: PuppetWhatsApp, messageId: strin
   return PUPPET.throwUnsupportedError()
 }
 
-export async function messageSend (this: PuppetWhatsApp, conversationId: string, content: MessageContent, options?: MessageSendOptions): Promise<string> {
+export async function messageSend (this: PuppetWhatsApp, conversationId: string, content: MessageContent, options?: MessageSendOptions, timeout = DEFAULT_TIMEOUT.MESSAGE_SEND): Promise<string> {
   logger.info('messageSend(%s, %s)', conversationId, typeof content)
 
   const msg = await this.manager.sendMessage(conversationId, content, options)
   const messageId = msg.id.id
   const cacheManager = await this.manager.getCacheManager()
   await cacheManager.setMessageRawPayload(messageId, msg)
+
+  const requestPool = RequestPool.Instance
+  await requestPool.pushRequest(messageId, timeout)
   return messageId
 }
 
@@ -196,9 +200,9 @@ export async function messageSendText (this: PuppetWhatsApp, conversationId: str
     const contacts = await Promise.all(mentions.map((v) => (
       this.manager.getContactById(v)
     )))
-    return messageSend.call(this, conversationId, text, { mentions: contacts })
+    return messageSend.call(this, conversationId, text, { mentions: contacts }, DEFAULT_TIMEOUT.MESSAGE_SEND_TEXT)
   } else {
-    return messageSend.call(this, conversationId, text)
+    return messageSend.call(this, conversationId, text, {}, DEFAULT_TIMEOUT.MESSAGE_SEND_TEXT)
   }
 }
 
@@ -206,14 +210,14 @@ export async function messageSendFile (this: PuppetWhatsApp, conversationId: str
   logger.info('messageSendFile(%s, %s)', conversationId, file.name)
   await file.ready()
   const msgContent = new MessageMedia(file.mimeType!, await file.toBase64(), file.name)
-  return messageSend.call(this, conversationId, msgContent, options)
+  return messageSend.call(this, conversationId, msgContent, options, DEFAULT_TIMEOUT.MESSAGE_SEND_FILE)
 }
 
 export async function messageSendContact (this: PuppetWhatsApp, conversationId: string, contactId: string, options?: MessageSendOptions): Promise<void> {
   logger.info('messageSendContact(%s, %s)', conversationId, contactId)
 
   const contact = await this.manager.getContactById(contactId)
-  await messageSend.call(this, conversationId, contact, options)
+  await messageSend.call(this, conversationId, contact, options, DEFAULT_TIMEOUT.MESSAGE_SEND_TEXT)
 }
 
 export async function messageSendUrl (
@@ -222,7 +226,7 @@ export async function messageSendUrl (
   urlLinkPayload: PUPPET.UrlLinkPayload,
 ): Promise<string> {
   logger.info('messageSendUrl(%s, %s)', conversationId, JSON.stringify(urlLinkPayload))
-  return messageSend.call(this, conversationId, urlLinkPayload.url)
+  return messageSend.call(this, conversationId, urlLinkPayload.url, {}, DEFAULT_TIMEOUT.MESSAGE_SEND_TEXT)
 }
 
 export async function messageSendMiniProgram (this: PuppetWhatsApp, conversationId: string, miniProgramPayload: PUPPET.MiniProgramPayload): Promise<void> {

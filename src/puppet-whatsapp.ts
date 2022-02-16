@@ -41,6 +41,7 @@ import type {
   ClientOptions,
   WhatsAppClientType,
 } from './schema/whatsapp-type.js'
+import { RequestPool } from './request/requestPool.js'
 
 process.on('uncaughtException', (e) => {
   console.error('process error is:', e.message)
@@ -175,6 +176,9 @@ class PuppetWhatsApp extends PUPPET.Puppet {
     logger.info(`${EventName.LOGOUT}, ${wxid}`)
 
     this.id = undefined
+
+    const requestPool = RequestPool.Instance
+    requestPool.clearPool()
 
     this.emit('logout', { contactId: wxid, data: message })
   }
