@@ -58,6 +58,7 @@ export class CacheManager {
   private cacheContactOrRoomRawPayload?: FlashStore<string, WhatsAppContactPayload>
   private cacheRoomMemberIdList?: FlashStore<string, string[]>
   private cacheRoomInvitationRawPayload?: FlashStore<string, Partial<InviteV4Data>>
+  private cacheLatestMessageTimestampForChat?: FlashStore<string, number>
 
   /**
    * -------------------------------
@@ -228,6 +229,28 @@ export class CacheManager {
 
   /**
    * -------------------------------
+   * Message Cache Section
+   * --------------------------------
+   */
+  public async getLatestMessageTimestampForChat (id: string) {
+    const cache = this.getLatestMessageTimestampForChatCache()
+    return cache.get(id)
+  }
+
+  public async setLatestMessageTimestampForChat (id: string, num: number): Promise<void> {
+    const cache = this.getLatestMessageTimestampForChatCache()
+    await cache.set(id, num)
+  }
+
+  private getLatestMessageTimestampForChatCache () {
+    if (!this.cacheLatestMessageTimestampForChat) {
+      throw new WAError(WA_ERROR_TYPE.ERR_NO_CACHE, 'getLatestMessageTimestampForChatCache() has no cache')
+    }
+    return this.cacheLatestMessageTimestampForChat
+  }
+
+  /**
+   * -------------------------------
    * Private Method Section
    * --------------------------------
    */
@@ -258,6 +281,7 @@ export class CacheManager {
     this.cacheContactOrRoomRawPayload = new FlashStore(path.join(baseDir, 'contact-or-room'))
     this.cacheRoomInvitationRawPayload = new FlashStore(path.join(baseDir, 'room-invitation'))
     this.cacheRoomMemberIdList = new FlashStore(path.join(baseDir, 'room-member'))
+    this.cacheLatestMessageTimestampForChat = new FlashStore(path.join(baseDir, 'latest-message-timestamp-for-chat'))
 
     const messageTotal = await this.cacheMessageRawPayload.size
 
@@ -271,6 +295,7 @@ export class CacheManager {
         && this.cacheContactOrRoomRawPayload
         && this.cacheRoomInvitationRawPayload
         && this.cacheRoomMemberIdList
+        && this.cacheLatestMessageTimestampForChat
     ) {
       logger.silly('releaseCache() closing caches ...')
 
@@ -279,12 +304,14 @@ export class CacheManager {
         this.cacheContactOrRoomRawPayload.close(),
         this.cacheRoomInvitationRawPayload.close(),
         this.cacheRoomMemberIdList.close(),
+        this.cacheLatestMessageTimestampForChat.close(),
       ])
 
       this.cacheMessageRawPayload = undefined
       this.cacheContactOrRoomRawPayload = undefined
       this.cacheRoomInvitationRawPayload = undefined
       this.cacheRoomMemberIdList = undefined
+      this.cacheLatestMessageTimestampForChat = undefined
 
       logger.silly('releaseCache() cache closed.')
     } else {

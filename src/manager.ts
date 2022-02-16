@@ -261,9 +261,19 @@ export class Manager extends EventEmitter {
       // can not get chat for bot self
       return
     }
+    const contactOrRoomId = contactOrRoom.id._serialized
+    const cacheManager = await this.getCacheManager()
     try {
       const chat = await contactOrRoom.getChat()
-      const messageList = await chat.fetchMessages({})
+      const latestMessageTimestampInCache = await cacheManager.getLatestMessageTimestampForChat(contactOrRoomId)
+      let messageList = await chat.fetchMessages({})
+      if (latestMessageTimestampInCache) {
+        messageList = messageList.filter(m => m.timestamp >= latestMessageTimestampInCache)
+      }
+      const latestMessageTimestamp = messageList[messageList.length - 1]?.timestamp
+      if (latestMessageTimestamp) {
+        await cacheManager.setLatestMessageTimestampForChat(contactOrRoomId, latestMessageTimestamp)
+      }
       const batchSize = 50
       await batchProcess(batchSize, messageList, async (message: WhatsAppMessage) => {
         await this.onMessage(message)
