@@ -188,7 +188,7 @@ export class Manager extends EventEmitter {
 
   private async onLogin (contactOrRoomList: WhatsAppContact[]) {
     if (!this.botId) {
-      throw new WAError(WA_ERROR_TYPE.ERR_INIT, 'No login bot id.')
+      throw WAError(WA_ERROR_TYPE.ERR_INIT, 'No login bot id.')
     }
 
     await this.initCache(this.botId)
@@ -480,7 +480,7 @@ export class Manager extends EventEmitter {
   private async onChangeBattery (batteryInfo: BatteryInfo) {
     logger.silly(`onChangeBattery(${JSON.stringify(batteryInfo)})`)
     if (!this.botId) {
-      throw new WAError(WA_ERROR_TYPE.ERR_INIT, 'No login bot id.')
+      throw WAError(WA_ERROR_TYPE.ERR_INIT, 'No login bot id.')
     }
 
     if (batteryInfo.battery <= MIN_BATTERY_VALUE_FOR_LOGOUT && !batteryInfo.plugged) {
@@ -491,7 +491,7 @@ export class Manager extends EventEmitter {
   private async onChangeState (state: WAStateType) {
     logger.silly(`onChangeState(${JSON.stringify(state)})`)
     if (!this.botId) {
-      throw new WAError(WA_ERROR_TYPE.ERR_INIT, 'No login bot id.')
+      throw WAError(WA_ERROR_TYPE.ERR_INIT, 'No login bot id.')
     }
 
     switch (state) {
@@ -634,7 +634,7 @@ export class Manager extends EventEmitter {
 
   public async getCacheManager () {
     if (!this.cacheManager) {
-      throw new WAError(WA_ERROR_TYPE.ERR_INIT, 'no cache manager')
+      throw WAError(WA_ERROR_TYPE.ERR_INIT, 'no cache manager')
     }
     return this.cacheManager
   }
@@ -660,7 +660,7 @@ export class Manager extends EventEmitter {
 
   private getRequestManager () {
     if (!this.requestManager) {
-      throw new WAError(WA_ERROR_TYPE.ERR_INIT, 'No request manager')
+      throw WAError(WA_ERROR_TYPE.ERR_INIT, 'No request manager')
     }
     return this.requestManager
   }
@@ -714,7 +714,7 @@ export class Manager extends EventEmitter {
       const roomChat = await this.getChatById(roomId)
       return roomChat as GroupChat
     } else {
-      throw new WAError(WA_ERROR_TYPE.ERR_GROUP_OR_CONTACT_ID, `The roomId: ${roomId} is not right.`)
+      throw WAError(WA_ERROR_TYPE.ERR_GROUP_OR_CONTACT_ID, `The roomId: ${roomId} is not right.`)
     }
   }
 
@@ -723,7 +723,7 @@ export class Manager extends EventEmitter {
       const roomChat = await this.getChatById(contactId)
       return roomChat as PrivateChat
     } else {
-      throw new WAError(WA_ERROR_TYPE.ERR_GROUP_OR_CONTACT_ID, `The contactId: ${contactId} is not right.`)
+      throw WAError(WA_ERROR_TYPE.ERR_GROUP_OR_CONTACT_ID, `The contactId: ${contactId} is not right.`)
     }
   }
 
@@ -874,14 +874,14 @@ export class Manager extends EventEmitter {
 
   public getWhatsApp () {
     if (!this.whatsAppClient) {
-      throw new WAError(WA_ERROR_TYPE.ERR_INIT, 'Not init whatsapp')
+      throw WAError(WA_ERROR_TYPE.ERR_INIT, 'Not init whatsapp')
     }
     return this.whatsAppClient
   }
 
   public getBotId () {
     if (!this.botId) {
-      throw new WAError(WA_ERROR_TYPE.ERR_INIT, 'this bot is not login')
+      throw WAError(WA_ERROR_TYPE.ERR_INIT, 'this bot is not login')
     }
     return this.botId
   }

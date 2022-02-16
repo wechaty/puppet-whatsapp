@@ -78,7 +78,7 @@ class PuppetWhatsApp extends PUPPET.Puppet {
       whatsapp = await this.startManager(this.manager)
     } catch (err) {
       logger.error(`Can not start whatsapp, error: ${(err as Error).message}`)
-      throw new WAError(WA_ERROR_TYPE.ERR_INIT, `Can not start whatsapp, error: ${(err as Error).message}`)
+      throw WAError(WA_ERROR_TYPE.ERR_INIT, `Can not start whatsapp, error: ${(err as Error).message}`)
     }
 
     /**

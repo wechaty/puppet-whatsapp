@@ -20,5 +20,5 @@ test('vcard parser for only one phone of contact from IOS', async t => {
 test('vcard parser for multi phones of contact', async t => {
   const fn = () => parseVcard(contentContainMultiPhones)
   const data = [{ phone:'+86 24 6278 1276', waid:'862462781276@c.us' }, { phone:'+52 729739', waid:'52729739@c.us' }]
-  t.throws(fn, WAError, new WAError(WA_ERROR_TYPE.ERR_MSG_CONTACT, `This card contains more than 1 phone number, detail: ${JSON.stringify(data)}`))
+  t.throws(fn, WAError, WAError(WA_ERROR_TYPE.ERR_MSG_CONTACT, `This card contains more than 1 phone number, detail: ${JSON.stringify(data)}`))
 })

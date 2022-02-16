@@ -98,7 +98,7 @@ export async function roomCreate (
     })
     return roomId
   } else {
-    throw new WAError(WA_ERROR_TYPE.ERR_CREATE_ROOM, `An error occurred while creating the group, detail: ${contactIdList}, topic: ${topic}`)
+    throw WAError(WA_ERROR_TYPE.ERR_CREATE_ROOM, `An error occurred while creating the group, detail: ${contactIdList}, topic: ${topic}`)
   }
 }
 
@@ -276,7 +276,7 @@ export async function roomInvitationRawPayloadParser (this: PuppetWhatsApp, rawP
 export async function roomRawPayload (this: PuppetWhatsApp, id: string): Promise<RoomPayload> {
   logger.verbose('roomRawPayload(%s)', id)
   if (!isRoomId(id)) {
-    throw new WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `please check room id: ${id} again.`)
+    throw WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `please check room id: ${id} again.`)
   }
   const cacheManager = await this.manager.getCacheManager()
   const room = await cacheManager.getContactOrRoomRawPayload(id)
@@ -290,7 +290,7 @@ export async function roomRawPayload (this: PuppetWhatsApp, id: string): Promise
       await cacheManager.setContactOrRoomRawPayload(id, room)
       return room
     } catch (error) {
-      throw new WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `roomRawPayload(${id}) not found.`)
+      throw WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `roomRawPayload(${id}) not found.`)
     }
   }
 }
@@ -300,7 +300,7 @@ export async function roomRawPayloadParser (this: PuppetWhatsApp, roomPayload: R
   try {
     const roomChat = await this.manager.getRoomChatById(roomId)
     if (roomChat.participants.length === 0) {
-      throw new WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `roomRawPayloadParser(${roomId}) can not get chat info for this room.`)
+      throw WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `roomRawPayloadParser(${roomId}) can not get chat info for this room.`)
     }
     return {
       adminIdList: roomChat.participants.filter(m => m.isAdmin || m.isSuperAdmin).map(m => m.id._serialized),
@@ -312,6 +312,6 @@ export async function roomRawPayloadParser (this: PuppetWhatsApp, roomPayload: R
     }
   } catch (error) {
     logger.error(`roomRawPayloadParser(${roomId}) failed, error message: ${(error as Error).message}`)
-    throw new WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `roomRawPayloadParser(${roomId}) failed, error message: ${(error as Error).message}`)
+    throw WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `roomRawPayloadParser(${roomId}) failed, error message: ${(error as Error).message}`)
   }
 }

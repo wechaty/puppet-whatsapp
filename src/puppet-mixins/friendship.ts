@@ -14,7 +14,7 @@ export async function friendshipRawPayload (this: PuppetWhatsApp, id: string): P
   const cache = await this.manager.getCacheManager()
   const message = await cache.getMessageRawPayload(id)
   if (!message) {
-    throw new WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, 'Message not found', `messageId: ${id}`)
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, 'Message not found', `messageId: ${id}`)
   }
   return message
 }
@@ -61,7 +61,7 @@ export async function friendshipAdd (
   logger.verbose('friendshipAdd(%s, %s)', contactId, JSON.stringify(option))
   const isUser = await this.manager.isWhatsappUser(contactId)
   if (!isUser) {
-    throw new WAError(WA_ERROR_TYPE.ERR_CONTACT_NOT_FOUND, 'Not a registered user on WhatsApp.', `contactId: ${contactId}`)
+    throw WAError(WA_ERROR_TYPE.ERR_CONTACT_NOT_FOUND, 'Not a registered user on WhatsApp.', `contactId: ${contactId}`)
   }
 
   await this.contactRawPayload(contactId)
