@@ -41,6 +41,7 @@ import type {
   ClientOptions,
   WhatsAppClientType,
 } from './schema/whatsapp-type.js'
+import { RequestPool } from './request/requestPool.js'
 
 process.on('uncaughtException', (e) => {
   console.error('process error is:', e.message)
@@ -181,6 +182,8 @@ class PuppetWhatsApp extends PUPPET.Puppet {
 
   private async onMessage (message: PUPPET.EventMessagePayload): Promise<void> {
     logger.info('onMessage(%s)', JSON.stringify(message))
+    const requestPool = RequestPool.Instance
+    requestPool.resolveRequest(message.messageId)
     this.emit('message', message)
   }
 
