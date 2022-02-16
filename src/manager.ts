@@ -355,6 +355,10 @@ export class Manager extends EventEmitter {
      * if message ack equal MessageAck.ACK_DEVICE, we could regard it as has already send success.
      *
      * FIXME: if the ack is not consecutive, and without MessageAck.ACK_DEVICE, then we could not receive this message.
+     *
+     * After add sync missed message schedule, if the ack of message has not reach MessageAck.ACK_DEVICE,
+     * the schedule will emit these messages with wrong ack (ack = MessageAck.ACK_PENDING or MessageAck.ACK_SERVER),
+     * and will make some mistakes (can not get the media of message).
      */
     if (message.id.fromMe && message.ack === MessageAck.ACK_DEVICE) {
       const messageId = message.id.id
