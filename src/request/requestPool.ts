@@ -21,6 +21,7 @@ export class RequestPool {
       this.poolMap[id]!.push(resolve)
       setTimeout(reject, timeout)
     }).catch(() => {
+      delete this.poolMap[id]
       throw WAError(WA_ERROR_TYPE.ERR_REQUEST_TIMEOUT, `TIMEOUT when processing request :${id}`)
     })
     return callback
