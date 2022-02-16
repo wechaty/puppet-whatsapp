@@ -56,6 +56,7 @@ import {
   genRoomJoinEvent,
   genRoomTopicEvent,
 } from './pure-function-helpers/room-event-generator.js'
+import ScheduleManager from './schedule/schedule-manager.js'
 
 const logger = withPrefix(`${PRE} Manager`)
 
@@ -79,11 +80,14 @@ export class Manager extends EventEmitter {
   whatsAppClient?: WhatsAppClientType
   requestManager?: RequestManager
   cacheManager?: CacheManager
+  scheduleManager: ScheduleManager
   botId?: string
+  startingFetchMessages: boolean = false
 
   constructor (private options: PuppetWhatsAppOptions) {
     super()
     this.options = options
+    this.scheduleManager = new ScheduleManager(this)
   }
 
   public override emit (event: 'message', payload: PUPPET.EventMessagePayload): boolean
@@ -179,11 +183,18 @@ export class Manager extends EventEmitter {
   private async onWhatsAppReady () {
     const whatsapp = this.getWhatsApp()
     this.botId = whatsapp.info.wid._serialized
-    const contactList: WhatsAppContact[] = await whatsapp.getContacts()
-    const contactOrRoomList = contactList.filter(c => c.id.server !== 'broadcast')
+    const contactOrRoomList = await this.syncContactOrRoomList()
     logger.info(`WhatsApp Client Version: ${await whatsapp.getWWebVersion()}`)
     await this.onLogin(contactOrRoomList)
     await this.onReady(contactOrRoomList)
+    this.scheduleManager.startSyncMissedMessagesSchedule()
+  }
+
+  public async syncContactOrRoomList () {
+    const whatsapp = this.getWhatsApp()
+    const contactList: WhatsAppContact[] = await whatsapp.getContacts()
+    const contactOrRoomList = contactList.filter(c => c.id.server !== 'broadcast')
+    return contactOrRoomList
   }
 
   private async onLogin (contactOrRoomList: WhatsAppContact[]) {
@@ -245,7 +256,7 @@ export class Manager extends EventEmitter {
       } else {
         logger.warn(`Unknown contact type: ${JSON.stringify(contactOrRoom)}`)
       }
-      await this.fetchMessagesBeforeReady(contactOrRoom)
+      await this.fetchMessages(contactOrRoom)
     })
 
     logger.info(`onReady() all contacts and rooms are ready, friendCount: ${friendCount} contactCount: ${contactCount} roomCount: ${roomCount}`)
@@ -256,7 +267,11 @@ export class Manager extends EventEmitter {
    * Fetch all messages of contact or room, and then call onMessage method to emit them or not.
    * @param {WhatsAppContact} contactOrRoom contact or room instance
    */
-  private async fetchMessagesBeforeReady (contactOrRoom: WhatsAppContact) {
+  public async fetchMessages (contactOrRoom: WhatsAppContact) {
+    if (this.startingFetchMessages) {
+      return
+    }
+    this.startingFetchMessages = true
     if (contactOrRoom.isMe) {
       // can not get chat for bot self
       return
@@ -276,17 +291,21 @@ export class Manager extends EventEmitter {
       }
       const batchSize = 50
       await batchProcess(batchSize, messageList, async (message: WhatsAppMessage) => {
-        await this.onMessage(message)
+        if (message.ack === MessageAck.ACK_DEVICE || message.ack === MessageAck.ACK_READ) {
+          await this.onMessage(message)
+        }
       })
     } catch (error) {
-      logger.error(`fetchMessagesBeforeReady error: ${(error as Error).message}`)
+      logger.error(`fetchMessages error: ${(error as Error).message}`)
     }
+    this.startingFetchMessages = false
   }
 
   private async onLogout (reason: string = LOGOUT_REASON.DEFAULT) {
     logger.info(`onLogout(${reason})`)
     await this.options.memory?.delete(MEMORY_SLOT)
     await this.options.memory?.save()
+    this.scheduleManager.stopSyncMissedMessagesSchedule()
     const whatsapp = this.getWhatsApp()
     this.emit('logout', whatsapp.info.wid._serialized, reason as string)
   }
@@ -338,6 +357,10 @@ export class Manager extends EventEmitter {
      * if message ack equal MessageAck.ACK_DEVICE, we could regard it as has already send success.
      *
      * FIXME: if the ack is not consecutive, and without MessageAck.ACK_DEVICE, then we could not receive this message.
+     *
+     * After add sync missed message schedule, if the ack of message has not reach MessageAck.ACK_DEVICE,
+     * the schedule will emit these messages with wrong ack (ack = MessageAck.ACK_PENDING or MessageAck.ACK_SERVER),
+     * and will make some mistakes (can not get the media of message).
      */
     if (message.id.fromMe && message.ack === MessageAck.ACK_DEVICE) {
       const messageId = message.id.id
