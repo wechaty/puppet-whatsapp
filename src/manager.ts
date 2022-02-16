@@ -245,10 +245,42 @@ export class Manager extends EventEmitter {
       } else {
         logger.warn(`Unknown contact type: ${JSON.stringify(contactOrRoom)}`)
       }
+      await this.fetchMessagesBeforeReady(contactOrRoom)
     })
 
     logger.info(`onReady() all contacts and rooms are ready, friendCount: ${friendCount} contactCount: ${contactCount} roomCount: ${roomCount}`)
     this.emit('ready')
+  }
+
+  /**
+   * Fetch all messages of contact or room, and then call onMessage method to emit them or not.
+   * @param {WhatsAppContact} contactOrRoom contact or room instance
+   */
+  private async fetchMessagesBeforeReady (contactOrRoom: WhatsAppContact) {
+    if (contactOrRoom.isMe) {
+      // can not get chat for bot self
+      return
+    }
+    const contactOrRoomId = contactOrRoom.id._serialized
+    const cacheManager = await this.getCacheManager()
+    try {
+      const chat = await contactOrRoom.getChat()
+      const latestMessageTimestampInCache = await cacheManager.getLatestMessageTimestampForChat(contactOrRoomId)
+      let messageList = await chat.fetchMessages({})
+      if (latestMessageTimestampInCache) {
+        messageList = messageList.filter(m => m.timestamp >= latestMessageTimestampInCache)
+      }
+      const latestMessageTimestamp = messageList[messageList.length - 1]?.timestamp
+      if (latestMessageTimestamp) {
+        await cacheManager.setLatestMessageTimestampForChat(contactOrRoomId, latestMessageTimestamp)
+      }
+      const batchSize = 50
+      await batchProcess(batchSize, messageList, async (message: WhatsAppMessage) => {
+        await this.onMessage(message)
+      })
+    } catch (error) {
+      logger.error(`fetchMessagesBeforeReady error: ${(error as Error).message}`)
+    }
   }
 
   private async onLogout (reason: string = LOGOUT_REASON.DEFAULT) {
@@ -290,6 +322,42 @@ export class Manager extends EventEmitter {
 
     const needEmitMessage = await this.convertInviteLinkMessageToEvent(message)
     if (needEmitMessage) {
+      this.emit('message', { messageId })
+    }
+  }
+
+  /**
+   * This event only for the message which sent by bot (web / phone)
+   * @param {WhatsAppMessage} message message detail info
+   * @returns
+   */
+  private async onMessageAck (message: WhatsAppMessage) {
+    logger.silly(`onMessageAck(${JSON.stringify(message)})`)
+
+    /**
+     * if message ack equal MessageAck.ACK_DEVICE, we could regard it as has already send success.
+     *
+     * FIXME: if the ack is not consecutive, and without MessageAck.ACK_DEVICE, then we could not receive this message.
+     */
+    if (message.id.fromMe && message.ack === MessageAck.ACK_DEVICE) {
+      const messageId = message.id.id
+      const cacheManager = await this.getCacheManager()
+      await cacheManager.setMessageRawPayload(messageId, message)
+      this.emit('message', { messageId })
+    }
+  }
+
+  /**
+   * This event only for the message which sent by bot (web / phone) and to the bot self
+   * @param {WhatsAppMessage} message message detail info
+   * @returns
+   */
+  private async onMessageCreate (message: WhatsAppMessage) {
+    logger.silly(`onMessageCreate(${JSON.stringify(message)})`)
+    if (message.id.fromMe && message.to === this.getBotId()) {
+      const messageId = message.id.id
+      const cacheManager = await this.getCacheManager()
+      await cacheManager.setMessageRawPayload(messageId, message)
       this.emit('message', { messageId })
     }
   }
@@ -447,43 +515,6 @@ export class Manager extends EventEmitter {
         return
       }
       await cacheManager.setMessageRawPayload(messageId, message)
-    }
-  }
-
-  /**
-   * This event only for the message which sent by bot (web / phone)
-   * @param {WhatsAppMessage} message message detail info
-   * @returns
-   */
-  private async onMessageAck (message: WhatsAppMessage) {
-    logger.silly(`onMessageAck(${JSON.stringify(message)})`)
-
-    /**
-     * if message ack equal MessageAck.ACK_DEVICE, we could regard it as has already send success.
-     *
-     * FIXME: if the ack is not consecutive, and without MessageAck.ACK_DEVICE, then we could not receive this message.
-     */
-    if (message.id.fromMe && message.ack === MessageAck.ACK_DEVICE) {
-      logger.info(`onMessageAck(${JSON.stringify(message)})`)
-      const messageId = message.id.id
-      const cacheManager = await this.getCacheManager()
-      await cacheManager.setMessageRawPayload(messageId, message)
-      this.emit('message', { messageId })
-    }
-  }
-
-  /**
-   * This event only for the message which sent by bot (web / phone) and to the bot self
-   * @param {WhatsAppMessage} message message detail info
-   * @returns
-   */
-  private async onMessageCreate (message: WhatsAppMessage) {
-    logger.silly(`onMessageCreate(${JSON.stringify(message)})`)
-    if (message.id.fromMe && message.to === this.getBotId()) {
-      const messageId = message.id.id
-      const cacheManager = await this.getCacheManager()
-      await cacheManager.setMessageRawPayload(messageId, message)
-      this.emit('message', { messageId })
     }
   }
 
