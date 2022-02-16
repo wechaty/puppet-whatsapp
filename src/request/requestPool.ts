@@ -1,7 +1,5 @@
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
-
-/* eslint-disable no-use-before-define */
 export class RequestPool {
 
   private static _instance?: RequestPool
