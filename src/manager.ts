@@ -13,6 +13,7 @@ import {
   MEMORY_SLOT,
   MIN_BATTERY_VALUE_FOR_LOGOUT,
   PRE,
+  MessageMediaTypeList,
 } from './config.js'
 import { WA_ERROR_TYPE } from './exceptions/error-type.js'
 import WAError from './exceptions/whatsapp-error.js'
@@ -363,10 +364,33 @@ export class Manager extends EventEmitter {
      * the schedule will emit these messages with wrong ack (ack = MessageAck.ACK_PENDING or MessageAck.ACK_SERVER),
      * and will make some mistakes (can not get the media of message).
      */
-    if (message.id.fromMe && message.ack === MessageAck.ACK_DEVICE) {
-      const messageId = message.id.id
-      const cacheManager = await this.getCacheManager()
-      await cacheManager.setMessageRawPayload(messageId, message)
+    if (message.id.fromMe) {
+      if (MessageMediaTypeList.includes(message.type)) {
+        if (message.hasMedia && message.ack === MessageAck.ACK_SERVER) {
+          await this.processMessageFromBot(message)
+        }
+        if (message.ack === MessageAck.ACK_DEVICE || message.ack === MessageAck.ACK_READ) {
+          await this.processMessageFromBot(message)
+        }
+      } else {
+        await this.processMessageFromBot(message)
+      }
+    }
+  }
+
+  private async processMessageFromBot (message: WhatsAppMessage) {
+    const messageId = message.id.id
+    const cacheManager = await this.getCacheManager()
+    const messageInCache = await cacheManager.getMessageRawPayload(messageId)
+    await cacheManager.setMessageRawPayload(messageId, message) // set message with different message ack
+    /**
+     * - Non-Media Message
+     *   emit only when no cache
+     *
+     * - Media Message
+     *   emit message when no cache or ack of message in cache equal 1
+     */
+    if (!messageInCache || (MessageMediaTypeList.includes(message.type) && messageInCache.ack === MessageAck.ACK_SERVER)) {
       const requestPool = RequestPool.Instance
       requestPool.resolveRequest(messageId)
       this.emit('message', { messageId })

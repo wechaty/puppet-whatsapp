@@ -32,8 +32,8 @@ export const LOGOUT_REASON = {
   NETWORK_TIMEOUT_IN_PHONE: '手机端网络连接异常',
 }
 
-export const SkipTypeList = [
-  WhatsAppMessageType.CONTACT_CARD_MULTI,
+export const MessageMediaTypeList = [
+  // WhatsAppMessageType.CONTACT_CARD_MULTI,
   WhatsAppMessageType.AUDIO,
   WhatsAppMessageType.VOICE,
   WhatsAppMessageType.IMAGE,
