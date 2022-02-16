@@ -461,6 +461,15 @@ export class Manager extends EventEmitter {
         const roomJoinPayload = genRoomJoinEvent(notification, members)
         this.emit('room-join', roomJoinPayload)
         break
+      case GroupNotificationTypes.PICTURE:
+        const rawRoom = await this.getContactById(roomId)
+        const avatar = await rawRoom.getProfilePicUrl() || ''
+        const roomPayloadInCache = await cacheManager.getContactOrRoomRawPayload(roomId)
+        if (roomPayloadInCache) {
+          roomPayloadInCache.avatar = avatar
+          await cacheManager.setContactOrRoomRawPayload(roomId, roomPayloadInCache)
+        }
+        break
     }
   }
 
