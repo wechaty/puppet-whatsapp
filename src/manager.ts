@@ -57,6 +57,7 @@ import {
   genRoomTopicEvent,
 } from './pure-function-helpers/room-event-generator.js'
 import ScheduleManager from './schedule/schedule-manager.js'
+import { RequestPool } from './request/requestPool.js'
 
 const logger = withPrefix(`${PRE} Manager`)
 
@@ -366,6 +367,8 @@ export class Manager extends EventEmitter {
       const messageId = message.id.id
       const cacheManager = await this.getCacheManager()
       await cacheManager.setMessageRawPayload(messageId, message)
+      const requestPool = RequestPool.Instance
+      requestPool.resolveRequest(messageId)
       this.emit('message', { messageId })
     }
   }
