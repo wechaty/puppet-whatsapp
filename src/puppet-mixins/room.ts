@@ -140,8 +140,7 @@ export async function roomQuit (this: PuppetWhatsApp, roomId: string): Promise<v
   const roomChat = await this.manager.getRoomChatById(roomId)
   await roomChat.leave()
   const cacheManager = await this.manager.getCacheManager()
-  await cacheManager.deleteContactOrRoom(roomId)
-  await cacheManager.deleteRoomMemberIdList(roomId)
+  await cacheManager.removeRoomMemberFromList(roomId, this.selfId())
 }
 
 export async function roomAvatar (this: PuppetWhatsApp, roomId: string): Promise<FileBox> {
