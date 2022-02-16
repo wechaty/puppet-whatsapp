@@ -16,6 +16,7 @@ import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import { withPrefix } from '../logger/index.js'
 import { PRE } from '../config.js'
+import { RequestPool } from '../request/requestPool.js'
 
 const logger = withPrefix(`${PRE} message`)
 
@@ -187,6 +188,9 @@ export async function messageSend (this: PuppetWhatsApp, conversationId: string,
   const messageId = msg.id.id
   const cacheManager = await this.manager.getCacheManager()
   await cacheManager.setMessageRawPayload(messageId, msg)
+
+  const requestPool = RequestPool.Instance
+  await requestPool.pushRequest(messageId, 10 * 1000)
   return messageId
 }
 
