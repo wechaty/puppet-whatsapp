@@ -292,7 +292,9 @@ export class Manager extends EventEmitter {
       }
       const batchSize = 50
       await batchProcess(batchSize, messageList, async (message: WhatsAppMessage) => {
-        await this.onMessage(message)
+        if (message.ack === MessageAck.ACK_DEVICE || message.ack === MessageAck.ACK_READ) {
+          await this.onMessage(message)
+        }
       })
     } catch (error) {
       logger.error(`fetchMessages error: ${(error as Error).message}`)
