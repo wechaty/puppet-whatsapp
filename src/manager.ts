@@ -182,8 +182,13 @@ export class Manager extends EventEmitter {
   }
 
   private async onWhatsAppReady () {
+    logger.info('onWhatsAppReady()')
     const whatsapp = this.getWhatsApp()
-    this.botId = whatsapp.info.wid._serialized
+    try {
+      this.botId = whatsapp.info.wid._serialized
+    } catch (error) {
+      logger.error(`onWhatsAppReady() error message: ${(error as Error).message}`)
+    }
     const contactOrRoomList = await this.syncContactOrRoomList()
     logger.info(`WhatsApp Client Version: ${await whatsapp.getWWebVersion()}`)
     await this.onLogin(contactOrRoomList)
@@ -307,8 +312,7 @@ export class Manager extends EventEmitter {
     await this.options.memory?.delete(MEMORY_SLOT)
     await this.options.memory?.save()
     this.scheduleManager.stopSyncMissedMessagesSchedule()
-    const whatsapp = this.getWhatsApp()
-    this.emit('logout', whatsapp.info.wid._serialized, reason as string)
+    this.emit('logout', this.getBotId(), reason as string)
   }
 
   private async onMessage (message: WhatsAppMessage | WhatsAppMessagePayload) {
