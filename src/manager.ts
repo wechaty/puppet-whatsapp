@@ -257,12 +257,20 @@ export class Manager extends EventEmitter {
    * @param {WhatsAppContact} contactOrRoom contact or room instance
    */
   private async fetchMessagesBeforeReady (contactOrRoom: WhatsAppContact) {
-    const contactChat = await contactOrRoom.getChat()
-    const messageList = await contactChat.fetchMessages({})
-    const batchSize = 50
-    await batchProcess(batchSize, messageList, async (message: WhatsAppMessage) => {
-      await this.onMessage(message)
-    })
+    if (contactOrRoom.isMe) {
+      // can not get chat for bot self
+      return
+    }
+    try {
+      const chat = await contactOrRoom.getChat()
+      const messageList = await chat.fetchMessages({})
+      const batchSize = 50
+      await batchProcess(batchSize, messageList, async (message: WhatsAppMessage) => {
+        await this.onMessage(message)
+      })
+    } catch (error) {
+      logger.error(`fetchMessagesBeforeReady error: ${(error as Error).message}`)
+    }
   }
 
   private async onLogout (reason: string = LOGOUT_REASON.DEFAULT) {
