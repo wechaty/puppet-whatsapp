@@ -186,14 +186,14 @@ export class Manager extends EventEmitter {
     const whatsapp = this.getWhatsApp()
     try {
       this.botId = whatsapp.info.wid._serialized
-      const contactOrRoomList = await this.syncContactOrRoomList()
-      logger.info(`WhatsApp Client Version: ${await whatsapp.getWWebVersion()}`)
-      await this.onLogin(contactOrRoomList)
-      await this.onReady(contactOrRoomList)
-      this.scheduleManager.startSyncMissedMessagesSchedule()
     } catch (error) {
       logger.error(`onWhatsAppReady() error message: ${(error as Error).message}`)
     }
+    const contactOrRoomList = await this.syncContactOrRoomList()
+    logger.info(`WhatsApp Client Version: ${await whatsapp.getWWebVersion()}`)
+    await this.onLogin(contactOrRoomList)
+    await this.onReady(contactOrRoomList)
+    this.scheduleManager.startSyncMissedMessagesSchedule()
   }
 
   public async syncContactOrRoomList () {
