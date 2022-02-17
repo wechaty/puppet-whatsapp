@@ -87,6 +87,8 @@ export class Manager extends EventEmitter {
   botId?: string
   startingFetchMessages: boolean = false
 
+  private pendingLogoutEmitTimer?: NodeJS.Timeout
+
   constructor (private options: PuppetWhatsAppOptions) {
     super()
     this.options = options
@@ -543,8 +545,6 @@ export class Manager extends EventEmitter {
     }
   }
 
-  private previousState?: WAStateType
-  private pendingLogoutEmitTimer?: NodeJS.Timeout
   private async onChangeState (state: WAStateType) {
     logger.info(`onChangeState(${JSON.stringify(state)})`)
     if (!this.botId) {
@@ -559,7 +559,7 @@ export class Manager extends EventEmitter {
         }, DEFAULT_TIMEOUT.TIMEOUT_WAIT_CONNECTED)
         break
       case WAState.CONNECTED:
-        if (this.previousState === WAState.TIMEOUT && this.pendingLogoutEmitTimer) {
+        if (this.pendingLogoutEmitTimer) {
           clearTimeout(this.pendingLogoutEmitTimer)
         }
         this.emit('login', this.botId)
@@ -567,7 +567,6 @@ export class Manager extends EventEmitter {
       default:
         break
     }
-    this.previousState = state
   }
 
   private async onIncomingCall (...args: any[]) { // it is a any[] argument
