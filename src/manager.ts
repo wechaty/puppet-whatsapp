@@ -211,11 +211,12 @@ export class Manager extends EventEmitter {
   }
 
   private async onLogin (contactOrRoomList: WhatsAppContact[]) {
+    logger.info('onLogin()')
     const whatsapp = this.getWhatsApp()
     try {
       this.botId = whatsapp.info.wid._serialized
     } catch (error) {
-      throw WAError(WA_ERROR_TYPE.ERR_INIT, 'No login bot id.')
+      throw WAError(WA_ERROR_TYPE.ERR_INIT, `Can not get bot id from WhatsApp client, current state: ${await whatsapp.getState()}`, JSON.stringify(error))
     }
     logger.info(`WhatsApp Client Info: ${JSON.stringify(whatsapp.info)}`)
 
@@ -244,7 +245,9 @@ export class Manager extends EventEmitter {
   }
 
   private async onReady (contactOrRoomList: WhatsAppContact[]) {
+    logger.info('onReady()')
     if (this.loadingData) {
+      logger.info('onReady() loading data are under process.')
       return
     }
     this.loadingData = true
