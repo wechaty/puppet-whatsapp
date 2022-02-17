@@ -23,6 +23,8 @@ function avatarForContact (): FileBox {
 const MEMORY_SLOT = 'PUPPET_WHATSAPP'
 const PRE = 'PuppetWhatsApp'
 
+export const SPECIAL_BOT_PUSHNAME = '-' // FIXME: pushname is '-', see: https://github.com/wechaty/puppet-whatsapp/issues/233
+
 export const MIN_BATTERY_VALUE_FOR_LOGOUT = Number(process.env['MIN_BATTERY_VALUE_FOR_LOGOUT']) || 1
 
 export const LOGOUT_REASON = {
