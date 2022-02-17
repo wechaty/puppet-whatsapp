@@ -87,6 +87,8 @@ export class Manager extends EventEmitter {
   botId?: string
   startingFetchMessages: boolean = false
 
+  private pendingLogoutEmitTimer?: NodeJS.Timeout
+
   constructor (private options: PuppetWhatsAppOptions) {
     super()
     this.options = options
@@ -314,6 +316,7 @@ export class Manager extends EventEmitter {
     await this.options.memory?.delete(MEMORY_SLOT)
     await this.options.memory?.save()
     this.scheduleManager.stopSyncMissedMessagesSchedule()
+    this.clearPendingLogoutEmitTimer()
     this.emit('logout', this.getBotId(), reason as string)
   }
 
@@ -543,8 +546,6 @@ export class Manager extends EventEmitter {
     }
   }
 
-  private previousState?: WAStateType
-  private pendingLogoutEmitTimer?: NodeJS.Timeout
   private async onChangeState (state: WAStateType) {
     logger.info(`onChangeState(${JSON.stringify(state)})`)
     if (!this.botId) {
@@ -555,19 +556,16 @@ export class Manager extends EventEmitter {
       case WAState.TIMEOUT:
         this.pendingLogoutEmitTimer = setTimeout(() => {
           this.emit('logout', this.getBotId(), LOGOUT_REASON.NETWORK_TIMEOUT_IN_PHONE)
+          this.pendingLogoutEmitTimer = undefined
         }, DEFAULT_TIMEOUT.TIMEOUT_WAIT_CONNECTED)
         break
       case WAState.CONNECTED:
-        if (this.previousState === WAState.TIMEOUT && this.pendingLogoutEmitTimer) {
-          clearTimeout(this.pendingLogoutEmitTimer)
-        } else {
-          this.emit('login', this.botId)
-        }
+        this.clearPendingLogoutEmitTimer()
+        this.emit('login', this.botId)
         break
       default:
         break
     }
-    this.previousState = state
   }
 
   private async onIncomingCall (...args: any[]) { // it is a any[] argument
@@ -960,6 +958,13 @@ export class Manager extends EventEmitter {
     const roomChat = await this.getRoomChatById(roomId)
     // FIXME: How to deal with pendingParticipants? Maybe we should find which case could has this attribute.
     return roomChat.participants.map(m => m.id._serialized)
+  }
+
+  private clearPendingLogoutEmitTimer () {
+    if (this.pendingLogoutEmitTimer) {
+      clearTimeout(this.pendingLogoutEmitTimer)
+      this.pendingLogoutEmitTimer = undefined
+    }
   }
 
 }
