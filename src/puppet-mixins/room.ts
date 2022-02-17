@@ -144,7 +144,7 @@ export async function roomQuit (this: PuppetWhatsApp, roomId: string): Promise<v
   await cacheManager.deleteRoomMemberIdList(roomId)
 }
 
-export async function roomAvatar (this: PuppetWhatsApp, roomId: string): Promise<void | FileBox> {
+export async function roomAvatar (this: PuppetWhatsApp, roomId: string): Promise<FileBox> {
   logger.info('roomAvatar(%s)', roomId)
 
   const payload = await this.roomPayload(roomId)
@@ -152,6 +152,7 @@ export async function roomAvatar (this: PuppetWhatsApp, roomId: string): Promise
   if (payload.avatar) {
     return FileBox.fromUrl(payload.avatar)
   }
+  throw WAError(WA_ERROR_TYPE.ERR_ROOM_AVATAR_NOT_FOUND, `can not find this room avatar, room id: ${roomId}`)
 }
 
 export async function roomTopic(this: PuppetWhatsApp, roomId: string): Promise<string>
