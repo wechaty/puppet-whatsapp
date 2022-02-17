@@ -86,6 +86,7 @@ export class Manager extends EventEmitter {
   scheduleManager: ScheduleManager
   botId?: string
   startingFetchMessages: boolean = false
+  isReadying: boolean = false
 
   private pendingLogoutEmitTimer?: NodeJS.Timeout
 
@@ -161,7 +162,7 @@ export class Manager extends EventEmitter {
     }
     await this.releaseCache()
     this.requestManager = undefined
-    this.botId = undefined
+    this.resetAllVarInMemory()
   }
 
   private async onAuthenticated (session: ClientSession) {
@@ -187,14 +188,7 @@ export class Manager extends EventEmitter {
 
   private async onWhatsAppReady () {
     logger.info('onWhatsAppReady()')
-    const whatsapp = this.getWhatsApp()
-    try {
-      this.botId = whatsapp.info.wid._serialized
-    } catch (error) {
-      logger.error(`onWhatsAppReady() error message: ${(error as Error).message}`)
-    }
     const contactOrRoomList = await this.syncContactOrRoomList()
-    logger.info(`WhatsApp Client Version: ${await whatsapp.getWWebVersion()}`)
     await this.onLogin(contactOrRoomList)
     await this.onReady(contactOrRoomList)
     this.scheduleManager.startSyncMissedMessagesSchedule()
@@ -208,9 +202,13 @@ export class Manager extends EventEmitter {
   }
 
   private async onLogin (contactOrRoomList: WhatsAppContact[]) {
-    if (!this.botId) {
+    const whatsapp = this.getWhatsApp()
+    try {
+      this.botId = whatsapp.info.wid._serialized
+    } catch (error) {
       throw WAError(WA_ERROR_TYPE.ERR_INIT, 'No login bot id.')
     }
+    logger.info(`WhatsApp Client Info: ${JSON.stringify(whatsapp.info)}`)
 
     await this.initCache(this.botId)
     const cacheManager = await this.getCacheManager()
@@ -237,11 +235,15 @@ export class Manager extends EventEmitter {
   }
 
   private async onReady (contactOrRoomList: WhatsAppContact[]) {
-    const cacheManager = await this.getCacheManager()
+    if (this.isReadying) {
+      return
+    }
+    this.isReadying = true
     let friendCount = 0
     let contactCount = 0
     let roomCount = 0
 
+    const cacheManager = await this.getCacheManager()
     const batchSize = 100
     await batchProcess(batchSize, contactOrRoomList, async (contactOrRoom: WhatsAppContact) => {
       const contactOrRoomId = contactOrRoom.id._serialized
@@ -254,7 +256,7 @@ export class Manager extends EventEmitter {
         }
         await cacheManager.setContactOrRoomRawPayload(contactOrRoomId, contactWithAvatar)
       } else if (isRoomId(contactOrRoomId)) {
-        const memberList = await this.roomMemberListSync(contactOrRoomId)
+        const memberList = await this.syncRoomMemberList(contactOrRoomId)
         if (memberList.length > 0) {
           roomCount++
           await cacheManager.setContactOrRoomRawPayload(contactOrRoomId, contactWithAvatar)
@@ -271,6 +273,7 @@ export class Manager extends EventEmitter {
 
     logger.info(`onReady() all contacts and rooms are ready, friendCount: ${friendCount} contactCount: ${contactCount} roomCount: ${roomCount}`)
     this.emit('ready')
+    this.isReadying = false
   }
 
   /**
@@ -313,6 +316,7 @@ export class Manager extends EventEmitter {
 
   private async onLogout (reason: string = LOGOUT_REASON.DEFAULT) {
     logger.info(`onLogout(${reason})`)
+    this.resetAllVarInMemory()
     await this.options.memory?.delete(MEMORY_SLOT)
     await this.options.memory?.save()
     this.scheduleManager.stopSyncMissedMessagesSchedule()
@@ -515,7 +519,7 @@ export class Manager extends EventEmitter {
         await this.onMessage(msgPayload)
         break
       case GroupNotificationTypes.CREATE:
-        const members = await this.roomMemberListSync(roomId)
+        const members = await this.syncRoomMemberList(roomId)
         const roomJoinPayload = genRoomJoinEvent(notification, members)
         this.emit('room-join', roomJoinPayload)
         break
@@ -562,6 +566,8 @@ export class Manager extends EventEmitter {
       case WAState.CONNECTED:
         this.clearPendingLogoutEmitTimer()
         this.emit('login', this.botId)
+        const contactOrRoomList = await this.syncContactOrRoomList()
+        await this.onReady(contactOrRoomList)
         break
       default:
         break
@@ -957,7 +963,7 @@ export class Manager extends EventEmitter {
    * @param { string } roomId roomId
    * @returns { string[] } member id list
    */
-  public async roomMemberListSync (roomId: string): Promise<string[]> {
+  public async syncRoomMemberList (roomId: string): Promise<string[]> {
     const roomChat = await this.getRoomChatById(roomId)
     // FIXME: How to deal with pendingParticipants? Maybe we should find which case could has this attribute.
     return roomChat.participants.map(m => m.id._serialized)
@@ -968,6 +974,12 @@ export class Manager extends EventEmitter {
       clearTimeout(this.pendingLogoutEmitTimer)
       this.pendingLogoutEmitTimer = undefined
     }
+  }
+
+  private resetAllVarInMemory () {
+    this.botId = undefined
+    this.isReadying = false
+    this.startingFetchMessages = false
   }
 
 }
