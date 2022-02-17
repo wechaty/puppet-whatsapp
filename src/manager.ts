@@ -13,6 +13,7 @@ import {
   MEMORY_SLOT,
   MIN_BATTERY_VALUE_FOR_LOGOUT,
   PRE,
+  DEFAULT_TIMEOUT,
   MessageMediaTypeList,
 } from './config.js'
 import { WA_ERROR_TYPE } from './exceptions/error-type.js'
@@ -542,22 +543,31 @@ export class Manager extends EventEmitter {
     }
   }
 
+  private previousState?: WAStateType
+  private pendingLogoutEmitTimer?: NodeJS.Timeout
   private async onChangeState (state: WAStateType) {
-    logger.silly(`onChangeState(${JSON.stringify(state)})`)
+    logger.info(`onChangeState(${JSON.stringify(state)})`)
     if (!this.botId) {
       throw WAError(WA_ERROR_TYPE.ERR_INIT, 'No login bot id.')
     }
 
     switch (state) {
       case WAState.TIMEOUT:
-        this.emit('logout', this.botId, LOGOUT_REASON.NETWORK_TIMEOUT_IN_PHONE)
+        this.pendingLogoutEmitTimer = setTimeout(() => {
+          this.emit('logout', this.getBotId(), LOGOUT_REASON.NETWORK_TIMEOUT_IN_PHONE)
+        }, DEFAULT_TIMEOUT.TIMEOUT_WAIT_CONNECTED)
         break
       case WAState.CONNECTED:
-        this.emit('login', this.botId)
+        if (this.previousState === WAState.TIMEOUT && this.pendingLogoutEmitTimer) {
+          clearTimeout(this.pendingLogoutEmitTimer)
+        } else {
+          this.emit('login', this.botId)
+        }
         break
       default:
         break
     }
+    this.previousState = state
   }
 
   private async onIncomingCall (...args: any[]) { // it is a any[] argument
