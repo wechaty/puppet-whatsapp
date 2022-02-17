@@ -195,7 +195,7 @@ export async function roomMemberList (this: PuppetWhatsApp, roomId: string): Pro
   const cacheManager = await this.manager.getCacheManager()
   const memberList = await cacheManager.getRoomMemberIdList(roomId)
   if (memberList.length === 0) {
-    return this.manager.roomMemberListSync(roomId)
+    return this.manager.syncRoomMemberList(roomId)
   }
   return memberList
 }
