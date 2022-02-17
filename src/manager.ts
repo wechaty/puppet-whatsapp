@@ -162,7 +162,7 @@ export class Manager extends EventEmitter {
     }
     await this.releaseCache()
     this.requestManager = undefined
-    this.botId = undefined
+    this.resetAllVarInMemory()
   }
 
   private async onAuthenticated (session: ClientSession) {
@@ -188,14 +188,7 @@ export class Manager extends EventEmitter {
 
   private async onWhatsAppReady () {
     logger.info('onWhatsAppReady()')
-    const whatsapp = this.getWhatsApp()
-    try {
-      this.botId = whatsapp.info.wid._serialized
-    } catch (error) {
-      logger.error(`onWhatsAppReady() error message: ${(error as Error).message}`)
-    }
     const contactOrRoomList = await this.syncContactOrRoomList()
-    logger.info(`WhatsApp Client Version: ${await whatsapp.getWWebVersion()}`)
     await this.onLogin(contactOrRoomList)
     await this.onReady(contactOrRoomList)
     this.scheduleManager.startSyncMissedMessagesSchedule()
@@ -209,9 +202,13 @@ export class Manager extends EventEmitter {
   }
 
   private async onLogin (contactOrRoomList: WhatsAppContact[]) {
-    if (!this.botId) {
+    const whatsapp = this.getWhatsApp()
+    try {
+      this.botId = whatsapp.info.wid._serialized
+    } catch (error) {
       throw WAError(WA_ERROR_TYPE.ERR_INIT, 'No login bot id.')
     }
+    logger.info(`WhatsApp Client Info: ${JSON.stringify(whatsapp.info)}`)
 
     await this.initCache(this.botId)
     const cacheManager = await this.getCacheManager()
@@ -319,6 +316,7 @@ export class Manager extends EventEmitter {
 
   private async onLogout (reason: string = LOGOUT_REASON.DEFAULT) {
     logger.info(`onLogout(${reason})`)
+    this.resetAllVarInMemory()
     await this.options.memory?.delete(MEMORY_SLOT)
     await this.options.memory?.save()
     this.scheduleManager.stopSyncMissedMessagesSchedule()
@@ -976,6 +974,12 @@ export class Manager extends EventEmitter {
       clearTimeout(this.pendingLogoutEmitTimer)
       this.pendingLogoutEmitTimer = undefined
     }
+  }
+
+  private resetAllVarInMemory () {
+    this.botId = undefined
+    this.isReadying = false
+    this.startingFetchMessages = false
   }
 
 }
