@@ -13,20 +13,22 @@ export default class ScheduleManager {
   constructor (private manager: Manager) {}
 
   public startSyncMissedMessagesSchedule () {
-    logger.silly('startSyncMissedMessages()')
+    logger.silly('startSyncMissedMessagesSchedule()')
     if (!this.syncMissedMessagesSchedule) {
       this.syncMissedMessagesSchedule = schedule.scheduleJob('0 */2 * * * *', async () => {
+        logger.silly('startSyncMissedMessages')
         const contactOrRoomList = await this.manager.syncContactOrRoomList()
         const batchSize = 100
         await batchProcess(batchSize, contactOrRoomList, async (contactOrRoom: WhatsAppContact) => {
           await this.manager.fetchMessages(contactOrRoom)
         })
+        logger.silly('startSyncMissedMessages finished')
       })
     }
   }
 
   public stopSyncMissedMessagesSchedule () {
-    logger.silly('stopSyncMissedMessages()')
+    logger.silly('stopSyncMissedMessagesSchedule()')
     if (this.syncMissedMessagesSchedule) {
       this.syncMissedMessagesSchedule.cancel()
     }
