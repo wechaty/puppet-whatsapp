@@ -560,6 +560,7 @@ export class Manager extends EventEmitter {
       case WAState.CONNECTED:
         if (this.previousState === WAState.TIMEOUT && this.pendingLogoutEmitTimer) {
           clearTimeout(this.pendingLogoutEmitTimer)
+          this.pendingLogoutEmitTimer = undefined
         } else {
           this.emit('login', this.botId)
         }
