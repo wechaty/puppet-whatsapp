@@ -1,4 +1,5 @@
 import * as PUPPET from 'wechaty-puppet'
+import * as path  from 'path'
 import mime from 'mime'
 import { FileBox } from '../compact/index.js'
 import type PuppetWhatsApp from '../puppet-whatsapp.js'
@@ -206,6 +207,10 @@ export async function messageSendText (this: PuppetWhatsApp, conversationId: str
 export async function messageSendFile (this: PuppetWhatsApp, conversationId: string, file: FileBox, options?: MessageSendOptions): Promise<void | string> {
   logger.info('messageSendFile(%s, %s)', conversationId, file.name)
   await file.ready()
+  const type = (file.mimeType && file.mimeType !== 'application/octet-stream')
+    ? file.mimeType.replace(/;.*$/, '')
+    : path.extname(file.name)
+  logger.silly(`message type: ${type}, filename: ${file.name}`)
   const fileBoxJsonObject: any = file.toJSON() // FIXME: need import FileBoxJsonObject from file-box
   const remoteUrl = fileBoxJsonObject.remoteUrl
   let msgContent
