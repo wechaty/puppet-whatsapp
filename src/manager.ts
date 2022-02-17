@@ -555,14 +555,14 @@ export class Manager extends EventEmitter {
       case WAState.TIMEOUT:
         this.pendingLogoutEmitTimer = setTimeout(() => {
           this.emit('logout', this.getBotId(), LOGOUT_REASON.NETWORK_TIMEOUT_IN_PHONE)
+          clearTimeout(this.pendingLogoutEmitTimer!)
         }, DEFAULT_TIMEOUT.TIMEOUT_WAIT_CONNECTED)
         break
       case WAState.CONNECTED:
         if (this.previousState === WAState.TIMEOUT && this.pendingLogoutEmitTimer) {
           clearTimeout(this.pendingLogoutEmitTimer)
-        } else {
-          this.emit('login', this.botId)
         }
+        this.emit('login', this.botId)
         break
       default:
         break
