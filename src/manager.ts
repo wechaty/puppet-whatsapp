@@ -95,14 +95,6 @@ export class Manager extends EventEmitter {
     super()
     this.options = options
     this.scheduleManager = new ScheduleManager(this)
-
-    process.on('uncaughtException', async (err, origin) => {
-      if (err.message.includes('Session closed') || err.message.includes('browser has disconnected')) {
-        logger.warn(`uncaughtException: ${err.message} at ${origin}`)
-        await this.stop()
-        await this.start()
-      }
-    })
   }
 
   public override emit (event: 'message', payload: PUPPET.EventMessagePayload): boolean
@@ -160,6 +152,8 @@ export class Manager extends EventEmitter {
 
     this.requestManager = new RequestManager(this.whatsAppClient)
     await this.initWhatsAppEvents(this.whatsAppClient)
+
+    this.startHeartbeat()
     return this.whatsAppClient
   }
 
@@ -172,6 +166,8 @@ export class Manager extends EventEmitter {
     await this.releaseCache()
     this.requestManager = undefined
     this.resetAllVarInMemory()
+
+    this.stopHeartbeat()
   }
 
   private async onAuthenticated (session: ClientSession) {
@@ -244,6 +240,7 @@ export class Manager extends EventEmitter {
   }
 
   private async onReady (contactOrRoomList: WhatsAppContact[]) {
+    logger.info('onReady()')
     if (this.loadingData) {
       return
     }
@@ -577,7 +574,9 @@ export class Manager extends EventEmitter {
       case WAState.CONNECTED:
         this.clearPendingLogoutEmitTimer()
         this.emit('login', this.botId)
+        logger.info('will sync contact')
         const contactOrRoomList = await this.syncContactOrRoomList()
+        logger.info('contact synced')
         await this.onReady(contactOrRoomList)
         break
       default:
@@ -991,6 +990,36 @@ export class Manager extends EventEmitter {
     this.botId = undefined
     this.loadingData = false
     this.fetchingMessages = false
+  }
+
+  private heartbeatTimer?: NodeJS.Timer
+
+  private startHeartbeat () {
+    if (!this.heartbeatTimer) {
+      this.asystoleCount = 0
+      this.heartbeatTimer = setInterval(this.heartbeat.bind(this), 5000)
+    }
+  }
+
+  private stopHeartbeat () {
+    if (this.heartbeatTimer) {
+      clearTimeout(this.heartbeatTimer)
+    }
+  }
+
+  private asystoleCount = 0
+  private async heartbeat () {
+    const alive = this.whatsAppClient?.pupBrowser?.isConnected()
+    if (alive) {
+      this.asystoleCount = 0
+    } else {
+      this.asystoleCount += 1
+      if (this.asystoleCount > 5) {
+        await this.stop()
+        await this.start()
+        this.asystoleCount = 0
+      }
+    }
   }
 
 }
