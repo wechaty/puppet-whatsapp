@@ -93,6 +93,14 @@ export class Manager extends EventEmitter {
     super()
     this.options = options
     this.scheduleManager = new ScheduleManager(this)
+
+    process.on('uncaughtException', async (err) => {
+      if (err.message.includes('Session closed') || err.message.includes('browser has disconnected')) {
+        logger.warn('Session closed')
+        await this.stop()
+        await this.start()
+      }
+    })
   }
 
   public override emit (event: 'message', payload: PUPPET.EventMessagePayload): boolean
