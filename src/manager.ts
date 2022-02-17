@@ -254,7 +254,7 @@ export class Manager extends EventEmitter {
         }
         await cacheManager.setContactOrRoomRawPayload(contactOrRoomId, contactWithAvatar)
       } else if (isRoomId(contactOrRoomId)) {
-        const memberList = await this.roomMemberListSync(contactOrRoomId)
+        const memberList = await this.syncRoomMemberList(contactOrRoomId)
         if (memberList.length > 0) {
           roomCount++
           await cacheManager.setContactOrRoomRawPayload(contactOrRoomId, contactWithAvatar)
@@ -515,7 +515,7 @@ export class Manager extends EventEmitter {
         await this.onMessage(msgPayload)
         break
       case GroupNotificationTypes.CREATE:
-        const members = await this.roomMemberListSync(roomId)
+        const members = await this.syncRoomMemberList(roomId)
         const roomJoinPayload = genRoomJoinEvent(notification, members)
         this.emit('room-join', roomJoinPayload)
         break
@@ -957,7 +957,7 @@ export class Manager extends EventEmitter {
    * @param { string } roomId roomId
    * @returns { string[] } member id list
    */
-  public async roomMemberListSync (roomId: string): Promise<string[]> {
+  public async syncRoomMemberList (roomId: string): Promise<string[]> {
     const roomChat = await this.getRoomChatById(roomId)
     // FIXME: How to deal with pendingParticipants? Maybe we should find which case could has this attribute.
     return roomChat.participants.map(m => m.id._serialized)
