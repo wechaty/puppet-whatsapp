@@ -13,7 +13,7 @@ import {
   MEMORY_SLOT,
   MIN_BATTERY_VALUE_FOR_LOGOUT,
   PRE,
-  DEFAULT_TIMEOUT
+  DEFAULT_TIMEOUT,
 } from './config.js'
 import { WA_ERROR_TYPE } from './exceptions/error-type.js'
 import WAError from './exceptions/whatsapp-error.js'
