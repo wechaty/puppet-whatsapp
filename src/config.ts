@@ -55,3 +55,5 @@ export const DEFAULT_TIMEOUT = {
   MESSAGE_SEND_TEXT: 20 * 1000,
   TIMEOUT_WAIT_CONNECTED: 3 * 1000,
 }
+
+export const HISTORY_MESSAGES_DAYS = Number(process.env['HISTORY_MESSAGES_DAYS'] || '3')

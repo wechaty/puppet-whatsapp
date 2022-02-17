@@ -1,3 +1,5 @@
+import { HISTORY_MESSAGES_DAYS } from './config.js'
+
 const InviteLinkRegex = /^(https?:\/\/)?chat\.whatsapp\.com\/(?:invite\/)?([a-zA-Z0-9_-]{22})$/
 
 export const sleep = async (milliseconds?: number) => {
@@ -36,4 +38,8 @@ export const batchProcess = async (batchSize: number, list: any[], func: any) =>
     await Promise.all(curList.map(func))
     index++
   }
+}
+
+export const getMaxTimestampForLoadHistoryMessages = () => {
+  return Math.floor(Date.now() / 1000) - HISTORY_MESSAGES_DAYS * 24 * 3600
 }

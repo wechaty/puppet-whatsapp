@@ -28,6 +28,7 @@ import { withPrefix } from './logger/index.js'
 import {
   batchProcess,
   getInviteCode,
+  getMaxTimestampForLoadHistoryMessages,
   isContactId,
   isInviteLink,
   isRoomId,
@@ -301,11 +302,13 @@ export class Manager extends EventEmitter {
     const cacheManager = await this.getCacheManager()
     try {
       const chat = await contactOrRoom.getChat()
-      const latestMessageTimestampInCache = await cacheManager.getLatestMessageTimestampForChat(contactOrRoomId)
       let messageList = await chat.fetchMessages({})
-      if (latestMessageTimestampInCache) {
-        messageList = messageList.filter(m => m.timestamp >= latestMessageTimestampInCache)
-      }
+
+      const maxTimestampForLoadHistoryMessages = getMaxTimestampForLoadHistoryMessages()
+      const latestTimestampInCache = await cacheManager.getLatestMessageTimestampForChat(contactOrRoomId)
+      const minTimestamp = Math.min(latestTimestampInCache, maxTimestampForLoadHistoryMessages)
+      messageList = messageList.filter(m => m.timestamp >= minTimestamp)
+
       const latestMessageTimestamp = messageList[messageList.length - 1]?.timestamp
       if (latestMessageTimestamp) {
         await cacheManager.setLatestMessageTimestampForChat(contactOrRoomId, latestMessageTimestamp)
