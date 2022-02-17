@@ -232,9 +232,19 @@ export class CacheManager {
    * Message Cache Section
    * --------------------------------
    */
-  public async getLatestMessageTimestampForChat (id: string) {
+
+  /**
+   * get timestamp of the latest message for contact or room, if timestamp is not in cache, return Number.MAX_SAFE_INTEGER
+   * @param {string} id message id
+   * @returns {number} timestamp or Number.MAX_SAFE_INTEGER
+   */
+  public async getLatestMessageTimestampForChat (id: string): Promise<number> {
     const cache = this.getLatestMessageTimestampForChatCache()
-    return cache.get(id)
+    const timestamp = await cache.get(id)
+    if (!timestamp) {
+      return Number.MAX_SAFE_INTEGER
+    }
+    return timestamp
   }
 
   public async setLatestMessageTimestampForChat (id: string, num: number): Promise<void> {
