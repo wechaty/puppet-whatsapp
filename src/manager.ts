@@ -95,9 +95,9 @@ export class Manager extends EventEmitter {
     this.options = options
     this.scheduleManager = new ScheduleManager(this)
 
-    process.on('uncaughtException', async (err, promise) => {
+    process.on('uncaughtException', async (err, origin) => {
       if (err.message.includes('Session closed') || err.message.includes('browser has disconnected')) {
-        logger.warn(`uncaughtException: ${err.message} at ${promise}`)
+        logger.warn(`uncaughtException: ${err.message} at ${origin}`)
         await this.stop()
         await this.start()
       }
