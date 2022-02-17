@@ -467,7 +467,7 @@ export class Manager extends EventEmitter {
       timestamp: notification.timestamp,
     }
     const cacheManager = await this.getCacheManager()
-    await cacheManager.addRoomMemberToList(roomId, notification.recipientIds)
+    await cacheManager.deleteRoomMemberIdList(roomId)
     this.emit('room-join', roomJoinPayload)
   }
 
@@ -483,7 +483,7 @@ export class Manager extends EventEmitter {
       timestamp: notification.timestamp,
     }
     const cacheManager = await this.getCacheManager()
-    await cacheManager.removeRoomMemberFromList(roomId, notification.recipientIds)
+    await cacheManager.deleteRoomMemberIdList(roomId)
     this.emit('room-leave', roomLeavePayload)
   }
 
