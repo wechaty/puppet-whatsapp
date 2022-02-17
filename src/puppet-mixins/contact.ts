@@ -4,7 +4,7 @@ import * as PUPPET from 'wechaty-puppet'
 import {
   FileBox,
 } from '../compact/index.js'
-import { avatarForContact, PRE, SPECIAL_BOT_PUSHNAME } from '../config.js'
+import { PRE, SPECIAL_BOT_PUSHNAME } from '../config.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import { withPrefix } from '../logger/index.js'
@@ -55,8 +55,8 @@ export async function contactList (this: PuppetWhatsApp): Promise<string[]> {
   return contactIdList
 }
 
-export async function contactAvatar (this: PuppetWhatsApp, contactId: string)                : Promise<FileBox>
-export async function contactAvatar (this: PuppetWhatsApp, contactId: string, file: FileBox) : Promise<void>
+export async function contactAvatar (this: PuppetWhatsApp, contactId: string): Promise<FileBox>
+export async function contactAvatar (this: PuppetWhatsApp, contactId: string, file: FileBox): Promise<void>
 
 export async function contactAvatar (this: PuppetWhatsApp, contactId: string, file?: FileBox): Promise<void | FileBox> {
   logger.info('contactAvatar(%s)', contactId)
@@ -73,8 +73,6 @@ export async function contactAvatar (this: PuppetWhatsApp, contactId: string, fi
   }
   if (avatar) {
     return FileBox.fromUrl(avatar)
-  } else {
-    return avatarForContact()
   }
 
 }

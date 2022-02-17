@@ -1,7 +1,7 @@
 /* eslint-disable no-redeclare */
 import * as PUPPET from 'wechaty-puppet'
 import { FileBox } from '../compact/index.js'
-import { avatarForGroup, PRE } from '../config.js'
+import { PRE } from '../config.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import { withPrefix } from '../logger/index.js'
@@ -152,8 +152,7 @@ export async function roomAvatar (this: PuppetWhatsApp, roomId: string): Promise
   if (payload.avatar) {
     return FileBox.fromUrl(payload.avatar)
   }
-  logger.warn('roomAvatar() avatar not found, use the chatie default.')
-  return avatarForGroup()
+  throw WAError(WA_ERROR_TYPE.ERR_ROOM_AVATAR_NOT_FOUND, `can not find this room avatar, room id: ${roomId}`)
 }
 
 export async function roomTopic(this: PuppetWhatsApp, roomId: string): Promise<string>
