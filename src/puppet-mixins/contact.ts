@@ -4,7 +4,7 @@ import * as PUPPET from 'wechaty-puppet'
 import {
   FileBox,
 } from '../compact/index.js'
-import { avatarForContact, PRE } from '../config.js'
+import { avatarForContact, PRE, SPECIAL_BOT_PUSHNAME } from '../config.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import { withPrefix } from '../logger/index.js'
@@ -108,7 +108,10 @@ export async function contactRawPayloadParser (this: PuppetWhatsApp, contactPayl
   }
   let name
   if (contactPayload.isMe) {
-    name = contactPayload.pushname || this.manager.getWhatsApp().info.pushname
+    name = this.manager.getWhatsApp().info.pushname || contactPayload.pushname
+    if (name === SPECIAL_BOT_PUSHNAME) {
+      name = contactPayload.shortName
+    }
   } else {
     name = contactPayload.pushname || contactPayload.name
   }
