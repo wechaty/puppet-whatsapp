@@ -1,7 +1,7 @@
 /* eslint-disable no-redeclare */
 import * as PUPPET from 'wechaty-puppet'
 import { FileBox } from '../compact/index.js'
-import { avatarForGroup, PRE } from '../config.js'
+import { PRE } from '../config.js'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
 import { withPrefix } from '../logger/index.js'
@@ -144,7 +144,7 @@ export async function roomQuit (this: PuppetWhatsApp, roomId: string): Promise<v
   await cacheManager.deleteRoomMemberIdList(roomId)
 }
 
-export async function roomAvatar (this: PuppetWhatsApp, roomId: string): Promise<FileBox> {
+export async function roomAvatar (this: PuppetWhatsApp, roomId: string): Promise<void | FileBox> {
   logger.info('roomAvatar(%s)', roomId)
 
   const payload = await this.roomPayload(roomId)
@@ -152,8 +152,6 @@ export async function roomAvatar (this: PuppetWhatsApp, roomId: string): Promise
   if (payload.avatar) {
     return FileBox.fromUrl(payload.avatar)
   }
-  logger.warn('roomAvatar() avatar not found, use the chatie default.')
-  return avatarForGroup()
 }
 
 export async function roomTopic(this: PuppetWhatsApp, roomId: string): Promise<string>
