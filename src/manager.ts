@@ -85,8 +85,8 @@ export class Manager extends EventEmitter {
   cacheManager?: CacheManager
   scheduleManager: ScheduleManager
   botId?: string
-  startingFetchMessages: boolean = false
-  isReadying: boolean = false
+  fetchingMessages: boolean = false
+  loadingData: boolean = false
 
   private pendingLogoutEmitTimer?: NodeJS.Timeout
 
@@ -235,10 +235,10 @@ export class Manager extends EventEmitter {
   }
 
   private async onReady (contactOrRoomList: WhatsAppContact[]) {
-    if (this.isReadying) {
+    if (this.loadingData) {
       return
     }
-    this.isReadying = true
+    this.loadingData = true
     let friendCount = 0
     let contactCount = 0
     let roomCount = 0
@@ -273,7 +273,7 @@ export class Manager extends EventEmitter {
 
     logger.info(`onReady() all contacts and rooms are ready, friendCount: ${friendCount} contactCount: ${contactCount} roomCount: ${roomCount}`)
     this.emit('ready')
-    this.isReadying = false
+    this.loadingData = false
   }
 
   /**
@@ -281,10 +281,10 @@ export class Manager extends EventEmitter {
    * @param {WhatsAppContact} contactOrRoom contact or room instance
    */
   public async fetchMessages (contactOrRoom: WhatsAppContact) {
-    if (this.startingFetchMessages) {
+    if (this.fetchingMessages) {
       return
     }
-    this.startingFetchMessages = true
+    this.fetchingMessages = true
     if (contactOrRoom.isMe) {
       // can not get chat for bot self
       return
@@ -311,7 +311,7 @@ export class Manager extends EventEmitter {
     } catch (error) {
       logger.error(`fetchMessages error: ${(error as Error).message}`)
     }
-    this.startingFetchMessages = false
+    this.fetchingMessages = false
   }
 
   private async onLogout (reason: string = LOGOUT_REASON.DEFAULT) {
@@ -978,8 +978,8 @@ export class Manager extends EventEmitter {
 
   private resetAllVarInMemory () {
     this.botId = undefined
-    this.isReadying = false
-    this.startingFetchMessages = false
+    this.loadingData = false
+    this.fetchingMessages = false
   }
 
 }
