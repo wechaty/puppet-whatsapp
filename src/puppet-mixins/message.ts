@@ -206,7 +206,15 @@ export async function messageSendText (this: PuppetWhatsApp, conversationId: str
 export async function messageSendFile (this: PuppetWhatsApp, conversationId: string, file: FileBox, options?: MessageSendOptions): Promise<void | string> {
   logger.info('messageSendFile(%s, %s)', conversationId, file.name)
   await file.ready()
-  const msgContent = new MessageMedia(file.mimeType!, await file.toBase64(), file.name)
+  const fileBoxJsonObject: any = file.toJSON() // FIXME: need import FileBoxJsonObject from file-box
+  const remoteUrl = fileBoxJsonObject.remoteUrl
+  let msgContent
+  if (remoteUrl) {
+    msgContent = await MessageMedia.fromUrl(remoteUrl, { filename: file.name })
+  } else {
+    const fileData = await file.toBase64()
+    msgContent = new MessageMedia(file.mimeType!, fileData, file.name)
+  }
   return messageSend.call(this, conversationId, msgContent, options, DEFAULT_TIMEOUT.MESSAGE_SEND_FILE)
 }
 
