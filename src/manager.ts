@@ -201,7 +201,7 @@ export class Manager extends EventEmitter {
   public async syncContactOrRoomList () {
     const whatsapp = this.getWhatsApp()
     const contactList: WhatsAppContact[] = await whatsapp.getContacts()
-    const contactOrRoomList = contactList.filter(c => c.id.server !== 'broadcast')
+    const contactOrRoomList = contactList.filter(c => c.id.server !== 'broadcast' && c.id._serialized !== '0@c.us')
     return contactOrRoomList
   }
 
