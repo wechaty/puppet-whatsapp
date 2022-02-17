@@ -577,6 +577,9 @@ export class Manager extends EventEmitter {
   private async onMediaUploaded (message: WhatsAppMessage) {
     logger.silly(`onMediaUploaded(${JSON.stringify(message)})`)
     await this.createOrUpdateImageMessage(message)
+    if (!message.hasMedia) {
+      logger.warn(`onMediaUploaded failed, message id: ${message.id.id}, type: ${message.type}, detail info: ${JSON.stringify(message)}`)
+    }
   }
 
   private async createOrUpdateImageMessage (message: WhatsAppMessage) {
