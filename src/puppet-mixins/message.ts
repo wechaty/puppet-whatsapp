@@ -186,9 +186,6 @@ export async function messageSend (this: PuppetWhatsApp, conversationId: string,
 
   const msg = await this.manager.sendMessage(conversationId, content, options)
   const messageId = msg.id.id
-  const cacheManager = await this.manager.getCacheManager()
-  await cacheManager.setMessageRawPayload(messageId, msg)
-
   const requestPool = RequestPool.Instance
   await requestPool.pushRequest(messageId, timeout)
   return messageId
