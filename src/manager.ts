@@ -86,6 +86,7 @@ export class Manager extends EventEmitter {
   scheduleManager: ScheduleManager
   botId?: string
   startingFetchMessages: boolean = false
+  isReadying: boolean = false
 
   private pendingLogoutEmitTimer?: NodeJS.Timeout
 
@@ -237,11 +238,15 @@ export class Manager extends EventEmitter {
   }
 
   private async onReady (contactOrRoomList: WhatsAppContact[]) {
-    const cacheManager = await this.getCacheManager()
+    if (this.isReadying) {
+      return
+    }
+    this.isReadying = true
     let friendCount = 0
     let contactCount = 0
     let roomCount = 0
 
+    const cacheManager = await this.getCacheManager()
     const batchSize = 100
     await batchProcess(batchSize, contactOrRoomList, async (contactOrRoom: WhatsAppContact) => {
       const contactOrRoomId = contactOrRoom.id._serialized
@@ -271,6 +276,7 @@ export class Manager extends EventEmitter {
 
     logger.info(`onReady() all contacts and rooms are ready, friendCount: ${friendCount} contactCount: ${contactCount} roomCount: ${roomCount}`)
     this.emit('ready')
+    this.isReadying = false
   }
 
   /**
@@ -562,6 +568,8 @@ export class Manager extends EventEmitter {
       case WAState.CONNECTED:
         this.clearPendingLogoutEmitTimer()
         this.emit('login', this.botId)
+        const contactOrRoomList = await this.syncContactOrRoomList()
+        await this.onReady(contactOrRoomList)
         break
       default:
         break
