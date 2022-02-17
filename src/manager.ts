@@ -316,6 +316,9 @@ export class Manager extends EventEmitter {
     await this.options.memory?.delete(MEMORY_SLOT)
     await this.options.memory?.save()
     this.scheduleManager.stopSyncMissedMessagesSchedule()
+    if (this.pendingLogoutEmitTimer) {
+      clearTimeout(this.pendingLogoutEmitTimer)
+    }
     this.emit('logout', this.getBotId(), reason as string)
   }
 
