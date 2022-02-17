@@ -316,9 +316,7 @@ export class Manager extends EventEmitter {
     await this.options.memory?.delete(MEMORY_SLOT)
     await this.options.memory?.save()
     this.scheduleManager.stopSyncMissedMessagesSchedule()
-    if (this.pendingLogoutEmitTimer) {
-      clearTimeout(this.pendingLogoutEmitTimer)
-    }
+    this.clearPendingLogoutEmitTimer()
     this.emit('logout', this.getBotId(), reason as string)
   }
 
@@ -558,13 +556,11 @@ export class Manager extends EventEmitter {
       case WAState.TIMEOUT:
         this.pendingLogoutEmitTimer = setTimeout(() => {
           this.emit('logout', this.getBotId(), LOGOUT_REASON.NETWORK_TIMEOUT_IN_PHONE)
-          clearTimeout(this.pendingLogoutEmitTimer!)
+          this.pendingLogoutEmitTimer = undefined
         }, DEFAULT_TIMEOUT.TIMEOUT_WAIT_CONNECTED)
         break
       case WAState.CONNECTED:
-        if (this.pendingLogoutEmitTimer) {
-          clearTimeout(this.pendingLogoutEmitTimer)
-        }
+        this.clearPendingLogoutEmitTimer()
         this.emit('login', this.botId)
         break
       default:
@@ -962,6 +958,13 @@ export class Manager extends EventEmitter {
     const roomChat = await this.getRoomChatById(roomId)
     // FIXME: How to deal with pendingParticipants? Maybe we should find which case could has this attribute.
     return roomChat.participants.map(m => m.id._serialized)
+  }
+
+  private clearPendingLogoutEmitTimer () {
+    if (this.pendingLogoutEmitTimer) {
+      clearTimeout(this.pendingLogoutEmitTimer)
+      this.pendingLogoutEmitTimer = undefined
+    }
   }
 
 }
