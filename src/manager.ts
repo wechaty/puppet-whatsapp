@@ -986,7 +986,6 @@ export class Manager extends EventEmitter {
   private clearPendingLogoutEmitTimer () {
     if (this.pendingLogoutEmitTimer) {
       clearTimeout(this.pendingLogoutEmitTimer)
-      this.pendingLogoutEmitTimer = undefined
     }
   }
 
