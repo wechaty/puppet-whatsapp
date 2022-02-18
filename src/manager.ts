@@ -574,9 +574,7 @@ export class Manager extends EventEmitter {
       case WAState.CONNECTED:
         this.clearPendingLogoutEmitTimer()
         this.emit('login', this.botId)
-        logger.info('will sync contact')
         const contactOrRoomList = await this.syncContactOrRoomList()
-        logger.info('contact synced')
         await this.onReady(contactOrRoomList)
         break
       default:
