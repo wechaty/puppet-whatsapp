@@ -35,7 +35,6 @@ import { tagContactAdd, tagContactRemove, tagContactDelete, tagContactList } fro
 import { Manager } from './manager.js'
 import { WA_ERROR_TYPE } from './exceptions/error-type.js'
 import WAError from './exceptions/whatsapp-error.js'
-import { EventName } from './schema/index.js'
 
 import type {
   ClientOptions,
@@ -161,7 +160,7 @@ class PuppetWhatsApp extends PUPPET.Puppet {
       logger.warn('onLogin(%s) already login? NOOP', wxid)
       return
     }
-    logger.info(`${EventName.LOGIN}, ${wxid}`)
+    logger.info(`${PUPPET.PUPPET_EVENT_DICT.login}, ${wxid}`)
     this.id = wxid
     if (!this.selfId()) {
       await super.login(this.id)
@@ -176,7 +175,7 @@ class PuppetWhatsApp extends PUPPET.Puppet {
     if (!this.logonoff()) {
       logger.warn('onLogout(%s) already logged out?', wxid)
     }
-    logger.info(`${EventName.LOGOUT}, ${wxid}`)
+    logger.info(`${PUPPET.PUPPET_EVENT_DICT.logout}, ${wxid}`)
 
     this.id = undefined
 
@@ -194,19 +193,19 @@ class PuppetWhatsApp extends PUPPET.Puppet {
   private async onScan (status: PUPPET.ScanStatus, qrcode?: string): Promise<void> {
     logger.info('onScan(%s, %s)', status, qrcode)
 
-    logger.info(`${EventName.SCAN}`)
+    logger.info(`${PUPPET.PUPPET_EVENT_DICT.scan}`)
     this.emit('scan', { qrcode, status })
   }
 
   private async onError (e: string) {
-    logger.info(`${EventName.ERROR}, ${e}`)
+    logger.info(`${PUPPET.PUPPET_EVENT_DICT.error}, ${e}`)
     this.emit('error', {
       data: e,
     })
   }
 
   private async onReset (reason: string) {
-    logger.info(`${EventName.RESET}, ${reason}`)
+    logger.info(`${PUPPET.PUPPET_EVENT_DICT.reset}, ${reason}`)
     this.emit('reset', { data: reason } as PUPPET.EventResetPayload)
   }
 
@@ -242,7 +241,7 @@ class PuppetWhatsApp extends PUPPET.Puppet {
   private async onReady () {
     logger.info('onReady()')
 
-    logger.info(`${EventName.READY}`)
+    logger.info(`${PUPPET.PUPPET_EVENT_DICT.ready}`)
     this.emit('ready', { data: 'ready' })
   }
 
