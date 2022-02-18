@@ -1,6 +1,6 @@
 /* eslint-disable no-case-declarations */
 /* eslint-disable import/no-duplicates */
-import { EventEmitter } from 'events'
+import { EventEmitter as EE } from 'ee-ts'
 import * as PUPPET from 'wechaty-puppet'
 import {
   distinctUntilKeyChanged,
@@ -62,25 +62,10 @@ import {
 } from './pure-function-helpers/room-event-generator.js'
 import ScheduleManager from './schedule/schedule-manager.js'
 import { RequestPool } from './request/requestPool.js'
+import type { ManagerEvents } from './manager-event.js'
 
 const logger = withPrefix(`${PRE} Manager`)
-
-type ManagerEvents = 'message'
-                   | 'room-join'
-                   | 'room-leave'
-                   | 'room-topic'
-                   | 'room-invite'
-                   | 'reset'
-                   | 'friendship'
-                   | 'ready'
-                   | 'error'
-                   | 'heartbeat'
-                   | 'scan'
-                   | 'login'
-                   | 'logout'
-                   | 'dirty'
-
-export class Manager extends EventEmitter {
+export class Manager extends EE<ManagerEvents> {
 
   whatsAppClient?: WhatsAppClientType
   requestManager?: RequestManager
@@ -96,45 +81,6 @@ export class Manager extends EventEmitter {
     super()
     this.options = options
     this.scheduleManager = new ScheduleManager(this)
-  }
-
-  public override emit (event: 'message', payload: PUPPET.EventMessagePayload): boolean
-  public override emit (event: 'room-join', payload: PUPPET.EventRoomJoinPayload): boolean
-  public override emit (event: 'room-leave', payload: PUPPET.EventRoomLeavePayload): boolean
-  public override emit (event: 'room-topic', payload: PUPPET.EventRoomTopicPayload): boolean
-  public override emit (event: 'room-invite', payload: PUPPET.EventRoomInvitePayload): boolean
-  public override emit (event: 'scan', status: PUPPET.ScanStatus, url?: string): boolean
-  public override emit (event: 'login', userId: string): boolean
-  public override emit (event: 'logout', userId: string, message: string): boolean
-  public override emit (event: 'friendship', payload: PUPPET.EventFriendshipPayload): boolean
-  public override emit (event: 'reset', reason: string): boolean
-  public override emit (event: 'error', error: string): boolean
-  public override emit (event: 'heartbeat', data: string): boolean
-  public override emit (event: 'ready'): boolean
-  public override emit (event: 'dirty', payload: PUPPET.EventDirtyPayload): boolean
-  public override emit (event: never, ...args: never[]): never
-  public override emit (event: ManagerEvents, ...args: any[]): boolean {
-    return super.emit(event, ...args)
-  }
-
-  public override on (event: 'message', listener: (payload: PUPPET.EventMessagePayload) => any): this
-  public override on (event: 'room-join', listener: (payload: PUPPET.EventRoomJoinPayload) => any): this
-  public override on (event: 'room-leave', listener: (payload: PUPPET.EventRoomLeavePayload) => any): this
-  public override on (event: 'room-topic', listener: (payload: PUPPET.EventRoomTopicPayload) => any): this
-  public override on (event: 'room-invite', listener: (payload: PUPPET.EventRoomInvitePayload) => any): this
-  public override on (event: 'scan', listener: (status: PUPPET.ScanStatus, url?: string) => any): this
-  public override on (event: 'login', listener: (userId: string) => any): this
-  public override on (event: 'logout', listener: (userId: string, message: string) => any): this
-  public override on (event: 'friendship', listener: (id: string) => any): this
-  public override on (event: 'reset', listener: (reason: string) => any): this
-  public override on (event: 'error', listener: (error: string) => any): this
-  public override on (event: 'heartbeat', listener: (data: string) => any): this
-  public override on (event: 'ready', listener: () => any): this
-  public override on (event: 'dirty', listener: (payload: PUPPET.EventDirtyPayload) => void): this
-  public override on (event: never, listener: never): never
-  public override on (event: ManagerEvents, listener : (...args: any[]) => any): this {
-    super.on(event, listener)
-    return this
   }
 
   public async start (session?: ClientSession) {
@@ -208,11 +154,12 @@ export class Manager extends EventEmitter {
   }
 
   private async onLogin (contactOrRoomList: WhatsAppContact[]) {
+    logger.info('onLogin()')
     const whatsapp = this.getWhatsApp()
     try {
       this.botId = whatsapp.info.wid._serialized
     } catch (error) {
-      throw WAError(WA_ERROR_TYPE.ERR_INIT, 'No login bot id.')
+      throw WAError(WA_ERROR_TYPE.ERR_INIT, `Can not get bot id from WhatsApp client, current state: ${await whatsapp.getState()}`, JSON.stringify(error))
     }
     logger.info(`WhatsApp Client Info: ${JSON.stringify(whatsapp.info)}`)
 
@@ -243,6 +190,7 @@ export class Manager extends EventEmitter {
   private async onReady (contactOrRoomList: WhatsAppContact[]) {
     logger.info('onReady()')
     if (this.loadingData) {
+      logger.info('onReady() loading data are under process.')
       return
     }
     this.loadingData = true
@@ -325,12 +273,12 @@ export class Manager extends EventEmitter {
 
   private async onLogout (reason: string = LOGOUT_REASON.DEFAULT) {
     logger.info(`onLogout(${reason})`)
-    this.resetAllVarInMemory()
     await this.options.memory?.delete(MEMORY_SLOT)
     await this.options.memory?.save()
     this.scheduleManager.stopSyncMissedMessagesSchedule()
     this.clearPendingLogoutEmitTimer()
     this.emit('logout', this.getBotId(), reason as string)
+    this.resetAllVarInMemory()
   }
 
   private async onMessage (message: WhatsAppMessage | WhatsAppMessagePayload) {
@@ -961,7 +909,7 @@ export class Manager extends EventEmitter {
 
   public getBotId () {
     if (!this.botId) {
-      throw WAError(WA_ERROR_TYPE.ERR_INIT, 'this bot is not login')
+      throw WAError(WA_ERROR_TYPE.ERR_INIT, 'This bot is not login')
     }
     return this.botId
   }
@@ -981,7 +929,6 @@ export class Manager extends EventEmitter {
   private clearPendingLogoutEmitTimer () {
     if (this.pendingLogoutEmitTimer) {
       clearTimeout(this.pendingLogoutEmitTimer)
-      this.pendingLogoutEmitTimer = undefined
     }
   }
 
