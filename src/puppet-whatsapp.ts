@@ -105,21 +105,22 @@ class PuppetWhatsApp extends PUPPET.Puppet {
   }
 
   private async startManager (manager: Manager) {
-    manager
-      .on('heartbeat', data => this.emit('heartbeat', { data }))
-      .on('error',     this.onError.bind(this))
-      .on('scan',      this.onScan.bind(this))
-      .on('reset',     this.onReset.bind(this))
-      .on('login',     this.onLogin.bind(this))
-      .on('logout',    this.onLogout.bind(this))
-      .on('message',   this.onMessage.bind(this))
-      .on('friendship',  this.onFriendship.bind(this))
-      .on('room-join',  this.onRoomJoin.bind(this))
-      .on('room-leave', this.onRoomLeave.bind(this))
-      .on('room-topic', this.onRoomTopic.bind(this))
-      .on('room-invite', this.onRoomInvite.bind(this))
-      .on('ready',      this.onReady.bind(this))
-      .on('dirty', this.onDirty.bind(this))
+    manager.on({
+      dirty:this.onDirty.bind(this),
+      error:    this.onError.bind(this),
+      friendship: this.onFriendship.bind(this),
+      heartbeat: data => this.emit('heartbeat', { data }),
+      login:    this.onLogin.bind(this),
+      logout:   this.onLogout.bind(this),
+      message:  this.onMessage.bind(this),
+      ready:     this.onReady.bind(this),
+      reset:    this.onReset.bind(this),
+      'room-invite':this.onRoomInvite.bind(this),
+      'room-join': this.onRoomJoin.bind(this),
+      'room-leave':this.onRoomLeave.bind(this),
+      'room-topic':this.onRoomTopic.bind(this),
+      scan:     this.onScan.bind(this),
+    })
 
     const session = await this.options.memory?.get(MEMORY_SLOT)
     const whatsapp = await this.manager.start(session)
@@ -142,7 +143,7 @@ class PuppetWhatsApp extends PUPPET.Puppet {
   }
 
   private async stopManager () {
-    this.manager.removeAllListeners()
+    this.manager.off('*')
     await this.manager.stop()
   }
 
@@ -207,11 +208,11 @@ class PuppetWhatsApp extends PUPPET.Puppet {
     this.emit('reset', { data: reason } as PUPPET.EventResetPayload)
   }
 
-  private async onFriendship (id: string): Promise<void> {
-    const contactId = await this.messageContact(id)
+  private async onFriendship (payload: PUPPET.EventFriendshipPayload): Promise<void> {
+    const contactId = await this.messageContact(payload.friendshipId)
     // NOTE: this function automatically put non-contact into cache
     await this.contactRawPayload(contactId)
-    this.emit('friendship', { friendshipId: id })
+    this.emit('friendship', { friendshipId: payload.friendshipId })
   }
 
   private async onRoomJoin (payload: PUPPET.EventRoomJoinPayload) {
