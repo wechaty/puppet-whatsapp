@@ -932,6 +932,7 @@ export class Manager extends EE<ManagerEvents> {
   private clearPendingLogoutEmitTimer () {
     if (this.pendingLogoutEmitTimer) {
       clearTimeout(this.pendingLogoutEmitTimer)
+      this.pendingLogoutEmitTimer = undefined
     }
   }
 
