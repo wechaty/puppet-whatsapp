@@ -1,6 +1,6 @@
 {
   "name": "wechaty-puppet-whatsapp",
-  "version": "0.41.198",
+  "version": "0.41.200",
   "description": "Wechaty Puppet for WhatsApp",
   "type": "module",
   "exports": {
@@ -58,8 +58,8 @@
     "@types/cuid": "^2.0.1",
     "@types/fs-extra": "^9.0.13",
     "@types/mime": "^2.0.3",
-    "@types/qrcode-terminal": "^0.12.0",
     "@types/node-schedule": "^1.3.1",
+    "@types/qrcode-terminal": "^0.12.0",
     "qrcode-terminal": "^0.12.0"
   },
   "peerDependencies": {
@@ -67,14 +67,15 @@
   },
   "dependencies": {
     "@juzi.bot/whatsapp-web.js": "1.15.13",
+    "ee-ts": "^1.0.2",
     "flash-store": "^0.12.7",
     "fs-extra": "^10.0.0",
     "gerror": "^1.0.16",
     "mime": "^3.0.0",
+    "node-schedule": "^1.3.2",
     "rxjs": "^7.5.1",
     "tap": "^15.1.6",
     "type-fest": "^2.10.0",
-    "node-schedule": "^1.3.2",
     "wechaty-puppet": "^0.41.9"
   },
   "tap": {
