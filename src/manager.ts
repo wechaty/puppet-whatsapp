@@ -79,7 +79,6 @@ export class Manager extends EE<ManagerEvents> {
 
   constructor (private options: PuppetWhatsAppOptions) {
     super()
-    this.options = options
     this.scheduleManager = new ScheduleManager(this)
   }
 
