@@ -106,20 +106,22 @@ class PuppetWhatsApp extends PUPPET.Puppet {
 
   private async startManager (manager: Manager) {
     manager.on({
-      dirty:this.onDirty.bind(this),
-      error:    this.onError.bind(this),
+      dirty: this.onDirty.bind(this),
+      error: this.onError.bind(this),
       friendship: this.onFriendship.bind(this),
-      heartbeat: data => this.emit('heartbeat', { data }),
-      login:    this.onLogin.bind(this),
-      logout:   this.onLogout.bind(this),
-      message:  this.onMessage.bind(this),
-      ready:     this.onReady.bind(this),
-      reset:    this.onReset.bind(this),
-      'room-invite':this.onRoomInvite.bind(this),
+      heartbeat: data => this.emit('heartbeat', {
+        data,
+      }),
+      login: this.onLogin.bind(this),
+      logout: this.onLogout.bind(this),
+      message: this.onMessage.bind(this),
+      ready: this.onReady.bind(this),
+      reset: this.onReset.bind(this),
+      'room-invite': this.onRoomInvite.bind(this),
       'room-join': this.onRoomJoin.bind(this),
-      'room-leave':this.onRoomLeave.bind(this),
-      'room-topic':this.onRoomTopic.bind(this),
-      scan:     this.onScan.bind(this),
+      'room-leave': this.onRoomLeave.bind(this),
+      'room-topic': this.onRoomTopic.bind(this),
+      scan: this.onScan.bind(this),
     })
 
     const session = await this.options.memory?.get(MEMORY_SLOT)
