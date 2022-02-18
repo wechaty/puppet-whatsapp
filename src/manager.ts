@@ -122,12 +122,16 @@ export class Manager extends EE<ManagerEvents> {
 
   private async onAuthenticated (session: ClientSession) {
     logger.info(`onAuthenticated(${JSON.stringify(session)})`)
-    try {
-      await this.options.memory?.set(MEMORY_SLOT, session)
-      await this.options.memory?.save()
-    } catch (e) {
-      console.error(e)
-      logger.error('getClient() whatsapp.on(authenticated) rejection: %s', e)
+    if (this.options.memory) {
+      await this.options.memory.set(MEMORY_SLOT, session)
+      await this.options.memory.save()
+    }
+  }
+
+  private async clearSession () {
+    if (this.options.memory) {
+      await this.options.memory.delete(MEMORY_SLOT)
+      await this.options.memory.save()
     }
   }
 
@@ -137,8 +141,7 @@ export class Manager extends EE<ManagerEvents> {
     // msg -> auth_failure message
     // auth_failure due to session invalidation
     // clear sessionData -> reinit
-    await this.options.memory?.delete(MEMORY_SLOT)
-    await this.options.memory?.save()
+    await this.clearSession()
   }
 
   private async onWhatsAppReady () {
@@ -276,8 +279,7 @@ export class Manager extends EE<ManagerEvents> {
 
   private async onLogout (reason: string = LOGOUT_REASON.DEFAULT) {
     logger.info(`onLogout(${reason})`)
-    await this.options.memory?.delete(MEMORY_SLOT)
-    await this.options.memory?.save()
+    await this.clearSession()
     this.scheduleManager.stopSyncMissedMessagesSchedule()
     this.clearPendingLogoutEmitTimer()
     this.emit('logout', this.getBotId(), reason as string)
