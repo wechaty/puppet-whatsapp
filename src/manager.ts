@@ -157,11 +157,12 @@ export class Manager extends EE<ManagerEvents> {
   }
 
   private async onLogin (contactOrRoomList: WhatsAppContact[]) {
+    logger.info('onLogin()')
     const whatsapp = this.getWhatsApp()
     try {
       this.botId = whatsapp.info.wid._serialized
     } catch (error) {
-      throw WAError(WA_ERROR_TYPE.ERR_INIT, 'No login bot id.')
+      throw WAError(WA_ERROR_TYPE.ERR_INIT, `Can not get bot id from WhatsApp client, current state: ${await whatsapp.getState()}`, JSON.stringify(error))
     }
     logger.info(`WhatsApp Client Info: ${JSON.stringify(whatsapp.info)}`)
 
@@ -190,7 +191,9 @@ export class Manager extends EE<ManagerEvents> {
   }
 
   private async onReady (contactOrRoomList: WhatsAppContact[]) {
+    logger.info('onReady()')
     if (this.loadingData) {
+      logger.info('onReady() loading data are under process.')
       return
     }
     this.loadingData = true
@@ -273,12 +276,12 @@ export class Manager extends EE<ManagerEvents> {
 
   private async onLogout (reason: string = LOGOUT_REASON.DEFAULT) {
     logger.info(`onLogout(${reason})`)
-    this.resetAllVarInMemory()
     await this.options.memory?.delete(MEMORY_SLOT)
     await this.options.memory?.save()
     this.scheduleManager.stopSyncMissedMessagesSchedule()
     this.clearPendingLogoutEmitTimer()
     this.emit('logout', this.getBotId(), reason as string)
+    this.resetAllVarInMemory()
   }
 
   private async onMessage (message: WhatsAppMessage | WhatsAppMessagePayload) {
@@ -909,7 +912,7 @@ export class Manager extends EE<ManagerEvents> {
 
   public getBotId () {
     if (!this.botId) {
-      throw WAError(WA_ERROR_TYPE.ERR_INIT, 'this bot is not login')
+      throw WAError(WA_ERROR_TYPE.ERR_INIT, 'This bot is not login')
     }
     return this.botId
   }
