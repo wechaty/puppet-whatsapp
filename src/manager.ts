@@ -956,6 +956,13 @@ export class Manager extends EE<ManagerEvents> {
 
   private asystoleCount = 0
   private async heartbeat () {
+
+    /**
+     * puppteer.isConnected behaviour: (in MacOs)
+     * it will still return true if the Chromium window is closed with command + w
+     * it will not return true if the Chromium process is terminated with command + q
+     */
+
     const alive = this.getWhatsApp().pupBrowser?.isConnected()
     if (alive) {
       this.asystoleCount = 0
