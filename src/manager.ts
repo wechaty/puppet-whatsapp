@@ -962,7 +962,9 @@ export class Manager extends EE<ManagerEvents> {
       this.emit('heartbeat', 'puppeteer still connected')
     } else {
       this.asystoleCount += 1
+      logger.warn(`asystole count: ${this.asystoleCount}`)
       if (this.asystoleCount > MAX_HEARTBEAT_MISSED) {
+        logger.error('max asystole reached, restarting...')
         await this.stop()
         await this.start()
         this.asystoleCount = 0
