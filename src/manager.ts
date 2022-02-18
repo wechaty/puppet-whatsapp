@@ -330,12 +330,12 @@ export class Manager extends EventEmitter {
 
   private async onLogout (reason: string = LOGOUT_REASON.DEFAULT) {
     logger.info(`onLogout(${reason})`)
-    this.resetAllVarInMemory()
     await this.options.memory?.delete(MEMORY_SLOT)
     await this.options.memory?.save()
     this.scheduleManager.stopSyncMissedMessagesSchedule()
     this.clearPendingLogoutEmitTimer()
     this.emit('logout', this.getBotId(), reason as string)
+    this.resetAllVarInMemory()
   }
 
   private async onMessage (message: WhatsAppMessage | WhatsAppMessagePayload) {
@@ -966,7 +966,7 @@ export class Manager extends EventEmitter {
 
   public getBotId () {
     if (!this.botId) {
-      throw WAError(WA_ERROR_TYPE.ERR_INIT, 'this bot is not login')
+      throw WAError(WA_ERROR_TYPE.ERR_INIT, 'This bot is not login')
     }
     return this.botId
   }
