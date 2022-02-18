@@ -136,11 +136,8 @@ export class Manager extends EE<ManagerEvents> {
   }
 
   private async onAuthFailure (message: string) {
-    // Unable to log in. Are the session details valid?, then restart no use exist session
-    logger.warn('auth_failure: %s, then restart no use exist session', message)
-    // msg -> auth_failure message
-    // auth_failure due to session invalidation
-    // clear sessionData -> reinit
+    logger.warn('auth_failure: %s', message)
+    // avoid reuse invalid session data
     await this.clearSession()
   }
 
