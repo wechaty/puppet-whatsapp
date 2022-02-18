@@ -1011,6 +1011,7 @@ export class Manager extends EventEmitter {
     const alive = this.getWhatsApp().pupBrowser?.isConnected()
     if (alive) {
       this.asystoleCount = 0
+      this.emit('heartbeat', 'puppeteer still connected')
     } else {
       this.asystoleCount += 1
       if (this.asystoleCount > MAX_HEARTBEAT_MISSED) {
