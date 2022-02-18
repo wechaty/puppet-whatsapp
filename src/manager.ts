@@ -15,6 +15,7 @@ import {
   PRE,
   DEFAULT_TIMEOUT,
   MessageMediaTypeList,
+  MAX_HEARTBEAT_MISSED,
 } from './config.js'
 import { WA_ERROR_TYPE } from './exceptions/error-type.js'
 import WAError from './exceptions/whatsapp-error.js'
@@ -995,7 +996,7 @@ export class Manager extends EventEmitter {
   private startHeartbeat () {
     if (!this.heartbeatTimer) {
       this.asystoleCount = 0
-      this.heartbeatTimer = setInterval(this.heartbeat.bind(this), 5000)
+      this.heartbeatTimer = setInterval(this.heartbeat.bind(this), 15 * 1000)
     }
   }
 
@@ -1007,12 +1008,12 @@ export class Manager extends EventEmitter {
 
   private asystoleCount = 0
   private async heartbeat () {
-    const alive = this.whatsAppClient?.pupBrowser?.isConnected()
+    const alive = this.getWhatsApp().pupBrowser?.isConnected()
     if (alive) {
       this.asystoleCount = 0
     } else {
       this.asystoleCount += 1
-      if (this.asystoleCount > 5) {
+      if (this.asystoleCount > MAX_HEARTBEAT_MISSED) {
         await this.stop()
         await this.start()
         this.asystoleCount = 0

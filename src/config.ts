@@ -57,3 +57,4 @@ export const DEFAULT_TIMEOUT = {
 }
 
 export const HISTORY_MESSAGES_DAYS = Number(process.env['HISTORY_MESSAGES_DAYS'] || '3')
+export const MAX_HEARTBEAT_MISSED = Number(process.env['MAX_HEARTBEAT_MISSED'] || '3')
