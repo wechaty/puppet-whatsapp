@@ -1003,6 +1003,7 @@ export class Manager extends EventEmitter {
   private stopHeartbeat () {
     if (this.heartbeatTimer) {
       clearInterval(this.heartbeatTimer)
+      this.heartbeatTimer = undefined
     }
   }
 
