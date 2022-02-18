@@ -212,7 +212,7 @@ class PuppetWhatsApp extends PUPPET.Puppet {
     const contactId = await this.messageContact(payload.friendshipId)
     // NOTE: this function automatically put non-contact into cache
     await this.contactRawPayload(contactId)
-    this.emit('friendship', { friendshipId: payload.friendshipId })
+    this.emit('friendship', payload)
   }
 
   private async onRoomJoin (payload: PUPPET.EventRoomJoinPayload) {
