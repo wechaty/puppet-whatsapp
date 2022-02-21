@@ -42,7 +42,7 @@ import type {
   WhatsAppClientType,
 } from './schema/whatsapp-type.js'
 import { RequestPool } from './request/requestPool.js'
-import type { RequestManager } from './request/requestManager.js'
+import type { RequestManagerAPIs } from './request/requestManager.js'
 
 process.on('uncaughtException', (e) => {
   console.error('process error is:', e.message)
@@ -53,18 +53,18 @@ export type PuppetWhatsAppOptions = PUPPET.PuppetOptions & {
   puppeteerOptions?: ClientOptions
 }
 
-// const EVENT_LOG_PRE = 'EVENT_LOG'
+type ManagerWithRequestManager = Manager & RequestManagerAPIs
 class PuppetWhatsApp extends PUPPET.Puppet {
 
   static override readonly VERSION = VERSION
 
-  public manager: Manager & RequestManager
+  public manager: ManagerWithRequestManager
 
   constructor (
     override options: PuppetWhatsAppOptions = {},
   ) {
     super(options)
-    this.manager = new Manager(this.options) as Manager & RequestManager
+    this.manager = new Manager(this.options) as ManagerWithRequestManager
   }
 
   override async start (): Promise<void> {
