@@ -62,7 +62,7 @@ export async function messageRecall (this: PuppetWhatsApp, messageId: string): P
     logger.error('Message %s not found', messageId)
     throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} not found`)
   }
-  const msgObj = convertMessagePayloadToClass(this.manager.getWhatsApp(), msg)
+  const msgObj = convertMessagePayloadToClass(this.manager.getWhatsAppClient(), msg)
   try {
     await msgObj.delete(true)
     return true
@@ -137,7 +137,7 @@ export async function messageFile (this: PuppetWhatsApp, messageId: string): Pro
 }
 
 async function downloadMedia (this: PuppetWhatsApp, msg: WhatsAppMessagePayload) {
-  const msgObj = convertMessagePayloadToClass(this.manager.getWhatsApp(), msg)
+  const msgObj = convertMessagePayloadToClass(this.manager.getWhatsAppClient(), msg)
   const media = await msgObj.downloadMedia()
   const filenameExtension = mime.getExtension(media.mimetype)
   const fileBox = FileBox.fromBase64(media.data, media.filename ?? `unknown_name.${filenameExtension}`)
@@ -257,7 +257,7 @@ export async function messageForward (this: PuppetWhatsApp, conversationId: stri
     logger.error('Message %s not found', messageId)
     throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} not found`)
   }
-  const msgObj = convertMessagePayloadToClass(this.manager.getWhatsApp(), msg)
+  const msgObj = convertMessagePayloadToClass(this.manager.getWhatsAppClient(), msg)
   try {
     await msgObj.forward(conversationId)
   } catch (error) {

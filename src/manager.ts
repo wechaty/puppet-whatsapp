@@ -20,7 +20,6 @@ import {
 } from './utils.js'
 import { RequestManager } from './request/requestManager.js'
 import { CacheManager } from './data-manager/cache-manager.js'
-import { getWhatsApp } from './whatsapp/whatsapp.js'
 
 import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
 import type {
@@ -36,24 +35,24 @@ import type {
 } from './schema/whatsapp-type.js'
 import ScheduleManager from './schedule/schedule-manager.js'
 import type { ManagerEvents } from './manager-event.js'
-import WhatsAppEvent from './whatsapp/whatsapp-events.js'
+import WhatsAppManager from './whatsapp/whatsapp-manager.js'
 
 const logger = withPrefix(`${PRE} Manager`)
 export class Manager extends EE<ManagerEvents> {
 
   whatsAppClient?: WhatsAppClientType
-  whatsAppEvent: WhatsAppEvent
+  whatsAppManager: WhatsAppManager
   requestManager?: RequestManager
   cacheManager?: CacheManager
   scheduleManager: ScheduleManager
-  botId?: string
-  fetchingMessages: boolean = false
-  loadingData: boolean = false
+
+  private fetchingMessages: boolean = false
+  private heartbeatTimer?: NodeJS.Timer
 
   constructor (private options: PuppetWhatsAppOptions) {
     super()
     this.scheduleManager = new ScheduleManager(this)
-    this.whatsAppEvent = new WhatsAppEvent(this)
+    this.whatsAppManager = new WhatsAppManager(this)
   }
 
   public getOptions () {
@@ -62,7 +61,7 @@ export class Manager extends EE<ManagerEvents> {
 
   public async start (session?: ClientSession) {
     logger.info('start()')
-    this.whatsAppClient = await getWhatsApp(this.options['puppeteerOptions'], session)
+    this.whatsAppClient = await this.whatsAppManager.initWhatsAppClient(this.options['puppeteerOptions'], session)
     this.whatsAppClient
       .initialize()
       .then(() => logger.verbose('start() whatsapp.initialize() done.'))
@@ -75,7 +74,7 @@ export class Manager extends EE<ManagerEvents> {
       })
 
     this.requestManager = new RequestManager(this.whatsAppClient)
-    await this.whatsAppEvent.initWhatsAppEvents(this.whatsAppClient)
+    await this.whatsAppManager.initWhatsAppEvents(this.whatsAppClient)
 
     this.startHeartbeat()
     return this.whatsAppClient
@@ -88,14 +87,14 @@ export class Manager extends EE<ManagerEvents> {
       this.whatsAppClient = undefined
     }
     await this.releaseCache()
+    this.whatsAppManager.clearWhatsAppRelatedData()
     this.requestManager = undefined
-    this.resetAllVarInMemory()
 
     this.stopHeartbeat()
   }
 
   public async syncContactOrRoomList () {
-    const whatsapp = this.getWhatsApp()
+    const whatsapp = this.getWhatsAppClient()
     const contactList: WhatsAppContact[] = await whatsapp.getContacts()
     const contactOrRoomList = contactList.filter(c => c.id.server !== 'broadcast' && c.id._serialized !== '0@c.us')
     return contactOrRoomList
@@ -132,13 +131,17 @@ export class Manager extends EE<ManagerEvents> {
       const batchSize = 50
       await batchProcess(batchSize, messageList, async (message: WhatsAppMessage) => {
         if (message.ack === MessageAck.ACK_DEVICE || message.ack === MessageAck.ACK_READ) {
-          await this.whatsAppEvent.onMessage(message)
+          await this.processMessage(message)
         }
       })
     } catch (error) {
       logger.error(`fetchMessages error: ${(error as Error).message}`)
     }
     this.fetchingMessages = false
+  }
+
+  public async processMessage (message: WhatsAppMessage) {
+    await this.whatsAppManager.getMessageEventHandler().onMessage(message)
   }
 
   public async getCacheManager () {
@@ -381,7 +384,7 @@ export class Manager extends EE<ManagerEvents> {
     return requestManager.setStatusMessage(nickname)
   }
 
-  public getWhatsApp () {
+  public getWhatsAppClient () {
     if (!this.whatsAppClient) {
       throw WAError(WA_ERROR_TYPE.ERR_INIT, 'Not init whatsapp')
     }
@@ -399,14 +402,6 @@ export class Manager extends EE<ManagerEvents> {
     // FIXME: How to deal with pendingParticipants? Maybe we should find which case could has this attribute.
     return roomChat.participants.map(m => m.id._serialized)
   }
-
-  private resetAllVarInMemory () {
-    this.botId = undefined
-    this.loadingData = false
-    this.fetchingMessages = false
-  }
-
-  private heartbeatTimer?: NodeJS.Timer
 
   private startHeartbeat () {
     if (!this.heartbeatTimer) {
@@ -431,7 +426,7 @@ export class Manager extends EE<ManagerEvents> {
      * it will not return true if the Chromium process is terminated with command + q
      */
 
-    const alive = this.getWhatsApp().pupBrowser?.isConnected()
+    const alive = this.getWhatsAppClient().pupBrowser?.isConnected()
     if (alive) {
       this.asystoleCount = 0
       this.emit('heartbeat', 'puppeteer still connected')
