@@ -60,6 +60,7 @@ import {
 import ScheduleManager from './schedule/schedule-manager.js'
 import { RequestPool } from './request/requestPool.js'
 import type { ManagerEvents } from './manager-event.js'
+import type PuppetWhatsApp from './puppet-whatsapp.js'
 
 const logger = withPrefix(`${PRE} Manager`)
 export class Manager extends EE<ManagerEvents> {
@@ -74,7 +75,7 @@ export class Manager extends EE<ManagerEvents> {
 
   private pendingLogoutEmitTimer?: NodeJS.Timeout
 
-  constructor (private options: PuppetWhatsAppOptions) {
+  constructor (private _puppet:PuppetWhatsApp, private options: PuppetWhatsAppOptions) {
     super()
     this.scheduleManager = new ScheduleManager(this)
   }
