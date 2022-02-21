@@ -24,7 +24,7 @@ import {
   Client as WhatsApp,
 } from '../schema/whatsapp-interface.js'
 import { withPrefix } from '../logger/index.js'
-import BaseManager from './whatsapp-base.js'
+import WhatsAppBase from './whatsapp-base.js'
 import LoginEventHandler from './login-event-handler.js'
 import MessageEventHandler from './message-event-handler.js'
 import GroupEventHandler from './group-event-handler.js'
@@ -32,7 +32,7 @@ import type { Manager } from '../manager.js'
 
 const logger = withPrefix(`${PRE} WhatsAppEvent`)
 
-export default class WhatsAppManager extends BaseManager {
+export default class WhatsAppManager extends WhatsAppBase {
 
   private botEventHandler: LoginEventHandler
   private messageEventHandler: MessageEventHandler
