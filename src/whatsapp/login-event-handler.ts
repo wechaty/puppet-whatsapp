@@ -72,10 +72,10 @@ export default class LoginEventHandler extends WhatsAppBase { // FIXME: I have n
     await this.manager.initCache(this.botId)
     const cacheManager = await this.manager.getCacheManager()
 
-    const botSelf = await this.manager.requestManger.getContactById(this.botId)
+    const botSelf = await this.manager.requestManager.getContactById(this.botId)
     await cacheManager.setContactOrRoomRawPayload(this.botId, {
       ...botSelf,
-      avatar: await this.manager.requestManger.getAvatarUrl(this.botId),
+      avatar: await this.manager.requestManager.getAvatarUrl(this.botId),
     })
 
     const batchSize = 500

@@ -57,7 +57,7 @@ export class Manager extends EE<ManagerEvents> {
   }
 
   public get (target: Manager, prop: keyof Manager & keyof RequestManager) {
-    return Object.prototype.hasOwnProperty.call(target, prop) ? target[prop] : target.requestManger[prop]
+    return Object.prototype.hasOwnProperty.call(target, prop) ? target[prop] : target.requestManager[prop]
   }
 
   public async start (session?: ClientSession) {
@@ -101,7 +101,7 @@ export class Manager extends EE<ManagerEvents> {
     return contactOrRoomList
   }
 
-  public get requestManger () {
+  public get requestManager () {
     if (!this._requestManager) {
       throw WAError(WA_ERROR_TYPE.ERR_INIT, 'No request manager')
     }
@@ -184,7 +184,7 @@ export class Manager extends EE<ManagerEvents> {
 
   public async getRoomChatById (roomId: string) {
     if (isRoomId(roomId)) {
-      const roomChat = await this.requestManger.getChatById(roomId)
+      const roomChat = await this.requestManager.getChatById(roomId)
       return roomChat as GroupChat
     } else {
       throw WAError(WA_ERROR_TYPE.ERR_GROUP_OR_CONTACT_ID, `The roomId: ${roomId} is not right.`)
@@ -193,7 +193,7 @@ export class Manager extends EE<ManagerEvents> {
 
   public async getContactChatById (contactId: string) {
     if (isContactId(contactId)) {
-      const roomChat = await this.requestManger.getChatById(contactId)
+      const roomChat = await this.requestManager.getChatById(contactId)
       return roomChat as PrivateChat
     } else {
       throw WAError(WA_ERROR_TYPE.ERR_GROUP_OR_CONTACT_ID, `The contactId: ${contactId} is not right.`)

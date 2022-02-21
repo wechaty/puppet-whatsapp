@@ -60,7 +60,7 @@ export default class GroupEventHandler extends WhatsAppBase {
     let roomPayload = await cacheManager.getContactOrRoomRawPayload(roomId)
 
     if (!roomPayload) {
-      const rawRoom = await this.manager.requestManger.getContactById(roomId)
+      const rawRoom = await this.manager.requestManager.getContactById(roomId)
       const avatar = await rawRoom.getProfilePicUrl()
       roomPayload = Object.assign(rawRoom, { avatar })
       await cacheManager.setContactOrRoomRawPayload(roomId, roomPayload)
@@ -86,7 +86,7 @@ export default class GroupEventHandler extends WhatsAppBase {
         this.emit('room-join', roomJoinPayload)
         break
       case GroupNotificationTypes.PICTURE:
-        const rawRoom = await this.manager.requestManger.getContactById(roomId)
+        const rawRoom = await this.manager.requestManager.getContactById(roomId)
         const avatar = await rawRoom.getProfilePicUrl() || ''
         const roomPayloadInCache = await cacheManager.getContactOrRoomRawPayload(roomId)
         if (roomPayloadInCache) {
