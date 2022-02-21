@@ -61,7 +61,7 @@ class PuppetWhatsApp extends PUPPET.Puppet {
   public manager: ManagerWithRequestManager
 
   constructor (
-    options: PuppetWhatsAppOptions = {},
+    protected override options: PuppetWhatsAppOptions = {},
   ) {
     super(options)
     this.manager = new Manager(this, this.options) as ManagerWithRequestManager
