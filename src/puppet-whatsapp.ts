@@ -61,10 +61,10 @@ class PuppetWhatsApp extends PUPPET.Puppet {
   public manager: ManagerWithRequestManager
 
   constructor (
-    override options: PuppetWhatsAppOptions = {},
+    options: PuppetWhatsAppOptions = {},
   ) {
     super(options)
-    this.manager = new Manager(this.options) as ManagerWithRequestManager
+    this.manager = new Manager(this, this.options) as ManagerWithRequestManager
   }
 
   override async start (): Promise<void> {
