@@ -41,7 +41,7 @@ async function checkRoomMember (this: PuppetWhatsApp, memberIdList: string[]) {
     }
   }
 
-  const botId = this.manager.getBotId()
+  const botId = this.manager.whatsAppEvent.getBotId()
   if (!friendsList.includes(botId)) {
     friendsList.push(botId)
   }
