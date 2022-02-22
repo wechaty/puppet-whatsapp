@@ -1,13 +1,13 @@
 #!/usr/bin/env node --no-warnings --loader ts-node/esm
 
 import { test } from 'tstest'
-
-import {
-  getWhatsApp,
-}                 from './whatsapp.js'
+import { Manager } from '../manager.js'
+import WhatsAppManager from './whatsapp-manager.js'
 
 test('getWhatsApp() QR Code & Destroy', async t => {
-  const whatsapp = await getWhatsApp()
+  const manager = new Manager({})
+  const whatsAppManager = new WhatsAppManager(manager)
+  const whatsapp = await whatsAppManager.initWhatsAppClient()
 
   try {
     const future = new Promise(resolve => whatsapp.once('qr', resolve))

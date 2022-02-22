@@ -106,7 +106,7 @@ export async function contactRawPayloadParser (this: PuppetWhatsApp, contactPayl
   }
   let name
   if (contactPayload.isMe) {
-    name = this.manager.getWhatsApp().info.pushname || contactPayload.pushname
+    name = this.manager.getWhatsAppClient().info.pushname || contactPayload.pushname
     if (name === SPECIAL_BOT_PUSHNAME) {
       name = contactPayload.shortName
     }
