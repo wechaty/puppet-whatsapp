@@ -7,7 +7,7 @@ import WhatsAppManager from './whatsapp-manager.js'
 test('getWhatsApp() QR Code & Destroy', async t => {
   const manager = new Manager({})
   const whatsAppManager = new WhatsAppManager(manager)
-  const whatsapp = await whatsAppManager.initWhatsAppClient()
+  const whatsapp = await whatsAppManager.genWhatsAppClient()
 
   try {
     const future = new Promise(resolve => whatsapp.once('qr', resolve))

@@ -45,10 +45,8 @@ export default class WhatsAppManager extends WhatsAppBase {
     this.groupEventHandler = new GroupEventHandler(manager)
   }
 
-  public async initWhatsAppClient (
-    options: ClientOptions = {
-      // clientId: '',
-    },
+  public async genWhatsAppClient (
+    options: ClientOptions = {},
     session?: ClientSession,
   ): Promise<WhatsAppClientType> {
     logger.verbose('initWhatsAppClient()')
@@ -75,44 +73,51 @@ export default class WhatsAppManager extends WhatsAppBase {
       session,
       ...restOptions,
     })
-
     return this.whatsAppClient
   }
 
-  public async initWhatsAppEvents (
-    whatsapp: WhatsAppClientType,
-  ): Promise<void> {
-    logger.verbose('initWhatsAppEvents()')
+  public async initWhatsAppClient (): Promise<void> {
+    const whatsAppClient = this.getWhatsAppClient()
+    whatsAppClient
+      .initialize()
+      .then(() => logger.verbose('start() whatsapp.initialize() done.'))
+      .catch(async e => {
+        logger.error('start() whatsapp.initialize() rejection: %s', e)
+      })
+  }
 
-    whatsapp.on('qr', this.botEventHandler.onQRCode)
-    whatsapp.on('authenticated', this.botEventHandler.onAuthenticated)
+  public async initWhatsAppEvents (): Promise<void> {
+    logger.verbose('initWhatsAppEvents()')
+    const whatsAppClient = this.getWhatsAppClient()
+    whatsAppClient.on('qr', this.botEventHandler.onQRCode)
+    whatsAppClient.on('authenticated', this.botEventHandler.onAuthenticated)
     /**
      * There is only one situation that will cause this event, invalid session causing timeout
      * https://github.com/pedroslopez/whatsapp-web.js/blob/d86c39de3ca5699a50db98ee93e264ab8c4f25a3/src/Client.js#L116-L129
      */
-    whatsapp.on('auth_failure', this.botEventHandler.onAuthFailure)
-    whatsapp.on('ready', this.botEventHandler.onWhatsAppReady)
-    whatsapp.on('change_state', this.botEventHandler.onChangeState)
-    whatsapp.on('change_battery', this.botEventHandler.onChangeBattery)
+    whatsAppClient.on('auth_failure', this.botEventHandler.onAuthFailure)
+    whatsAppClient.on('ready', this.botEventHandler.onWhatsAppReady)
+    whatsAppClient.on('change_state', this.botEventHandler.onChangeState)
+    whatsAppClient.on('change_battery', this.botEventHandler.onChangeBattery)
 
-    whatsapp.on('message', this.messageEventHandler.onMessage)
-    whatsapp.on('message_ack', this.messageEventHandler.onMessageAck)
-    whatsapp.on('message_create', this.messageEventHandler.onMessageCreate)
-    whatsapp.on('message_revoke_everyone', this.messageEventHandler.onMessageRevokeEveryone)
-    whatsapp.on('message_revoke_me', this.messageEventHandler.onMessageRevokeMe)
-    whatsapp.on('media_uploaded', this.messageEventHandler.onMediaUploaded)
-    whatsapp.on('incoming_call', this.messageEventHandler.onIncomingCall)
+    whatsAppClient.on('message', this.messageEventHandler.onMessage)
+    whatsAppClient.on('message_ack', this.messageEventHandler.onMessageAck)
+    whatsAppClient.on('message_create', this.messageEventHandler.onMessageCreate)
+    whatsAppClient.on('message_revoke_everyone', this.messageEventHandler.onMessageRevokeEveryone)
+    whatsAppClient.on('message_revoke_me', this.messageEventHandler.onMessageRevokeMe)
+    whatsAppClient.on('media_uploaded', this.messageEventHandler.onMediaUploaded)
+    whatsAppClient.on('incoming_call', this.messageEventHandler.onIncomingCall)
 
-    whatsapp.on('group_join', this.groupEventHandler.onRoomJoin)
-    whatsapp.on('group_leave', this.groupEventHandler.onRoomLeave)
-    whatsapp.on('group_update', this.groupEventHandler.onRoomUpdate)
+    whatsAppClient.on('group_join', this.groupEventHandler.onRoomJoin)
+    whatsAppClient.on('group_leave', this.groupEventHandler.onRoomLeave)
+    whatsAppClient.on('group_update', this.groupEventHandler.onRoomUpdate)
 
     const events = [
       'authenticated',
       'ready',
       'disconnected',
     ]
-    const eventStreams = events.map((event) => fromEvent(whatsapp, event).pipe(map((value: any) => ({ event, value }))))
+    const eventStreams = events.map((event) => fromEvent(whatsAppClient, event).pipe(map((value: any) => ({ event, value }))))
     const allEvents$ = merge(...eventStreams)
     allEvents$.pipe(distinctUntilKeyChanged('event')).subscribe(({ event, value }: { event: string, value: any }) => {
       logger.info(`initWhatsAppEvents: ${JSON.stringify(event)}, value: ${JSON.stringify(value)}`)

@@ -60,21 +60,17 @@ export class Manager extends EE<ManagerEvents> {
 
   public async start (session?: ClientSession) {
     logger.info('start()')
-    const whatsAppClient = await this.whatsAppManager.initWhatsAppClient(this.options['puppeteerOptions'], session)
-    whatsAppClient
-      .initialize()
-      .then(() => logger.verbose('start() whatsapp.initialize() done.'))
-      .catch(async e => {
-        logger.error('start() whatsapp.initialize() rejection: %s', e)
-        if (process.env['NODE_ENV'] !== 'test') {
-          await sleep(2 * 1000)
-          await this.start(session)
-        }
-      })
+    const whatsAppClient = await this.whatsAppManager.genWhatsAppClient(this.options['puppeteerOptions'], session)
+    try {
+      await this.whatsAppManager.initWhatsAppClient()
+      await this.whatsAppManager.initWhatsAppEvents()
+    } catch (error) {
+      logger.error(`start() error message: ${(error as Error).stack}`)
+      await sleep(2 * 1000)
+      await this.start(session)
+    }
 
     this._requestManager = new RequestManager(whatsAppClient)
-    await this.whatsAppManager.initWhatsAppEvents(whatsAppClient)
-
     this.startHeartbeat()
     return whatsAppClient
   }
