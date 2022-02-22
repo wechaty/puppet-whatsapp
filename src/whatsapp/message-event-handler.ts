@@ -6,14 +6,14 @@ import {
   PRE,
 } from '../config.js'
 import {
-  MessageTypes as WhatsAppMessageType,
-  MessageAck,
-} from '../schema/whatsapp-interface.js'
-import {
   getInviteCode,
   isContactId,
   isInviteLink,
 } from '../utils.js'
+import {
+  MessageTypes as WhatsAppMessageType,
+  MessageAck,
+} from '../schema/whatsapp-interface.js'
 
 import type {
   WhatsAppMessage,

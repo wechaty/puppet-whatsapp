@@ -28,7 +28,7 @@ import type {
 import { withPrefix } from '../logger/index.js'
 import WhatsAppBase from './whatsapp-base.js'
 
-const logger = withPrefix(`${PRE} BotEventHandler`)
+const logger = withPrefix(`${PRE} LoginEventHandler`)
 
 export default class LoginEventHandler extends WhatsAppBase { // FIXME: I have no good idea for this class name.
 

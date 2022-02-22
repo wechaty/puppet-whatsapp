@@ -3,7 +3,6 @@
 import { EventEmitter as EE } from 'ee-ts'
 import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
 import WAError from '../exceptions/whatsapp-error.js'
-
 import type { ManagerEvents } from '../manager-event.js'
 import type { Manager } from '../manager.js'
 
