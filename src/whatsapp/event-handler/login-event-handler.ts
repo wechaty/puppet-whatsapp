@@ -60,7 +60,7 @@ export default class LoginEventHandler extends WhatsAppBase { // FIXME: I have n
 
   public async onLogin (contactOrRoomList: WhatsAppContact[]) {
     logger.info('onLogin()')
-    const whatsapp = this.manager.getWhatsAppClient()
+    const whatsapp = this.getWhatsAppClient()
     try {
       this.botId = whatsapp.info.wid._serialized
     } catch (error) {

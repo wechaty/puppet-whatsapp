@@ -20,24 +20,22 @@ import {
 } from './utils.js'
 import { RequestManager } from './request/requestManager.js'
 import { CacheManager } from './data-manager/cache-manager.js'
+import ScheduleManager from './schedule/schedule-manager.js'
+import WhatsAppManager from './whatsapp/whatsapp-manager.js'
 
 import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
 import type {
-  WhatsAppClientType,
   WhatsAppContact,
   WhatsAppMessage,
   ClientSession,
   GroupChat,
   PrivateChat,
 } from './schema/whatsapp-type.js'
-import ScheduleManager from './schedule/schedule-manager.js'
 import type { ManagerEvents } from './manager-event.js'
-import WhatsAppManager from './whatsapp/whatsapp-manager.js'
 
 const logger = withPrefix(`${PRE} Manager`)
 export class Manager extends EE<ManagerEvents> {
 
-  whatsAppClient?: WhatsAppClientType
   whatsAppManager: WhatsAppManager
   _requestManager?: RequestManager
   cacheManager?: CacheManager
@@ -62,8 +60,8 @@ export class Manager extends EE<ManagerEvents> {
 
   public async start (session?: ClientSession) {
     logger.info('start()')
-    this.whatsAppClient = await this.whatsAppManager.initWhatsAppClient(this.options['puppeteerOptions'], session)
-    this.whatsAppClient
+    const whatsAppClient = await this.whatsAppManager.initWhatsAppClient(this.options['puppeteerOptions'], session)
+    whatsAppClient
       .initialize()
       .then(() => logger.verbose('start() whatsapp.initialize() done.'))
       .catch(async e => {
@@ -74,19 +72,16 @@ export class Manager extends EE<ManagerEvents> {
         }
       })
 
-    this._requestManager = new RequestManager(this.whatsAppClient)
-    await this.whatsAppManager.initWhatsAppEvents(this.whatsAppClient)
+    this._requestManager = new RequestManager(whatsAppClient)
+    await this.whatsAppManager.initWhatsAppEvents(whatsAppClient)
 
     this.startHeartbeat()
-    return this.whatsAppClient
+    return whatsAppClient
   }
 
   public async stop () {
     logger.info('stop()')
-    if (this.whatsAppClient) {
-      await this.whatsAppClient.stop()
-      this.whatsAppClient = undefined
-    }
+    await this.getWhatsAppClient().stop()
     await this.releaseCache()
     this._requestManager = undefined
     this.whatsAppManager.clearWhatsAppRelatedData()
@@ -201,10 +196,7 @@ export class Manager extends EE<ManagerEvents> {
   }
 
   public getWhatsAppClient () {
-    if (!this.whatsAppClient) {
-      throw WAError(WA_ERROR_TYPE.ERR_INIT, 'Not init whatsapp')
-    }
-    return this.whatsAppClient
+    return this.whatsAppManager.getWhatsAppClient()
   }
 
   /**

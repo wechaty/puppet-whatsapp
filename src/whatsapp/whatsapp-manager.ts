@@ -68,7 +68,7 @@ export default class WhatsAppManager extends WhatsAppBase {
       ...restPuppeteerOptions,
     }
 
-    const whatsapp = new WhatsApp({
+    this.whatsAppClient = new WhatsApp({
       puppeteer: puppeteerOptions,
       qrRefreshIntervalMs: 10 * 1000,
       restartOnAuthFail: true,
@@ -76,7 +76,7 @@ export default class WhatsAppManager extends WhatsAppBase {
       ...restOptions,
     })
 
-    return whatsapp
+    return this.whatsAppClient
   }
 
   public async initWhatsAppEvents (
