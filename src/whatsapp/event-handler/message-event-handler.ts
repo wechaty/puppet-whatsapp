@@ -1,27 +1,25 @@
-/* eslint-disable no-case-declarations */
-/* eslint-disable import/no-duplicates */
 import type * as PUPPET from 'wechaty-puppet'
 import {
   MessageMediaTypeList,
   PRE,
-} from '../config.js'
+} from '../../config.js'
 import {
   getInviteCode,
   isContactId,
   isInviteLink,
-} from '../utils.js'
+} from '../../utils.js'
 import {
   MessageTypes as WhatsAppMessageType,
   MessageAck,
-} from '../schema/whatsapp-interface.js'
+} from '../../schema/whatsapp-interface.js'
+import { RequestPool } from '../../request/requestPool.js'
+import { withPrefix } from '../../logger/index.js'
+import WhatsAppBase from '../whatsapp-base.js'
 
 import type {
   WhatsAppMessage,
   WhatsAppMessagePayload,
-} from '../schema/whatsapp-type.js'
-import { RequestPool } from '../request/requestPool.js'
-import { withPrefix } from '../logger/index.js'
-import WhatsAppBase from './whatsapp-base.js'
+} from '../../schema/whatsapp-type.js'
 
 const logger = withPrefix(`${PRE} MessageEventHandler`)
 

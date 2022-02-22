@@ -1,23 +1,22 @@
 /* eslint-disable no-case-declarations */
-/* eslint-disable import/no-duplicates */
-import type * as PUPPET from 'wechaty-puppet'
 import {
   PRE,
-} from '../config.js'
+} from '../../config.js'
 import {
   GroupNotificationTypes,
-} from '../schema/whatsapp-interface.js'
-
-import type {
-  GroupNotification,
-} from '../schema/whatsapp-type.js'
+} from '../../schema/whatsapp-interface.js'
 import {
   genRoomAnnounce,
   genRoomJoinEvent,
   genRoomTopicEvent,
-} from '../pure-function-helpers/room-event-generator.js'
-import { withPrefix } from '../logger/index.js'
-import WhatsAppBase from './whatsapp-base.js'
+} from '../../pure-function-helpers/room-event-generator.js'
+import { withPrefix } from '../../logger/index.js'
+import WhatsAppBase from '../whatsapp-base.js'
+
+import type * as PUPPET from 'wechaty-puppet'
+import type {
+  GroupNotification,
+} from '../../schema/whatsapp-type.js'
 
 const logger = withPrefix(`${PRE} GroupEventHandler`)
 

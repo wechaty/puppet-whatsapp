@@ -1,5 +1,4 @@
 /* eslint-disable no-case-declarations */
-/* eslint-disable import/no-duplicates */
 import * as PUPPET from 'wechaty-puppet'
 import {
   LOGOUT_REASON,
@@ -7,26 +6,26 @@ import {
   DEFAULT_TIMEOUT,
   PRE,
   MEMORY_SLOT,
-} from '../config.js'
-import { WA_ERROR_TYPE } from '../exceptions/error-type.js'
-import WAError from '../exceptions/whatsapp-error.js'
-import {
-  WAState,
-} from '../schema/whatsapp-interface.js'
+} from '../../config.js'
 import {
   batchProcess,
   isContactId,
   isRoomId,
-} from '../utils.js'
+} from '../../utils.js'
+import { WA_ERROR_TYPE } from '../../exceptions/error-type.js'
+import WAError from '../../exceptions/whatsapp-error.js'
+import {
+  WAState,
+} from '../../schema/whatsapp-interface.js'
+import WhatsAppBase from '../whatsapp-base.js'
+import { withPrefix } from '../../logger/index.js'
 
 import type {
   WhatsAppContact,
   ClientSession,
   BatteryInfo,
   WAStateType,
-} from '../schema/whatsapp-type.js'
-import { withPrefix } from '../logger/index.js'
-import WhatsAppBase from './whatsapp-base.js'
+} from '../../schema/whatsapp-type.js'
 
 const logger = withPrefix(`${PRE} LoginEventHandler`)
 

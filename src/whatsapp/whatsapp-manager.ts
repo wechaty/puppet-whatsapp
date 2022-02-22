@@ -24,11 +24,11 @@ import {
   Client as WhatsApp,
 } from '../schema/whatsapp-interface.js'
 import { withPrefix } from '../logger/index.js'
-import WhatsAppBase from './whatsapp-base.js'
-import LoginEventHandler from './login-event-handler.js'
-import MessageEventHandler from './message-event-handler.js'
-import GroupEventHandler from './group-event-handler.js'
+import LoginEventHandler from './event-handler/login-event-handler.js'
+import MessageEventHandler from './event-handler/message-event-handler.js'
+import GroupEventHandler from './event-handler/group-event-handler.js'
 import type { Manager } from '../manager.js'
+import WhatsAppBase from './whatsapp-base.js'
 
 const logger = withPrefix(`${PRE} WhatsAppEvent`)
 
@@ -40,9 +40,9 @@ export default class WhatsAppManager extends WhatsAppBase {
 
   constructor (manager: Manager) {
     super(manager)
-    this.botEventHandler = new LoginEventHandler(this.manager)
-    this.messageEventHandler = new MessageEventHandler(this.manager)
-    this.groupEventHandler = new GroupEventHandler(this.manager)
+    this.botEventHandler = new LoginEventHandler(manager)
+    this.messageEventHandler = new MessageEventHandler(manager)
+    this.groupEventHandler = new GroupEventHandler(manager)
   }
 
   public async initWhatsAppClient (
