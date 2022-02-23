@@ -10,13 +10,12 @@ const PRE = 'friendship'
 export type FriendshipRawPayload = WhatsAppMessagePayload
 
 export async function friendshipRawPayload (this: PuppetWhatsApp, id: string): Promise<FriendshipRawPayload> {
-  throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, 'Message not found', `messageId: ${id}`) // TODO: remove this
-  // const cache = await this.manager.getCacheManager()
-  // const message = await cache.getMessageRawPayload(id)
-  // if (!message) {
-  //   throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, 'Message not found', `messageId: ${id}`)
-  // }
-  // return message
+  const cache = await this.manager.getCacheManager()
+  const message = await cache.getMessageRawPayload(id)
+  if (!message) {
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, 'Message not found', `messageId: ${id}`)
+  }
+  return message
 }
 
 export async function friendshipRawPayloadParser (rawPayload: FriendshipRawPayload): Promise<PUPPET.payloads.Friendship> {
@@ -59,15 +58,14 @@ export async function friendshipAdd (
     hello = STRINGS[LANGUAGE].DEFAULT_HELLO_MESSAGE
   }
   log.verbose(PRE, 'friendshipAdd(%s, %s)', contactId, JSON.stringify(option))
-  throw WAError(WA_ERROR_TYPE.ERR_CONTACT_NOT_FOUND, 'Not a registered user on WhatsApp.', `contactId: ${contactId}`) // TODO: remove this
-  // const isUser = await this.manager.isWhatsappUser(contactId)
-  // if (!isUser) {
-  //   throw WAError(WA_ERROR_TYPE.ERR_CONTACT_NOT_FOUND, 'Not a registered user on WhatsApp.', `contactId: ${contactId}`)
-  // }
+  const isUser = await this.manager.isWhatsappUser(contactId)
+  if (!isUser) {
+    throw WAError(WA_ERROR_TYPE.ERR_CONTACT_NOT_FOUND, 'Not a registered user on WhatsApp.', `contactId: ${contactId}`)
+  }
 
-  // await this.contactRawPayload(contactId)
+  await this.contactRawPayload(contactId)
 
-  // await this.messageSendText(contactId, hello)
+  await this.messageSendText(contactId, hello)
 }
 
 export async function friendshipAccept (
