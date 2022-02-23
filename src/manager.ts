@@ -7,7 +7,7 @@ const PRE = 'manager'
 
 export default class Manager {
 
-  cacheManager?: CacheManager
+  private cacheManager?: CacheManager
 
   /**
    * Lifecycle
