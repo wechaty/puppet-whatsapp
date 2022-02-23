@@ -2,6 +2,7 @@ import { log } from './config.js'
 import { CacheManager } from './data/cache-manager.js'
 import { WA_ERROR_TYPE } from './exception/error-type.js'
 import WAError from './exception/whatsapp-error.js'
+import ScheduleManager from './helper/schedule/schedule-manager.js'
 
 const PRE = 'manager'
 
@@ -51,6 +52,17 @@ export default class Manager {
       throw WAError(WA_ERROR_TYPE.ERR_INIT, 'no cache manager')
     }
     return this.cacheManager
+  }
+
+  /**
+   * Schedule
+   */
+
+  public startSchedule () {
+  }
+
+  public stopSchedule () {
+    ScheduleManager.Instance.clearAllTasks()
   }
 
 }
