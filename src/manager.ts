@@ -1,5 +1,5 @@
 import { EventEmitter as EE } from 'ee-ts'
-import { log } from './config.js'
+import { log, MAX_HEARTBEAT_MISSED } from './config.js'
 import { CacheManager } from './data/cache-manager.js'
 import { WA_ERROR_TYPE } from './exception/error-type.js'
 import WAError from './exception/whatsapp-error.js'
@@ -21,6 +21,7 @@ export default class Manager extends EE<ManagerEvents> {
   private _requestManager?: RequestManager
 
   private fetchingMessages: boolean = false
+  private heartbeatTimer?: NodeJS.Timer
 
   constructor (private options: PuppetWhatsAppOptions) {
     super()
@@ -195,12 +196,44 @@ export default class Manager extends EE<ManagerEvents> {
   /**
    * Heatbeat
    */
-  private startHeartbeat () {
 
+  private startHeartbeat () {
+    if (!this.heartbeatTimer) {
+      this.asystoleCount = 0
+      this.heartbeatTimer = setInterval(this.heartbeat.bind(this), 15 * 1000)
+    }
   }
 
   private stopHeartbeat () {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer)
+      this.heartbeatTimer = undefined
+    }
+  }
 
+  private asystoleCount = 0
+  private async heartbeat () {
+
+    /**
+     * puppteer.isConnected behaviour: (in MacOs)
+     * it will still return true if the Chromium window is closed with command + w
+     * it will not return true if the Chromium process is terminated with command + q
+     */
+
+    const alive = this.getWhatsAppClient().pupBrowser?.isConnected()
+    if (alive) {
+      this.asystoleCount = 0
+      this.emit('heartbeat', 'puppeteer still connected')
+    } else {
+      this.asystoleCount += 1
+      log.warn(`asystole count: ${this.asystoleCount}`)
+      if (this.asystoleCount > MAX_HEARTBEAT_MISSED) {
+        log.error('max asystole reached, restarting...')
+        await this.stop()
+        await this.start()
+        this.asystoleCount = 0
+      }
+    }
   }
 
 }
