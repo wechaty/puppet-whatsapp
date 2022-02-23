@@ -16,7 +16,7 @@ const PRE = 'manager'
 
 export default class Manager extends EE<ManagerEvents> {
 
-  private whatsAppManager: WhatsAppManager
+  public whatsAppManager: WhatsAppManager
   private cacheManager?: CacheManager
   private _requestManager?: RequestManager
 
