@@ -11,10 +11,10 @@ export async function contactSelfQRCode (this: PuppetWhatsApp): Promise<string> 
 
 export async function contactSelfName (this: PuppetWhatsApp, name: string): Promise<void> {
   log.verbose(PRE, 'contactSelfName(%s)', name)
-  // await this.manager.setNickname(name)
+  await this.manager.setNickname(name)
 }
 
 export async function contactSelfSignature (this: PuppetWhatsApp, signature: string): Promise<void> {
   log.verbose(PRE, 'contactSelfSignature(%s)', signature)
-  // await this.manager.setStatusMessage(signature)
+  await this.manager.setStatusMessage(signature)
 }
