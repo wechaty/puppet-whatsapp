@@ -1,14 +1,21 @@
+import { EventEmitter as EE } from 'ee-ts'
 import { log } from './config.js'
 import { CacheManager } from './data/cache-manager.js'
 import { WA_ERROR_TYPE } from './exception/error-type.js'
 import WAError from './exception/whatsapp-error.js'
 import ScheduleManager from './helper/schedule/schedule-manager.js'
+import type { ManagerEvents } from './manager-event.js'
+import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
 
 const PRE = 'manager'
 
-export default class Manager {
+export default class Manager extends EE<ManagerEvents> {
 
   private cacheManager?: CacheManager
+
+  constructor (private options: PuppetWhatsAppOptions) {
+    super()
+  }
 
   /**
    * Lifecycle

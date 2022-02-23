@@ -35,8 +35,11 @@ import {
   WhatsappContact,
   WhatsappMessage,
 }                   from './whatsapp.js'
+import Manager from './manager.js'
+import type { RequestManagerAPIs } from './request/request-manager.js'
 
 // import { Attachment } from './mock/user/types'
+type ManagerWithRequestManager = Manager & RequestManagerAPIs
 
 export type PuppetWhatsAppOptions = PUPPET.PuppetOptions & {
   memory?: MemoryCard
@@ -49,6 +52,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   private messageStore: { [id: string]: WhatsappMessage }
   private contactStore: { [id: string]: WhatsappContact }
   private whatsapp: undefined | WhatsApp
+  public manager: ManagerWithRequestManager
 
   constructor (
     override options: PuppetWhatsAppOptions = {},
@@ -58,6 +62,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
     this.messageStore = {}
     this.contactStore = {}
+    this.manager = new Manager(this.options) as ManagerWithRequestManager
   }
 
   override async onStart (): Promise<void> {
