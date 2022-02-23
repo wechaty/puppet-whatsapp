@@ -39,7 +39,7 @@ Learn how to run Wechaty bot from <https://github.com/wechaty/wechaty-getting-st
 
 ## HISTORY
 
-### master v1.0 (Oct 30, 2021)
+### main v1.0 (Oct 30, 2021)
 
 Release 1.0 of Wechaty Puppet Whatsapp.
 
@@ -62,8 +62,8 @@ Wechaty Puppet Whatsapp is built on top of [whatsapp-web.js](https://github.com/
 
 ## MAINTAINERS
 
-1. [@univerone](https://github.com/univerone) Shanshan JIANG
-1. [@huan](https://github.com/huan) [Huan LI](http://linkedin.com/in/zixia) \<zixia@zixia.net\>
+1. [@univerone](https://wechaty.js.org/contributors/univerone) Shanshan JIANG
+1. [@su-chang](https://wechaty.js.org/contributors/su-chang/) Chang SU
 
 ## COPYRIGHT & LICENSE
 

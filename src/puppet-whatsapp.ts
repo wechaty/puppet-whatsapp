@@ -382,7 +382,12 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     return this.messageStore[id]!
   }
 
-  private async messageSend (
+  /**
+   * Huan(202201): should be removed after merged to Wechaty API v1.13
+   *
+   *  use `messageSend()` from Puppet API instead
+   */
+  private async _messageSend (
     conversationId: string,
     something: string | FileBox, // | Attachment
   ): Promise<void> {
@@ -414,14 +419,14 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     conversationId: string,
     text     : string,
   ): Promise<void> {
-    return this.messageSend(conversationId, text)
+    return this._messageSend(conversationId, text)
   }
 
   override async messageSendFile (
     conversationId: string,
     file     : FileBox,
   ): Promise<void> {
-    return this.messageSend(conversationId, file)
+    return this._messageSend(conversationId, file)
   }
 
   override async messageSendContact (
