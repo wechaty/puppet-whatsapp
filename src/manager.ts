@@ -10,6 +10,20 @@ export default class Manager {
   cacheManager?: CacheManager
 
   /**
+   * Lifecycle
+   */
+
+  public async start () {
+    log.info(PRE, 'start()')
+  }
+
+  public async stop () {
+    log.info(PRE, 'stop()')
+
+    await this.releaseCache()
+  }
+
+  /**
    * Cache Section
    */
 
