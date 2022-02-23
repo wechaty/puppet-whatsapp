@@ -4,6 +4,10 @@ import {
 } from './schema/whatsapp-interface.js'
 import { packageJson } from './package-json.js'
 export { log } from 'wechaty-puppet'
+export {
+  FileBox,
+  FileBoxType,
+} from 'file-box'
 
 const VERSION = packageJson.version || '0.0.0'
 
