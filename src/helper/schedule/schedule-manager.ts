@@ -38,7 +38,7 @@ export default class ScheduleManager {
     if (jobIndex === -1) {
       log.warn(PRE, 'trying to cannel a job not in jobPool')
     } else {
-      this.jobPool = this.jobPool.slice(jobIndex)
+      this.jobPool.splice(jobIndex, 1)
     }
     return job.cancel()
   }
