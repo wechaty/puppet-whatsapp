@@ -19,6 +19,12 @@ export default class ScheduleManager {
     return this._instance
   }
 
+  /**
+   * Create a schedule job.
+   *
+   * @param rule     scheduling info, ref: https://github.com/node-schedule/node-schedule#cron-style-scheduling
+   * @param callback callback to be executed on each invocation
+   */
   public addScheduledTask (rule: ScheduleRule, callback: JobCallback): Job {
     log.silly(PRE, 'addScheduledTask()')
     const job = schedule.scheduleJob(rule, callback)
