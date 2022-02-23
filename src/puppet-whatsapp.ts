@@ -31,7 +31,7 @@ import {
 
 import Manager from './manager.js'
 import type { RequestManagerAPIs } from './request/request-manager.js'
-import type { WhatsAppClientType } from './schema/whatsapp-type.js'
+import type { ClientOptions, WhatsAppClientType } from './schema/whatsapp-type.js'
 import WAError from './exception/whatsapp-error.js'
 import { WA_ERROR_TYPE } from './exception/error-type.js'
 import { EventName } from './schema/event-name.js'
@@ -42,6 +42,7 @@ type ManagerWithRequestManager = Manager & RequestManagerAPIs
 
 export type PuppetWhatsAppOptions = PUPPET.PuppetOptions & {
   memory?: MemoryCard
+  puppeteerOptions?: ClientOptions
 }
 
 class PuppetWhatsapp extends PUPPET.Puppet {
