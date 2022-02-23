@@ -3,12 +3,12 @@ import { log } from './config.js'
 import { CacheManager } from './data/cache-manager.js'
 import { WA_ERROR_TYPE } from './exception/error-type.js'
 import WAError from './exception/whatsapp-error.js'
-import { sleep } from './helper/miscellaneous.js'
+import { isRoomId, sleep } from './helper/miscellaneous.js'
 import ScheduleManager from './helper/schedule/schedule-manager.js'
 import type { ManagerEvents } from './manager-event.js'
 import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
 import { RequestManager } from './request/request-manager.js'
-import type { ClientSession } from './schema/whatsapp-type.js'
+import type { ClientSession, GroupChat, WhatsAppMessage } from './schema/whatsapp-type.js'
 import WhatsAppManager from './whatsapp/whatsapp-manager.js'
 
 const PRE = 'manager'
@@ -65,6 +65,36 @@ export default class Manager extends EE<ManagerEvents> {
 
   public getWhatsAppClient () {
     return this.whatsAppManager.getWhatsAppClient()
+  }
+
+  /**
+   * LOGIC METHODS
+   */
+
+  public async getRoomChatById (roomId: string) {
+    if (isRoomId(roomId)) {
+      const roomChat = await this.requestManager.getChatById(roomId)
+      return roomChat as GroupChat
+    } else {
+      throw WAError(WA_ERROR_TYPE.ERR_GROUP_OR_CONTACT_ID, `The roomId: ${roomId} is not right.`)
+    }
+  }
+
+  /**
+   * Get member id list from web api
+   * @param { PuppetWhatsApp } this whatsapp client
+   * @param { string } roomId roomId
+   * @returns { string[] } member id list
+   */
+  public async syncRoomMemberList (roomId: string): Promise<string[]> {
+    const roomChat = await this.getRoomChatById(roomId)
+    // FIXME: How to deal with pendingParticipants? Maybe we should find which case could has this attribute.
+    return roomChat.participants.map(m => m.id._serialized)
+  }
+
+  public async processMessage (message: WhatsAppMessage) {
+    log.silly(`processMessage(${message})`)
+    // await this.whatsAppManager.getMessageEventHandler().onMessage(message)
   }
 
   /**
