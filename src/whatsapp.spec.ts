@@ -26,7 +26,7 @@ test('getWhatsApp() QR Code & Destroy', async t => {
     t.pass('whatsapp qr code received')
 
     closing = true
-    await whatsapp.destroy()
+    await whatsapp.stop()
 
   } catch (e) {
     t.fail(e as any)

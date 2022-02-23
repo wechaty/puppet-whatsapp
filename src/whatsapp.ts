@@ -6,7 +6,7 @@ import {
   Message as WhatsappMessage,
   Contact as WhatsappContact,
   ClientSession,
-}                               from 'whatsapp-web.js'
+}                               from '@juzi.bot/whatsapp-web.js'
 import type {
   LaunchOptions,
   BrowserLaunchArgumentOptions,
