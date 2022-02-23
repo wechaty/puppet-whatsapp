@@ -289,7 +289,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   override async contactList (): Promise<string[]> {
     log.verbose('PuppetWhatsApp', 'contactList()')
-    return Object.keys(this.contactStore)
+    return []
   }
 
   override async contactAvatar (contactId: string)                : Promise<FileBoxInterface>
@@ -312,7 +312,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     return FileBox.fromFile(WECHATY_ICON_PNG)
   }
 
-  override async contactRawPayloadParser (whatsAppPayload: WhatsappContact): Promise<PUPPET.payloads.Contact> {
+  override async contactRawPayloadParser (whatsAppPayload: any): Promise<PUPPET.payloads.Contact> {
     let type, name
     if (whatsAppPayload.isUser) {
       type = PUPPET.types.Contact.Individual
@@ -337,9 +337,9 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     }
   }
 
-  override async contactRawPayload (id: string): Promise<WhatsappContact> {
+  override async contactRawPayload (id: string): Promise<any> {
     log.verbose('PuppetWhatsApp', 'contactRawPayload(%s)', id)
-    return this.contactStore[id]!
+    return undefined
   }
 
   /**
@@ -428,7 +428,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     }
   }
 
-  override async messageRawPayloadParser (whatsAppPayload: WhatsappMessage): Promise<PUPPET.payloads.Message> {
+  override async messageRawPayloadParser (whatsAppPayload: any): Promise<PUPPET.payloads.Message> {
     return {
       fromId        : whatsAppPayload.from,
       id            : whatsAppPayload.id.id,
@@ -440,9 +440,9 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     }
   }
 
-  override async messageRawPayload (id: string): Promise<WhatsappMessage> {
+  override async messageRawPayload (id: string): Promise<any> {
     log.verbose('PuppetWhatsApp', 'messageRawPayload(%s)', id)
-    return this.messageStore[id]!
+    return undefined
   }
 
   /**
@@ -456,16 +456,16 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   ): Promise<void> {
     log.verbose('PuppetWhatsApp', 'messageSend(%s, %s)', conversationId, something)
 
-    if (typeof something !== 'string') {
-      return
-    }
+    // if (typeof something !== 'string') {
+    //   return
+    // }
 
-    if (!this.whatsapp) {
-      log.warn('PuppetWhatsApp', 'messageSend() this.client not found')
-      return
-    }
+    // if (!this.whatsapp) {
+    //   log.warn('PuppetWhatsApp', 'messageSend() this.client not found')
+    //   return
+    // }
 
-    await this.whatsapp.sendMessage(conversationId, something)
+    // await this.whatsapp.sendMessage(conversationId, something)
     // const user = this.mocker.ContactMock.load(this.currentUserId)
     // let conversation
 
