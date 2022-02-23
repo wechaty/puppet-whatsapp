@@ -1,5 +1,3 @@
-/* eslint-disable no-case-declarations */
-/* eslint-disable import/no-duplicates */
 import { EventEmitter as EE } from 'ee-ts'
 import { WA_ERROR_TYPE } from '../exception/error-type.js'
 import WAError from '../exception/whatsapp-error.js'
