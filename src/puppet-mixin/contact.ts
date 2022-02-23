@@ -62,9 +62,9 @@ export async function contactAvatar(this: PuppetWhatsApp, contactId: string, fil
 export async function contactAvatar (this: PuppetWhatsApp, contactId: string, file?: FileBox): Promise<void | FileBox> {
   log.info(PRE, 'contactAvatar(%s)', contactId)
 
-  // if (file) {
-  //   return PUPPET.throwUnsupportedError()
-  // }
+  if (file) {
+    return PUPPET.throwUnsupportedError()
+  }
   // let avatar: string = ''
   // const con = await this.manager.getContactById(contactId)
   // try {
