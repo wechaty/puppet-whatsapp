@@ -1,7 +1,8 @@
-import schedule, { Job, JobCallback } from 'node-schedule'
+import schedule, { Job, JobCallback, RecurrenceRule, RecurrenceSpecDateRange, RecurrenceSpecObjLit } from 'node-schedule'
 import { log } from '../../config.js'
 
 const PRE = 'ScheduleManager'
+type scheduleRule = RecurrenceRule | RecurrenceSpecDateRange | RecurrenceSpecObjLit | Date | string | number
 
 export default class ScheduleManager {
 
@@ -17,7 +18,7 @@ export default class ScheduleManager {
     return this._instance
   }
 
-  public addScheduledTask (rule: string, callback: JobCallback): Job {
+  public addScheduledTask (rule: scheduleRule, callback: JobCallback): Job {
     log.silly(PRE, 'addNewScheduledTask()')
     const job = schedule.scheduleJob(rule, callback)
     this.jobPool.push(job)
