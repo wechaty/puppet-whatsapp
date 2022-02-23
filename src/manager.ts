@@ -49,7 +49,15 @@ export default class Manager extends EE<ManagerEvents> {
   public async stop () {
     log.info(PRE, 'stop()')
 
+    this._requestManager = undefined
     await this.releaseCache()
+  }
+
+  public get requestManager () {
+    if (!this._requestManager) {
+      throw WAError(WA_ERROR_TYPE.ERR_INIT, 'No request manager')
+    }
+    return this._requestManager
   }
 
   /**
