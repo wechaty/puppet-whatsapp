@@ -25,9 +25,7 @@ import { FileBox } from 'file-box'
 import type { FileBoxInterface } from 'file-box'
 
 import {
-  CHATIE_OFFICIAL_ACCOUNT_QRCODE,
   MEMORY_SLOT,
-  qrCodeForChatie,
   VERSION,
 }                                     from './config.js'
 
@@ -179,7 +177,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
    */
   override async contactSelfQRCode (): Promise<string> {
     log.verbose('PuppetWhatsApp', 'contactSelfQRCode()')
-    return CHATIE_OFFICIAL_ACCOUNT_QRCODE
+    return 'to be implemented'
   }
 
   override async contactSelfName (name: string): Promise<void> {
@@ -500,7 +498,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       return FileBox.fromUrl(payload.avatar)
     }
     log.warn('PuppetWhatsApp', 'roomAvatar() avatar not found, use the chatie default.')
-    return qrCodeForChatie()
+    return FileBox.fromUrl('https://wechaty.js.org/img/wechatylogofooter.webp')
   }
 
   override async roomAdd (
