@@ -47,10 +47,13 @@ export default class Manager extends EE<ManagerEvents> {
   }
 
   public async stop () {
-    log.info(PRE, 'stop()')
-
-    this._requestManager = undefined
+    log.info('stop()')
+    await this.getWhatsAppClient().stop()
     await this.releaseCache()
+    this._requestManager = undefined
+    this.whatsAppManager.clearWhatsAppRelatedData()
+
+    this.stopHeartbeat()
   }
 
   public get requestManager () {
@@ -58,6 +61,10 @@ export default class Manager extends EE<ManagerEvents> {
       throw WAError(WA_ERROR_TYPE.ERR_INIT, 'No request manager')
     }
     return this._requestManager
+  }
+
+  public getWhatsAppClient () {
+    return this.whatsAppManager.getWhatsAppClient()
   }
 
   /**
@@ -105,6 +112,10 @@ export default class Manager extends EE<ManagerEvents> {
    * Heatbeat
    */
   private startHeartbeat () {
+
+  }
+
+  private stopHeartbeat () {
 
   }
 
