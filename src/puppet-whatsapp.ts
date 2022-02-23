@@ -119,7 +119,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
     const whatsapp = this.whatsapp
     this.whatsapp = undefined
-    await whatsapp.destroy()
+    await whatsapp.stop()
   }
 
   private initWhatsAppEvents (
