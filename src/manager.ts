@@ -148,7 +148,7 @@ export default class Manager extends EE<ManagerEvents> {
 
   public async processMessage (message: WhatsAppMessage) {
     log.silly(`processMessage(${message})`)
-    // await this.whatsAppManager.getMessageEventHandler().onMessage(message)
+    await this.whatsAppManager.getMessageEventHandler().onMessage(message)
   }
 
   /**
