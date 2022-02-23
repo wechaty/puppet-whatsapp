@@ -61,6 +61,7 @@
     "wechaty-puppet": "^1.11.14"
   },
   "dependencies": {
+    "wechaty-puppet": "^1.11.14",
     "whatsapp-web.js": "^1.15.3"
   },
   "files": [
