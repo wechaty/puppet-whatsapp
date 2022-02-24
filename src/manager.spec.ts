@@ -26,6 +26,7 @@ test('filterFetchedMessages within 3 days', async t => {
   const list = await manager.filterFetchedMessages(contactId, fakeMsgListWithin3Days)
   t.ok(list.length === fakeMsgListWithin3Days.length)
   await manager.releaseCache()
+  t.pass('filterFetchedMessages within 3 days pass')
 })
 
 test('filterFetchedMessages within 5 days', async t => {
@@ -35,4 +36,5 @@ test('filterFetchedMessages within 5 days', async t => {
   const list = await manager.filterFetchedMessages(contactId, fakeMsgListOver3Days)
   t.ok(list.length === fakeMsgListWithin3Days.length)
   await manager.releaseCache()
+  t.pass('filterFetchedMessages within 5 days pass')
 })

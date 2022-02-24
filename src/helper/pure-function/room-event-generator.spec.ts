@@ -57,6 +57,7 @@ test('generate room topic event', async t => {
     && roomTopicEvent.changerId === roomUpdateForTopic.author
     && roomTopicEvent.roomId === roomUpdateForTopic.id.remote,
   )
+  t.pass('generate room topic event pass')
 })
 
 test('generate room join event', async t => {
@@ -82,6 +83,7 @@ test('generate room join event', async t => {
     && roomJoinEvent.inviterId === roomUpdateForJoin.author
     && roomJoinEvent.roomId === roomUpdateForJoin.id.remote,
   )
+  t.pass('generate room join event pass')
 })
 
 test('generate room announce message', async t => {
@@ -108,4 +110,5 @@ test('generate room announce message', async t => {
     && messagePayload.body === description
     && messagePayload.to === roomUpdateForDescription.id.remote,
   )
+  t.pass('generate room announce message pass')
 })
