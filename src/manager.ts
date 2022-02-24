@@ -86,43 +86,55 @@ export default class Manager extends EE<ManagerEvents> {
    */
 
   /**
-   * Fetch all messages of contact or room, and then call onMessage method to emit them or not.
+   * Fetch history messages of contact or room, and then call onMessage method to emit them or not.
    * @param {WhatsAppContact} contactOrRoom contact or room instance
    */
-  public async fetchMessages (contactOrRoom: WhatsAppContact) {
+  public async processHistoryMessages (contactOrRoom: WhatsAppContact) {
     if (this.fetchingMessages) {
       return
     }
     this.fetchingMessages = true
+    const fetchedMessageList = await this.fetchMessages(contactOrRoom)
+    const filteredMessageList = await this.filterFetchedMessages(contactOrRoom.id._serialized, fetchedMessageList)
+    await this.processFetchedMessages(filteredMessageList)
+    this.fetchingMessages = false
+  }
+
+  private async fetchMessages (contactOrRoom: WhatsAppContact) {
     if (contactOrRoom.isMe) {
       // can not get chat for bot self
-      return
+      return []
     }
-    const contactOrRoomId = contactOrRoom.id._serialized
+    const chat = await contactOrRoom.getChat()
+    const messageList = await chat.fetchMessages({})
+    return messageList
+  }
+
+  private async filterFetchedMessages (contactOrRoomId: string, messageList: WhatsAppMessage[]) {
     const cacheManager = await this.getCacheManager()
+    const maxTimestampForLoadHistoryMessages = getMaxTimestampForLoadHistoryMessages()
+    const latestTimestampInCache = await cacheManager.getLatestMessageTimestampForChat(contactOrRoomId)
+    const minTimestamp = Math.min(latestTimestampInCache, maxTimestampForLoadHistoryMessages)
     try {
-      const chat = await contactOrRoom.getChat()
-      let messageList = await chat.fetchMessages({})
-
-      const maxTimestampForLoadHistoryMessages = getMaxTimestampForLoadHistoryMessages()
-      const latestTimestampInCache = await cacheManager.getLatestMessageTimestampForChat(contactOrRoomId)
-      const minTimestamp = Math.min(latestTimestampInCache, maxTimestampForLoadHistoryMessages)
-      messageList = messageList.filter(m => m.timestamp >= minTimestamp)
-
-      const latestMessageTimestamp = messageList[messageList.length - 1]?.timestamp
+      const _messageList = messageList.filter(m => m.timestamp >= minTimestamp)
+      const latestMessageTimestamp = _messageList[_messageList.length - 1]?.timestamp
       if (latestMessageTimestamp) {
         await cacheManager.setLatestMessageTimestampForChat(contactOrRoomId, latestMessageTimestamp)
       }
-      const batchSize = 50
-      await batchProcess(batchSize, messageList, async (message: WhatsAppMessage) => {
-        if (message.ack === MessageAck.ACK_DEVICE || message.ack === MessageAck.ACK_READ) {
-          await this.processMessage(message)
-        }
-      })
+      return _messageList
     } catch (error) {
-      log.error(`fetchMessages error: ${(error as Error).message}`)
+      log.error(`filterFetchedMessages error: ${(error as Error).message}`)
+      return []
     }
-    this.fetchingMessages = false
+  }
+
+  private async processFetchedMessages (messageList: WhatsAppMessage[]) {
+    const batchSize = 50
+    await batchProcess(batchSize, messageList, async (message: WhatsAppMessage) => {
+      if (message.ack === MessageAck.ACK_DEVICE || message.ack === MessageAck.ACK_READ) {
+        await this.processMessage(message)
+      }
+    })
   }
 
   public async getRoomChatById (roomId: string) {
@@ -198,7 +210,7 @@ export default class Manager extends EE<ManagerEvents> {
       const contactOrRoomList = await this.syncContactOrRoomList()
       const batchSize = 100
       await batchProcess(batchSize, contactOrRoomList, async (contactOrRoom: WhatsAppContact) => {
-        await this.fetchMessages(contactOrRoom)
+        await this.processHistoryMessages(contactOrRoom)
       })
       log.silly('startSyncMissedMessages finished')
     })
