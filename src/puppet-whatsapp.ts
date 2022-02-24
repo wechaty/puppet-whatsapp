@@ -48,6 +48,8 @@ export type PuppetWhatsAppOptions = PUPPET.PuppetOptions & {
   puppeteerOptions?: ClientOptions
 }
 
+const PRE = 'PuppetWhatsapp'
+
 class PuppetWhatsapp extends PUPPET.Puppet {
 
   static override readonly VERSION = VERSION
@@ -58,19 +60,19 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     override options: PuppetWhatsAppOptions = {},
   ) {
     super(options)
-    log.verbose('PuppetWhatsApp', 'constructor()')
+    log.verbose(PRE, 'constructor()')
 
     this.manager = new Manager(this.options) as ManagerWithRequestManager
   }
 
   override async onStart (): Promise<void> {
-    log.verbose('PuppetWhatsApp', 'onStart()')
+    log.verbose(PRE, 'onStart()')
 
     let whatsapp: WhatsAppClientType
     try {
       whatsapp = await this.startManager(this.manager)
     } catch (err) {
-      log.error(`Can not start whatsapp, error: ${(err as Error).message}`)
+      log.error(PRE, `Can not start whatsapp, error: ${(err as Error).message}`)
       throw WAError(WA_ERROR_TYPE.ERR_INIT, `Can not start whatsapp, error: ${(err as Error).message}`)
     }
 
@@ -121,11 +123,11 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   override async onStop (): Promise<void> {
-    log.verbose('PuppetWhatsApp', 'onStop()')
+    log.verbose(PRE, 'onStop()')
     try {
       await this.stopManager()
     } catch (err) {
-      log.error(`Can not stop, error: ${(err as Error).message}`)
+      log.error(PRE, `Can not stop, error: ${(err as Error).message}`)
     }
   }
 
@@ -138,13 +140,13 @@ class PuppetWhatsapp extends PUPPET.Puppet {
    * Event section: onXXX
    */
   private async onLogin (wxid: string): Promise<void> {
-    log.info('onLogin(%s)', wxid)
+    log.verbose(PRE, 'onLogin(%s)', wxid)
 
     if (this.logonoff()) {
-      log.warn('onLogin(%s) already login? NOOP', wxid)
+      log.warn(PRE, 'onLogin(%s) already login? NOOP', wxid)
       return
     }
-    log.info(`${EventName.LOGIN}, ${wxid}`)
+    log.info(PRE, `${EventName.LOGIN}, ${wxid}`)
 
     if (!this.selfId()) {
       await super.login(wxid)
@@ -154,12 +156,12 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   private async onLogout (wxid: string, message: string): Promise<void> {
-    log.info('onLogout(%s, %s)', wxid, message)
+    log.verbose(PRE, 'onLogout(%s, %s)', wxid, message)
 
     if (!this.logonoff()) {
-      log.warn('onLogout(%s) already logged out?', wxid)
+      log.warn(PRE, 'onLogout(%s) already logged out?', wxid)
     }
-    log.info(`${EventName.LOGOUT}, ${wxid}`)
+    log.info(PRE, `${EventName.LOGOUT}, ${wxid}`)
 
     const requestPool = RequestPool.Instance
     requestPool.clearPool()
@@ -168,26 +170,26 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   private async onMessage (message: PUPPET.payloads.EventMessage): Promise<void> {
-    log.info('onMessage(%s)', JSON.stringify(message))
+    log.verbose(PRE, 'onMessage(%s)', JSON.stringify(message))
     this.emit('message', message)
   }
 
   private async onScan (status: PUPPET.payloads.EventScan, qrcode?: string): Promise<void> {
-    log.info('onScan(%s, %s)', status, qrcode)
+    log.verbose(PRE, 'onScan(%s, %s)', status, qrcode)
 
-    log.info(`${EventName.SCAN}`)
+    log.info(PRE, `${EventName.SCAN}`)
     this.emit('scan', { qrcode, status })
   }
 
   private async onError (e: string) {
-    log.info(`${EventName.ERROR}, ${e}`)
+    log.info(PRE, `${EventName.ERROR}, ${e}`)
     this.emit('error', {
       data: e,
     })
   }
 
   private async onReset (reason: string) {
-    log.info(`${EventName.RESET}, ${reason}`)
+    log.info(PRE, `${EventName.RESET}, ${reason}`)
     this.emit('reset', { data: reason } as PUPPET.payloads.EventReset)
   }
 
@@ -221,9 +223,9 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   private async onReady () {
-    log.info('onReady()')
+    log.verbose(PRE, 'onReady()')
 
-    log.info(`${EventName.READY}`)
+    log.info(PRE, `${EventName.READY}`)
     this.emit('ready', { data: 'ready' })
   }
 
@@ -237,14 +239,14 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   override async logout () {
     if (!this.isLoggedIn) {
-      log.info('logout() do nothing')
+      log.verbose(PRE, 'logout() do nothing')
       return
     }
     return this.manager.logout()
   }
 
   override ding (data?: string): void {
-    log.silly('PuppetWhatsApp', 'ding(%s)', data || '')
+    log.silly(PRE, 'ding(%s)', data || '')
     setTimeout(() => this.emit('dong', { data: data || '' }), 1000)
   }
 

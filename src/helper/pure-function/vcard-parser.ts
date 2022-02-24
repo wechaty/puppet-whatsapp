@@ -2,7 +2,7 @@ import { log } from '../../config.js'
 import { WA_ERROR_TYPE } from '../../exception/error-type.js'
 import WAError from '../../exception/whatsapp-error.js'
 
-const PRE = 'vcard-parser'
+const PRE = 'VCARD_PARSER'
 export interface IVcard {
   /**
    * VERSION: X.X
@@ -102,7 +102,7 @@ export function parseVcard (body: string): IVcard {
         }
       } else {
         const match = TelPatternForContainMultiPhoneNumbers.exec(content)
-        log.info(PRE, `match: ${JSON.stringify(match)}`)
+        log.verbose(PRE, `match: ${JSON.stringify(match)}`)
         if (match) {
           result.TEL!.push({
             phone: match[0]!,

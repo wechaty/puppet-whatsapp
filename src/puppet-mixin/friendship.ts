@@ -5,7 +5,7 @@ import WAError from '../exception/whatsapp-error.js'
 import type PuppetWhatsApp from '../puppet-whatsapp.js'
 import type { WhatsAppMessagePayload } from '../schema/whatsapp-type.js'
 
-const PRE = 'friendship'
+const PRE = 'MIXIN_FRIENDSHIP'
 
 export type FriendshipRawPayload = WhatsAppMessagePayload
 

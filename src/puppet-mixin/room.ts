@@ -12,8 +12,10 @@ import type {
 } from '../schema/whatsapp-type.js'
 import { isRoomId } from '../helper/miscellaneous.js'
 
+const PRE = 'MIXIN_ROOM'
+
 export async function roomList (this: PuppetWhatsApp): Promise<string[]> {
-  log.verbose('roomList()')
+  log.verbose(PRE, 'roomList()')
   const cacheManager = await this.manager.getCacheManager()
   const roomIdList = await cacheManager.getRoomIdList()
   return roomIdList
@@ -80,7 +82,7 @@ export async function roomCreate (
   contactIdList: string[],
   topic: string,
 ): Promise<string> {
-  log.info('roomCreate(%s, %s)', contactIdList, topic)
+  log.verbose(PRE, 'roomCreate(%s, %s)', contactIdList, topic)
   const { friendsList, nonFriendsList } = await checkRoomMember.call(this, contactIdList)
   const group = await this.manager.createRoom(topic, friendsList)
   const roomId = group.gid._serialized
@@ -103,7 +105,7 @@ export async function roomAdd (
   roomId: string,
   contactId: string,
 ): Promise<void> {
-  log.info('roomAdd(%s, %s)', roomId, contactId)
+  log.verbose(PRE, 'roomAdd(%s, %s)', roomId, contactId)
   await addMemberListToRoom.call(this, roomId, contactId)
 }
 
@@ -124,7 +126,7 @@ export async function roomDel (
   roomId: string,
   contactId: string,
 ): Promise<void> {
-  log.info('roomDel(%s, %s)', roomId, contactId)
+  log.verbose(PRE, 'roomDel(%s, %s)', roomId, contactId)
   const roomChat = await this.manager.getRoomChatById(roomId)
   await roomChat.removeParticipants([contactId])
   const cacheManager = await this.manager.getCacheManager()
@@ -132,7 +134,7 @@ export async function roomDel (
 }
 
 export async function roomQuit (this: PuppetWhatsApp, roomId: string): Promise<void> {
-  log.info('roomQuit(%s)', roomId)
+  log.verbose(PRE, 'roomQuit(%s)', roomId)
   const roomChat = await this.manager.getRoomChatById(roomId)
   await roomChat.leave()
   const cacheManager = await this.manager.getCacheManager()
@@ -141,7 +143,7 @@ export async function roomQuit (this: PuppetWhatsApp, roomId: string): Promise<v
 }
 
 export async function roomAvatar (this: PuppetWhatsApp, roomId: string): Promise<FileBox> {
-  log.info('roomAvatar(%s)', roomId)
+  log.verbose(PRE, 'roomAvatar(%s)', roomId)
 
   const payload = await this.roomPayload(roomId)
 
@@ -159,7 +161,7 @@ export async function roomTopic (
   roomId: string,
   topic?: string,
 ): Promise<void | string> {
-  log.info('roomTopic(%s, %s)', roomId, topic)
+  log.verbose(PRE, 'roomTopic(%s, %s)', roomId, topic)
 
   if (typeof topic === 'undefined') {
     const payload = await this.roomPayload(roomId)
@@ -173,7 +175,7 @@ export async function roomTopic (
 }
 
 export async function roomQRCode (this: PuppetWhatsApp, roomId: string): Promise<string> {
-  log.info('roomQRCode(%s)', roomId)
+  log.verbose(PRE, 'roomQRCode(%s)', roomId)
   const roomChat = await this.manager.getRoomChatById(roomId)
   const code = await roomChat.getInviteCode()
   const url = `https://chat.whatsapp.com/${code}`
@@ -187,7 +189,7 @@ export async function roomQRCode (this: PuppetWhatsApp, roomId: string): Promise
  * @returns { string[] } member id list
  */
 export async function roomMemberList (this: PuppetWhatsApp, roomId: string): Promise<string[]> {
-  log.info('roomMemberList(%s)', roomId)
+  log.verbose(PRE, 'roomMemberList(%s)', roomId)
   const cacheManager = await this.manager.getCacheManager()
   const memberList = await cacheManager.getRoomMemberIdList(roomId)
   if (memberList.length === 0) {
@@ -197,7 +199,7 @@ export async function roomMemberList (this: PuppetWhatsApp, roomId: string): Pro
 }
 
 export async function roomMemberRawPayload (this: PuppetWhatsApp, roomId: string, contactId: string): Promise<PUPPET.payloads.RoomMember> {
-  log.verbose('roomMemberRawPayload(%s, %s)', roomId, contactId)
+  log.verbose(PRE, 'roomMemberRawPayload(%s, %s)', roomId, contactId)
   const member = await contactRawPayload.call(this, contactId)
   return {
     avatar: member.avatar,
@@ -208,7 +210,7 @@ export async function roomMemberRawPayload (this: PuppetWhatsApp, roomId: string
 }
 
 export async function roomMemberRawPayloadParser (this: PuppetWhatsApp, rawPayload: PUPPET.payloads.RoomMember): Promise<PUPPET.payloads.RoomMember> {
-  log.verbose('roomMemberRawPayloadParser(%s)', JSON.stringify(rawPayload))
+  log.verbose(PRE, 'roomMemberRawPayloadParser(%s)', JSON.stringify(rawPayload))
   return rawPayload
 }
 
@@ -231,7 +233,7 @@ export async function roomAnnounce (this: PuppetWhatsApp, roomId: string, text?:
 *
 */
 export async function roomInvitationAccept (this: PuppetWhatsApp, roomInvitationId: string): Promise<void> {
-  log.verbose('roomInvitationAccept(%s)', roomInvitationId)
+  log.verbose(PRE, 'roomInvitationAccept(%s)', roomInvitationId)
 
   const info = await roomInvitationRawPayload.call(this, roomInvitationId)
 
@@ -244,7 +246,7 @@ export async function roomInvitationAccept (this: PuppetWhatsApp, roomInvitation
 }
 
 export async function roomInvitationRawPayload (this: PuppetWhatsApp, roomInvitationId: string): Promise<Partial<InviteV4Data>> {
-  log.verbose('roomInvitationRawPayload(%s)', roomInvitationId)
+  log.verbose(PRE, 'roomInvitationRawPayload(%s)', roomInvitationId)
   const cacheManager = await this.manager.getCacheManager()
   const info = await cacheManager.getRoomInvitationRawPayload(roomInvitationId)
   if (info) {
@@ -264,12 +266,12 @@ export async function roomInvitationRawPayload (this: PuppetWhatsApp, roomInvita
  * TODO: Here we return Partial<InviteV4Data> for roomInvitationAccept usage, We may need other fields required by RoomInvitationPayload
  */
 export async function roomInvitationRawPayloadParser (this: PuppetWhatsApp, rawPayload: any): Promise<PUPPET.payloads.RoomInvitation> {
-  log.verbose('roomInvitationRawPayloadParser(%s)', JSON.stringify(rawPayload))
+  log.verbose(PRE, 'roomInvitationRawPayloadParser(%s)', JSON.stringify(rawPayload))
   return rawPayload
 }
 
 export async function roomRawPayload (this: PuppetWhatsApp, id: string): Promise<RoomPayload> {
-  log.verbose('roomRawPayload(%s)', id)
+  log.verbose(PRE, 'roomRawPayload(%s)', id)
   if (!isRoomId(id)) {
     throw WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `please check room id: ${id} again.`)
   }
@@ -306,7 +308,7 @@ export async function roomRawPayloadParser (this: PuppetWhatsApp, roomPayload: R
       topic: roomPayload.name || roomPayload.pushname || '',
     }
   } catch (error) {
-    log.error(`roomRawPayloadParser(${roomId}) failed, error message: ${(error as Error).message}`)
+    log.error(PRE, `roomRawPayloadParser(${roomId}) failed, error message: ${(error as Error).message}`)
     throw WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `roomRawPayloadParser(${roomId}) failed, error message: ${(error as Error).message}`)
   }
 }

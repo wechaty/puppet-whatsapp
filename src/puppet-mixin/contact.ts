@@ -12,7 +12,7 @@ import type PuppetWhatsApp from '../puppet-whatsapp.js'
 import type { WhatsAppContactPayload } from '../schema/whatsapp-type.js'
 import { isContactId } from '../helper/miscellaneous.js'
 
-const PRE = 'contact'
+const PRE = 'MIXIN_CONTACT'
 
 export async function contactAlias(this: PuppetWhatsApp, contactId: string): Promise<string>;
 export async function contactAlias(this: PuppetWhatsApp, contactId: string, alias: string | null): Promise<void>;
@@ -25,7 +25,7 @@ export async function contactPhone(this: PuppetWhatsApp, contactId: string): Pro
 export async function contactPhone(this: PuppetWhatsApp, contactId: string, phoneList: string[]): Promise<void>
 
 export async function contactPhone (this: PuppetWhatsApp, contactId: string, phoneList?: string[]): Promise<string[] | void> {
-  log.info(PRE, 'contactPhone(%s, %s)', contactId, phoneList)
+  log.verbose(PRE, 'contactPhone(%s, %s)', contactId, phoneList)
   if (typeof phoneList === 'undefined') {
     const cacheManager = await this.manager.getCacheManager()
     const contact = await cacheManager.getContactOrRoomRawPayload(contactId)
@@ -48,7 +48,7 @@ export async function contactDescription (this: PuppetWhatsApp, contactId: strin
 }
 
 export async function contactList (this: PuppetWhatsApp): Promise<string[]> {
-  log.info(PRE, 'contactList()')
+  log.verbose(PRE, 'contactList()')
   const cacheManager = await this.manager.getCacheManager()
   const contactIdList = await cacheManager.getContactIdList()
   return contactIdList
@@ -58,7 +58,7 @@ export async function contactAvatar(this: PuppetWhatsApp, contactId: string): Pr
 export async function contactAvatar(this: PuppetWhatsApp, contactId: string, file: FileBox): Promise<void>
 
 export async function contactAvatar (this: PuppetWhatsApp, contactId: string, file?: FileBox): Promise<void | FileBox> {
-  log.info(PRE, 'contactAvatar(%s)', contactId)
+  log.verbose(PRE, 'contactAvatar(%s)', contactId)
 
   if (file) {
     return PUPPET.throwUnsupportedError()

@@ -15,10 +15,12 @@ import {
   genRoomJoinEvent,
 } from '../../helper/pure-function/room-event-generator.js'
 
+const PRE = 'GroupEventHandler'
+
 export default class GroupEventHandler extends WhatsAppBase {
 
   public async onRoomJoin (notification: GroupNotification) {
-    log.info(`onRoomJoin(${JSON.stringify(notification)})`)
+    log.info(PRE, `onRoomJoin(${JSON.stringify(notification)})`)
     const roomId = notification.id.remote
     const roomJoinPayload: PUPPET.payloads.EventRoomJoin = {
       inviteeIdList: notification.recipientIds,
@@ -32,7 +34,7 @@ export default class GroupEventHandler extends WhatsAppBase {
   }
 
   public async onRoomLeave (notification: GroupNotification) {
-    log.info(`onRoomLeave(${JSON.stringify(notification)})`)
+    log.info(PRE, `onRoomLeave(${JSON.stringify(notification)})`)
     const { id, recipientIds } = notification
     const roomId = id.remote
     const isLeaveSelf = id.fromMe && recipientIds.length === 1 &&  recipientIds[0] === this.getBotId()
@@ -48,7 +50,7 @@ export default class GroupEventHandler extends WhatsAppBase {
   }
 
   public async onRoomUpdate (notification: GroupNotification) {
-    log.info(`onRoomUpdate(${JSON.stringify(notification)})`)
+    log.info(PRE, `onRoomUpdate(${JSON.stringify(notification)})`)
     const roomId = notification.id.remote
     const cacheManager = await this.manager.getCacheManager()
     let roomPayload = await cacheManager.getContactOrRoomRawPayload(roomId)

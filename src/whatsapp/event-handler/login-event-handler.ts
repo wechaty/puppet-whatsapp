@@ -50,7 +50,7 @@ export default class LoginEventHandler extends WhatsAppBase { // FIXME: I have n
   }
 
   public async onWhatsAppReady () {
-    log.info(PRE, 'onWhatsAppReady()')
+    log.verbose(PRE, 'onWhatsAppReady()')
     const contactOrRoomList = await this.manager.syncContactOrRoomList()
     await this.onLogin(contactOrRoomList)
     await this.onReady(contactOrRoomList)
@@ -58,7 +58,7 @@ export default class LoginEventHandler extends WhatsAppBase { // FIXME: I have n
   }
 
   public async onLogin (contactOrRoomList: WhatsAppContact[]) {
-    log.info(PRE, 'onLogin()')
+    log.verbose(PRE, 'onLogin()')
     const whatsapp = this.getWhatsAppClient()
     try {
       this.botId = whatsapp.info.wid._serialized
@@ -92,9 +92,9 @@ export default class LoginEventHandler extends WhatsAppBase { // FIXME: I have n
   }
 
   public async onReady (contactOrRoomList: WhatsAppContact[]) {
-    log.info(PRE, 'onReady()')
+    log.verbose(PRE, 'onReady()')
     if (this.loadingData) {
-      log.info(PRE, 'onReady() loading data are under process.')
+      log.verbose(PRE, 'onReady() loading data are under process.')
       return
     }
     this.loadingData = true
@@ -136,7 +136,7 @@ export default class LoginEventHandler extends WhatsAppBase { // FIXME: I have n
   }
 
   public async onLogout (reason: string = LOGOUT_REASON.DEFAULT) {
-    log.info(PRE, `onLogout(${reason})`)
+    log.verbose(PRE, `onLogout(${reason})`)
     await this.clearSession()
     this.manager.stopSchedule()
     this.emit('logout', this.getBotId(), reason as string)
@@ -172,7 +172,7 @@ export default class LoginEventHandler extends WhatsAppBase { // FIXME: I have n
    * leave logs to for further dev
   */
   public async onChangeBattery (batteryInfo: BatteryInfo) {
-    log.silly(PRE, `onChangeBattery(${JSON.stringify(batteryInfo)})`)
+    log.verbose(PRE, `onChangeBattery(${JSON.stringify(batteryInfo)})`)
     if (!this.botId) {
       throw WAError(WA_ERROR_TYPE.ERR_INIT, 'No login bot id.')
     }
