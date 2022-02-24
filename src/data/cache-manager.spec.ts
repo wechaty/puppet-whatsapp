@@ -11,6 +11,8 @@ test('cacheManager start and stop test', async t => {
   } catch (e) {
     t.fail(e as any)
   }
+
+  t.pass('cacheManager start and stop test pass')
 })
 
 test('cacheManager set and get test', async t => {
@@ -29,6 +31,7 @@ test('cacheManager set and get test', async t => {
     }
 
     await CacheManager.release()
+    t.pass('cacheManager set and get test pass')
   } catch (e) {
     t.fail(e as any)
   }
