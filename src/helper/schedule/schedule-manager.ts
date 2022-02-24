@@ -46,6 +46,7 @@ export default class ScheduleManager {
   public clearAllTasks () {
     log.silly(PRE, 'clearAllTasks()')
     this.jobPool.map(job => job.cancel())
+    this.jobPool = []
   }
 
 }
