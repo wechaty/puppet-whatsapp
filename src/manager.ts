@@ -19,6 +19,7 @@ export default class Manager extends EE<ManagerEvents> {
   public whatsAppManager: WhatsAppManager
   private cacheManager?: CacheManager
   private _requestManager?: RequestManager
+  private scheduleManager: ScheduleManager
 
   private fetchingMessages: boolean = false
   private heartbeatTimer?: NodeJS.Timer
@@ -26,6 +27,7 @@ export default class Manager extends EE<ManagerEvents> {
   constructor (private options: PuppetWhatsAppOptions) {
     super()
     this.whatsAppManager = new WhatsAppManager(this)
+    this.scheduleManager = ScheduleManager.Instance
   }
 
   public getOptions () {
@@ -187,10 +189,19 @@ export default class Manager extends EE<ManagerEvents> {
    */
 
   public startSchedule () {
+    this.scheduleManager.addScheduledTask('0 */2 * * * *', async () => {
+      log.silly('startSyncMissedMessages')
+      const contactOrRoomList = await this.syncContactOrRoomList()
+      const batchSize = 100
+      await batchProcess(batchSize, contactOrRoomList, async (contactOrRoom: WhatsAppContact) => {
+        await this.fetchMessages(contactOrRoom)
+      })
+      log.silly('startSyncMissedMessages finished')
+    })
   }
 
   public stopSchedule () {
-    ScheduleManager.Instance.clearAllTasks()
+    this.scheduleManager.clearAllTasks()
   }
 
   /**
