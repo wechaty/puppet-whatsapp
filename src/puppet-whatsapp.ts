@@ -32,6 +32,13 @@ import WAError from './exception/whatsapp-error.js'
 import { WA_ERROR_TYPE } from './exception/error-type.js'
 import { EventName } from './schema/event-name.js'
 import { RequestPool } from './request/request-pool.js'
+import { contactSelfQRCode, contactSelfName, contactSelfSignature } from './puppet-mixin/contact-self.js'
+import { contactAlias, contactPhone, contactCorporationRemark, contactDescription, contactList, contactAvatar, contactRawPayloadParser, contactRawPayload } from './puppet-mixin/contact.js'
+import { conversationReadMark } from './puppet-mixin/conversation.js'
+import { friendshipRawPayload, friendshipRawPayloadParser, friendshipSearchPhone, friendshipSearchWeixin, friendshipAdd, friendshipAccept } from './puppet-mixin/friendship.js'
+import { messageContact, messageImage, messageRecall, messageFile, messageUrl, messageMiniProgram, messageSendText, messageSendFile, messageSendContact, messageSendUrl, messageSendMiniProgram, messageForward, messageRawPayloadParser, messageRawPayload } from './puppet-mixin/message.js'
+import { roomRawPayloadParser, roomRawPayload, roomList, roomDel, roomAvatar, roomAdd, roomTopic, roomCreate, roomQuit, roomQRCode, roomMemberList, roomMemberRawPayload, roomMemberRawPayloadParser, roomAnnounce, roomInvitationAccept, roomInvitationRawPayload, roomInvitationRawPayloadParser } from './puppet-mixin/room.js'
+import { tagContactAdd, tagContactRemove, tagContactDelete, tagContactList } from './puppet-mixin/tag.js'
 
 // import { Attachment } from './mock/user/types'
 type ManagerWithRequestManager = Manager & RequestManagerAPIs
@@ -128,9 +135,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   /**
-   *
    * Event section: onXXX
-   *
    */
   private async onLogin (wxid: string): Promise<void> {
     log.info('onLogin(%s)', wxid)
@@ -222,14 +227,104 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     this.emit('ready', { data: 'ready' })
   }
 
+  /**
+   * Override Methods
+   */
+
   override async onDirty (payload: PUPPET.payloads.EventDirty) {
     this.emit('dirty', payload)
+  }
+
+  override async logout () {
+    return this.manager.logout()
   }
 
   override ding (data?: string): void {
     log.silly('PuppetWhatsApp', 'ding(%s)', data || '')
     setTimeout(() => this.emit('dong', { data: data || '' }), 1000)
   }
+
+  /**
+   * ContactSelf
+   */
+  override contactSelfQRCode = contactSelfQRCode
+  override contactSelfName = contactSelfName
+  override contactSelfSignature = contactSelfSignature
+
+  /**
+   * Contact
+   */
+  override contactAlias = contactAlias
+  override contactPhone = contactPhone
+  override contactCorporationRemark = contactCorporationRemark
+  override contactDescription = contactDescription
+  override contactList = contactList
+  override contactAvatar = contactAvatar
+  override contactRawPayloadParser = contactRawPayloadParser
+  override contactRawPayload = contactRawPayload
+
+  /**
+   * Conversation
+   */
+  override conversationReadMark = conversationReadMark
+
+  /**
+   * Message
+   */
+  override messageContact = messageContact
+  override messageImage = messageImage
+  override messageRecall = messageRecall
+  override messageFile = messageFile
+  override messageUrl = messageUrl
+  override messageMiniProgram = messageMiniProgram
+  override messageSendText = messageSendText
+  override messageSendFile = messageSendFile
+  override messageSendContact = messageSendContact
+  override messageSendUrl = messageSendUrl
+  override messageSendMiniProgram = messageSendMiniProgram
+  override messageForward = messageForward
+
+  override messageRawPayloadParser = messageRawPayloadParser
+  override messageRawPayload = messageRawPayload
+
+  /**
+    * Room
+    */
+  override roomRawPayloadParser = roomRawPayloadParser
+  override roomRawPayload = roomRawPayload
+  override roomList = roomList
+  override roomDel = roomDel
+  override roomAvatar = roomAvatar
+  override roomAdd = roomAdd
+  override roomTopic = roomTopic
+  override roomCreate = roomCreate
+  override roomQuit = roomQuit
+  override roomQRCode = roomQRCode
+  override roomMemberList = roomMemberList
+  override roomMemberRawPayload = roomMemberRawPayload
+  override roomMemberRawPayloadParser = roomMemberRawPayloadParser
+  override roomAnnounce = roomAnnounce
+  override roomInvitationAccept = roomInvitationAccept
+  override roomInvitationRawPayload =  roomInvitationRawPayload
+  override roomInvitationRawPayloadParser = roomInvitationRawPayloadParser
+
+  /**
+    * Friendship
+    */
+  override friendshipRawPayload = friendshipRawPayload
+  override friendshipRawPayloadParser = friendshipRawPayloadParser
+  override friendshipSearchPhone = friendshipSearchPhone
+  override friendshipSearchWeixin = friendshipSearchWeixin
+  override friendshipAdd = friendshipAdd
+  override friendshipAccept = friendshipAccept
+
+  /**
+    * Tag
+    */
+  override tagContactAdd = tagContactAdd
+  override tagContactRemove = tagContactRemove
+  override tagContactDelete = tagContactDelete
+  override tagContactList = tagContactList
 
 }
 
