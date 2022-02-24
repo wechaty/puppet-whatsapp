@@ -236,6 +236,10 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   override async logout () {
+    if (!this.isLoggedIn) {
+      log.info('logout() do nothing')
+      return
+    }
     return this.manager.logout()
   }
 
