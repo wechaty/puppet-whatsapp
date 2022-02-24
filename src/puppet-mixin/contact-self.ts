@@ -2,7 +2,7 @@ import * as PUPPET from 'wechaty-puppet'
 import { log } from '../config.js'
 import type PuppetWhatsApp from '../puppet-whatsapp'
 
-const PRE = 'contact-self'
+const PRE = 'MIXIN_CONTACT_SELF'
 
 export async function contactSelfQRCode (this: PuppetWhatsApp): Promise<string> {
   log.verbose(PRE, 'contactSelfQRCode()')

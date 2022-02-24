@@ -20,6 +20,8 @@ import LoginEventHandler from './event-handler/login-event-handler.js'
 import MessageEventHandler from './event-handler/message-event-handler.js'
 import GroupEventHandler from './event-handler/group-event-handler.js'
 
+const PRE = 'WhatsAppManager'
+
 export default class WhatsAppManager extends WhatsAppBase {
 
   private botEventHandler: LoginEventHandler
@@ -37,7 +39,7 @@ export default class WhatsAppManager extends WhatsAppBase {
     options: ClientOptions = {},
     session?: ClientSession,
   ): Promise<WhatsAppClientType> {
-    log.verbose('initWhatsAppClient()')
+    log.verbose(PRE, 'initWhatsAppClient()')
     const { puppeteer = {}, ...restOptions } = options
     const { args, ...restPuppeteerOptions } = puppeteer
     const puppeteerOptions: LaunchOptions & BrowserLaunchArgumentOptions & BrowserConnectOptions = {
@@ -68,14 +70,14 @@ export default class WhatsAppManager extends WhatsAppBase {
     const whatsAppClient = this.getWhatsAppClient()
     whatsAppClient
       .initialize()
-      .then(() => log.verbose('start() whatsapp.initialize() done.'))
+      .then(() => log.verbose(PRE, 'start() whatsapp.initialize() done.'))
       .catch(async e => {
-        log.error('start() whatsapp.initialize() rejection: %s', e)
+        log.error(PRE, 'start() whatsapp.initialize() rejection: %s', e)
       })
   }
 
   public async initWhatsAppEvents (): Promise<void> {
-    log.verbose('initWhatsAppEvents()')
+    log.verbose(PRE, 'initWhatsAppEvents()')
     const whatsAppClient = this.getWhatsAppClient()
     whatsAppClient.on('qr', this.botEventHandler.onQRCode)
     whatsAppClient.on('authenticated', this.botEventHandler.onAuthenticated)
@@ -108,7 +110,7 @@ export default class WhatsAppManager extends WhatsAppBase {
     const eventStreams = events.map((event) => fromEvent(whatsAppClient, event).pipe(map((value: any) => ({ event, value }))))
     const allEvents$ = merge(...eventStreams)
     allEvents$.pipe(distinctUntilKeyChanged('event')).subscribe(({ event, value }: { event: string, value: any }) => {
-      log.info(`initWhatsAppEvents: ${JSON.stringify(event)}, value: ${JSON.stringify(value)}`)
+      log.info(PRE, `initWhatsAppEvents: ${JSON.stringify(event)}, value: ${JSON.stringify(value)}`)
       if (event === 'disconnected') {
         switch (value) {
           case 'NAVIGATION':

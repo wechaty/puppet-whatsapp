@@ -2,7 +2,7 @@ import { log } from '../../config.js'
 import { WA_ERROR_TYPE } from '../../exception/error-type.js'
 import WAError from '../../exception/whatsapp-error.js'
 
-const PRE = 'vcard-parser'
+const PRE = 'VCARD_PARSER'
 export interface IVcard {
   /**
    * VERSION: X.X

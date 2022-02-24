@@ -1,7 +1,7 @@
 import * as PUPPET from 'wechaty-puppet'
 import { log } from '../config.js'
 
-const PRE = 'tag'
+const PRE = 'MIXIN_TAG'
 
 export async function tagContactAdd (
   tagId: string,

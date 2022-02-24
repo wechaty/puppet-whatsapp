@@ -12,7 +12,7 @@ import type PuppetWhatsApp from '../puppet-whatsapp.js'
 import type { WhatsAppContactPayload } from '../schema/whatsapp-type.js'
 import { isContactId } from '../helper/miscellaneous.js'
 
-const PRE = 'contact'
+const PRE = 'MIXIN_CONTACT'
 
 export async function contactAlias(this: PuppetWhatsApp, contactId: string): Promise<string>;
 export async function contactAlias(this: PuppetWhatsApp, contactId: string, alias: string | null): Promise<void>;

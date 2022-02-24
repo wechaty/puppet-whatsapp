@@ -1,7 +1,7 @@
 import * as PUPPET from 'wechaty-puppet'
 import { log } from '../config.js'
 
-const PRE = 'conversation'
+const PRE = 'MIXIN_CONVERSATION'
 
 export async function conversationReadMark (
   conversationId: string,

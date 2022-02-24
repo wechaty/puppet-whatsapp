@@ -12,7 +12,7 @@ import { MessageAck } from './schema/whatsapp-interface.js'
 import type { ClientSession, GroupChat, WhatsAppContact, WhatsAppMessage } from './schema/whatsapp-type.js'
 import WhatsAppManager from './whatsapp/whatsapp-manager.js'
 
-const PRE = 'manager'
+const PRE = 'Manager'
 
 export default class Manager extends EE<ManagerEvents> {
 
@@ -44,13 +44,12 @@ export default class Manager extends EE<ManagerEvents> {
 
   public async start (session?: ClientSession) {
     log.info(PRE, 'start()')
-    log.info('start()')
     const whatsAppClient = await this.whatsAppManager.genWhatsAppClient(this.options['puppeteerOptions'], session)
     try {
       await this.whatsAppManager.initWhatsAppClient()
       await this.whatsAppManager.initWhatsAppEvents()
     } catch (error) {
-      log.error(`start() error message: ${(error as Error).stack}`)
+      log.error(PRE, `start() error message: ${(error as Error).stack}`)
       await sleep(2 * 1000)
       await this.start(session)
     }
@@ -61,7 +60,7 @@ export default class Manager extends EE<ManagerEvents> {
   }
 
   public async stop () {
-    log.info('stop()')
+    log.info(PRE, 'stop()')
     await this.getWhatsAppClient().stop()
     await this.releaseCache()
     this._requestManager = undefined
@@ -123,7 +122,7 @@ export default class Manager extends EE<ManagerEvents> {
       }
       return _messageList
     } catch (error) {
-      log.error(`filterFetchedMessages error: ${(error as Error).message}`)
+      log.error(PRE, `filterFetchedMessages error: ${(error as Error).message}`)
       return []
     }
   }
@@ -166,7 +165,7 @@ export default class Manager extends EE<ManagerEvents> {
   }
 
   public async processMessage (message: WhatsAppMessage) {
-    log.silly(`processMessage(${message})`)
+    log.silly(PRE, `processMessage(${message})`)
     await this.whatsAppManager.getMessageEventHandler().onMessage(message)
   }
 
@@ -206,13 +205,13 @@ export default class Manager extends EE<ManagerEvents> {
 
   public startSchedule () {
     this.scheduleManager.addScheduledTask('0 */2 * * * *', async () => {
-      log.silly('startSyncMissedMessages')
+      log.silly(PRE, 'startSyncMissedMessages')
       const contactOrRoomList = await this.syncContactOrRoomList()
       const batchSize = 100
       await batchProcess(batchSize, contactOrRoomList, async (contactOrRoom: WhatsAppContact) => {
         await this.processHistoryMessages(contactOrRoom)
       })
-      log.silly('startSyncMissedMessages finished')
+      log.silly(PRE, 'startSyncMissedMessages finished')
     })
   }
 
@@ -253,9 +252,9 @@ export default class Manager extends EE<ManagerEvents> {
       this.emit('heartbeat', 'puppeteer still connected')
     } else {
       this.asystoleCount += 1
-      log.warn(`asystole count: ${this.asystoleCount}`)
+      log.warn(PRE, `asystole count: ${this.asystoleCount}`)
       if (this.asystoleCount > MAX_HEARTBEAT_MISSED) {
-        log.error('max asystole reached, restarting...')
+        log.error(PRE, 'max asystole reached, restarting...')
         await this.stop()
         await this.start()
         this.asystoleCount = 0
