@@ -127,7 +127,7 @@ export default class LoginEventHandler extends WhatsAppBase { // FIXME: I have n
       } else {
         log.warn(PRE, `Unknown contact type: ${JSON.stringify(contactOrRoom)}`)
       }
-      await this.manager.fetchMessages(contactOrRoom)
+      await this.manager.processHistoryMessages(contactOrRoom)
     })
 
     log.info(PRE, `onReady() all contacts and rooms are ready, friendCount: ${friendCount} contactCount: ${contactCount} roomCount: ${roomCount}`)
