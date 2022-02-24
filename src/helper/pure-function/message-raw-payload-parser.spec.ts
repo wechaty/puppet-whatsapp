@@ -39,6 +39,8 @@ test('message parser for room message which send from bot by web ', async t => {
     && messagePayload.fromId === '8613126768525@c.us'
     && messagePayload.text === 'ding',
   )
+
+  t.pass('message parser for room message which send from bot by web pass')
 })
 
 test('message parser for room message which send from bot by api ', async t => {
@@ -81,6 +83,7 @@ test('message parser for room message which send from bot by api ', async t => {
     && messagePayload.fromId === '8613126768525@c.us'
     && messagePayload.text === 'dong',
   )
+  t.pass('message parser for room message which send from bot by api pass')
 })
 
 test('message parser for room message which send from other contact ', async t => {
@@ -121,6 +124,7 @@ test('message parser for room message which send from other contact ', async t =
     && messagePayload.fromId === '8618500946096@c.us'
     && messagePayload.text === 'hello',
   )
+  t.pass('message parser for room message which send from other contact pass')
 })
 
 test('message parser for contact message which send from bot by web ', async t => {
@@ -159,6 +163,7 @@ test('message parser for contact message which send from bot by web ', async t =
     && messagePayload.fromId === '8613126768525@c.us'
     && messagePayload.text === 'ding',
   )
+  t.pass('message parser for contact message which send from bot by web pass')
 })
 
 test('message parser for contact message which send from bot by api ', async t => {
@@ -197,6 +202,7 @@ test('message parser for contact message which send from bot by api ', async t =
     && messagePayload.fromId === '8613126768525@c.us'
     && messagePayload.text === 'dong',
   )
+  t.pass('message parser for contact message which send from bot by api pass')
 })
 
 test('message parser for contact message which send from other contact', async t => {
@@ -235,4 +241,5 @@ test('message parser for contact message which send from other contact', async t
     && messagePayload.fromId === '8618500946096@c.us'
     && messagePayload.text === 'hola',
   )
+  t.pass('message parser for contact message which send from other contact pass')
 })

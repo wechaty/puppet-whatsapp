@@ -4,10 +4,11 @@ import { test } from 'tstest'
 test('cacheManager start and stop test', async t => {
   try {
     await CacheManager.init('test')
-    t.ok('cacheManager init success')
+    t.ok(CacheManager.Instance instanceof CacheManager)
 
     await CacheManager.release()
     t.ok('cacheManager release success')
+    t.pass('cacheManager start and stop test pass')
   } catch (e) {
     t.fail(e as any)
   }
@@ -22,13 +23,10 @@ test('cacheManager set and get test', async t => {
     await cacheManager.setLatestMessageTimestampForChat('test', testTimestamp)
     const timeStamp = await (cacheManager.getLatestMessageTimestampForChat('test'))
 
-    if (timeStamp === testTimestamp) {
-      t.ok('set and get test pass')
-    } else {
-      t.fail('did not get the same timestamp')
-    }
+    t.ok(timeStamp === testTimestamp)
 
     await CacheManager.release()
+    t.pass('cacheManager set and get test')
   } catch (e) {
     t.fail(e as any)
   }
