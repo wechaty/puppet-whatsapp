@@ -102,7 +102,7 @@ export function parseVcard (body: string): IVcard {
         }
       } else {
         const match = TelPatternForContainMultiPhoneNumbers.exec(content)
-        log.info(PRE, `match: ${JSON.stringify(match)}`)
+        log.verbose(PRE, `match: ${JSON.stringify(match)}`)
         if (match) {
           result.TEL!.push({
             phone: match[0]!,

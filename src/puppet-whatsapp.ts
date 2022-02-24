@@ -140,7 +140,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
    * Event section: onXXX
    */
   private async onLogin (wxid: string): Promise<void> {
-    log.info(PRE, 'onLogin(%s)', wxid)
+    log.verbose(PRE, 'onLogin(%s)', wxid)
 
     if (this.logonoff()) {
       log.warn(PRE, 'onLogin(%s) already login? NOOP', wxid)
@@ -156,7 +156,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   private async onLogout (wxid: string, message: string): Promise<void> {
-    log.info(PRE, 'onLogout(%s, %s)', wxid, message)
+    log.verbose(PRE, 'onLogout(%s, %s)', wxid, message)
 
     if (!this.logonoff()) {
       log.warn(PRE, 'onLogout(%s) already logged out?', wxid)
@@ -170,12 +170,12 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   private async onMessage (message: PUPPET.payloads.EventMessage): Promise<void> {
-    log.info(PRE, 'onMessage(%s)', JSON.stringify(message))
+    log.verbose(PRE, 'onMessage(%s)', JSON.stringify(message))
     this.emit('message', message)
   }
 
   private async onScan (status: PUPPET.payloads.EventScan, qrcode?: string): Promise<void> {
-    log.info(PRE, 'onScan(%s, %s)', status, qrcode)
+    log.verbose(PRE, 'onScan(%s, %s)', status, qrcode)
 
     log.info(PRE, `${EventName.SCAN}`)
     this.emit('scan', { qrcode, status })
@@ -223,7 +223,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   private async onReady () {
-    log.info(PRE, 'onReady()')
+    log.verbose(PRE, 'onReady()')
 
     log.info(PRE, `${EventName.READY}`)
     this.emit('ready', { data: 'ready' })
@@ -239,7 +239,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
 
   override async logout () {
     if (!this.isLoggedIn) {
-      log.info(PRE, 'logout() do nothing')
+      log.verbose(PRE, 'logout() do nothing')
       return
     }
     return this.manager.logout()

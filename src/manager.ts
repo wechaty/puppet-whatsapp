@@ -43,7 +43,7 @@ export default class Manager extends EE<ManagerEvents> {
    */
 
   public async start (session?: ClientSession) {
-    log.info(PRE, 'start()')
+    log.verbose(PRE, 'start()')
     const whatsAppClient = await this.whatsAppManager.genWhatsAppClient(this.options['puppeteerOptions'], session)
     try {
       await this.whatsAppManager.initWhatsAppClient()
@@ -60,7 +60,7 @@ export default class Manager extends EE<ManagerEvents> {
   }
 
   public async stop () {
-    log.info(PRE, 'stop()')
+    log.verbose(PRE, 'stop()')
     await this.getWhatsAppClient().stop()
     await this.releaseCache()
     this._requestManager = undefined
@@ -174,7 +174,7 @@ export default class Manager extends EE<ManagerEvents> {
    */
 
   public async initCache (userId: string) {
-    log.info(PRE, `initCache(${userId})`)
+    log.verbose(PRE, `initCache(${userId})`)
     if (this.cacheManager) {
       log.warn(PRE, 'initCache() already initialized, skip the init...')
       return
@@ -184,7 +184,7 @@ export default class Manager extends EE<ManagerEvents> {
   }
 
   public async releaseCache () {
-    log.info(PRE, 'releaseCache()')
+    log.verbose(PRE, 'releaseCache()')
     if (this.cacheManager) {
       log.warn(PRE, 'releaseCache() already initialized, skip the init...')
       return

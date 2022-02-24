@@ -31,7 +31,7 @@ const PRE = 'MIXIN_MESSAGE'
   * @returns contact name
   */
 export async function messageContact (this: PuppetWhatsApp, messageId: string): Promise<string> {
-  log.info(PRE, 'messageContact(%s)', messageId)
+  log.verbose(PRE, 'messageContact(%s)', messageId)
   const cacheManager = await this.manager.getCacheManager()
   const msg = await cacheManager.getMessageRawPayload(messageId)
   if (!msg) {
@@ -59,7 +59,7 @@ export async function messageContact (this: PuppetWhatsApp, messageId: string): 
 * @returns { Promise<boolean> }
 */
 export async function messageRecall (this: PuppetWhatsApp, messageId: string): Promise<boolean> {
-  log.info(PRE, 'messageRecall(%s)', messageId)
+  log.verbose(PRE, 'messageRecall(%s)', messageId)
   const cacheManager = await this.manager.getCacheManager()
   const msg = await cacheManager.getMessageRawPayload(messageId)
   if (!msg) {
@@ -83,7 +83,7 @@ export async function messageRecall (this: PuppetWhatsApp, messageId: string): P
 * @returns the image
 */
 export async function messageImage (this: PuppetWhatsApp, messageId: string, imageType: PUPPET.types.Image): Promise<FileBox> {
-  log.info(PRE, 'messageImage(%s, %s)', messageId, PUPPET.types.Image[imageType])
+  log.verbose(PRE, 'messageImage(%s, %s)', messageId, PUPPET.types.Image[imageType])
   const cacheManager = await this.manager.getCacheManager()
   const msg = await cacheManager.getMessageRawPayload(messageId)
   if (!msg) {
@@ -122,7 +122,7 @@ export async function messageImage (this: PuppetWhatsApp, messageId: string, ima
 * @returns the file that attached to the message
 */
 export async function messageFile (this: PuppetWhatsApp, messageId: string): Promise<FileBox> {
-  log.info(PRE, 'messageFile(%s)', messageId)
+  log.verbose(PRE, 'messageFile(%s)', messageId)
   const cacheManager = await this.manager.getCacheManager()
   const msg = await cacheManager.getMessageRawPayload(messageId)
   if (!msg) {
@@ -155,7 +155,7 @@ async function downloadMedia (this: PuppetWhatsApp, msg: WhatsAppMessagePayload)
 * @returns url in the message
 */
 export async function messageUrl (this: PuppetWhatsApp, messageId: string): Promise<PUPPET.payloads.UrlLink> {
-  log.info(PRE, 'messageUrl(%s)', messageId)
+  log.verbose(PRE, 'messageUrl(%s)', messageId)
   const cacheManager = await this.manager.getCacheManager()
   const msg = await cacheManager.getMessageRawPayload(messageId)
   if (!msg) {
@@ -182,12 +182,12 @@ export async function messageUrl (this: PuppetWhatsApp, messageId: string): Prom
 * @param messageId message id
 */
 export async function messageMiniProgram (this: PuppetWhatsApp, messageId: string): Promise<PUPPET.payloads.MiniProgram> {
-  log.info(PRE, 'messageMiniProgram(%s)', messageId)
+  log.verbose(PRE, 'messageMiniProgram(%s)', messageId)
   return PUPPET.throwUnsupportedError()
 }
 
 export async function messageSend (this: PuppetWhatsApp, conversationId: string, content: MessageContent, options?: MessageSendOptions, timeout = DEFAULT_TIMEOUT.MESSAGE_SEND): Promise<string> {
-  log.info(PRE, 'messageSend(%s, %s)', conversationId, typeof content)
+  log.verbose(PRE, 'messageSend(%s, %s)', conversationId, typeof content)
 
   const msg = await this.manager.sendMessage(conversationId, content, options)
   const messageId = msg.id.id
@@ -197,7 +197,7 @@ export async function messageSend (this: PuppetWhatsApp, conversationId: string,
 }
 
 export async function messageSendText (this: PuppetWhatsApp, conversationId: string, text: string, mentions?: string[]): Promise<void | string> {
-  log.info(PRE, 'messageSendText(%s, %s)', conversationId, text)
+  log.verbose(PRE, 'messageSendText(%s, %s)', conversationId, text)
   if (mentions) {
     const contacts = await Promise.all(mentions.map((v) => (
       this.manager.getContactById(v)
@@ -209,7 +209,7 @@ export async function messageSendText (this: PuppetWhatsApp, conversationId: str
 }
 
 export async function messageSendFile (this: PuppetWhatsApp, conversationId: string, file: FileBox, options?: MessageSendOptions): Promise<void | string> {
-  log.info(PRE, 'messageSendFile(%s, %s)', conversationId, file.name)
+  log.verbose(PRE, 'messageSendFile(%s, %s)', conversationId, file.name)
   await file.ready()
   const type = (file.mimeType && file.mimeType !== 'application/octet-stream')
     ? file.mimeType.replace(/;.*$/, '')
@@ -228,7 +228,7 @@ export async function messageSendFile (this: PuppetWhatsApp, conversationId: str
 }
 
 export async function messageSendContact (this: PuppetWhatsApp, conversationId: string, contactId: string, options?: MessageSendOptions): Promise<void> {
-  log.info(PRE, 'messageSendContact(%s, %s)', conversationId, contactId)
+  log.verbose(PRE, 'messageSendContact(%s, %s)', conversationId, contactId)
 
   const contact = await this.manager.getContactById(contactId)
   await messageSend.call(this, conversationId, contact, options, DEFAULT_TIMEOUT.MESSAGE_SEND_TEXT)
@@ -239,7 +239,7 @@ export async function messageSendUrl (
   conversationId: string,
   urlLinkPayload: PUPPET.payloads.UrlLink,
 ): Promise<string> {
-  log.info(PRE, 'messageSendUrl(%s, %s)', conversationId, JSON.stringify(urlLinkPayload))
+  log.verbose(PRE, 'messageSendUrl(%s, %s)', conversationId, JSON.stringify(urlLinkPayload))
   return messageSend.call(this, conversationId, urlLinkPayload.url, {}, DEFAULT_TIMEOUT.MESSAGE_SEND_TEXT)
 }
 
@@ -249,7 +249,7 @@ export async function messageSendMiniProgram (this: PuppetWhatsApp, conversation
 }
 
 export async function messageForward (this: PuppetWhatsApp, conversationId: string, messageId: string): Promise<void> {
-  log.info(PRE, 'messageForward(%s, %s)', conversationId, messageId)
+  log.verbose(PRE, 'messageForward(%s, %s)', conversationId, messageId)
   const cacheManager = await this.manager.getCacheManager()
   const msg = await cacheManager.getMessageRawPayload(messageId)
   if (!msg) {
@@ -265,7 +265,7 @@ export async function messageForward (this: PuppetWhatsApp, conversationId: stri
 }
 
 export async function messageRawPayload (this: PuppetWhatsApp, id: string): Promise<WhatsAppMessagePayload> {
-  log.info(PRE, 'messageRawPayload(%s)', id)
+  log.verbose(PRE, 'messageRawPayload(%s)', id)
   const cacheManager = await this.manager.getCacheManager()
   const msg = await cacheManager.getMessageRawPayload(id)
   if (!msg) {

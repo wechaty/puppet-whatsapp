@@ -294,7 +294,7 @@ export class CacheManager {
 
     const messageTotal = await this.cacheMessageRawPayload.size
 
-    log.info(PRE, `initCache() inited Messages: ${messageTotal} cacheDir="${baseDir}"`)
+    log.verbose(PRE, `initCache() inited Messages: ${messageTotal} cacheDir="${baseDir}"`)
   }
 
   private async releaseCache () {
