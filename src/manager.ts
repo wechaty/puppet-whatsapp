@@ -44,7 +44,7 @@ export default class Manager extends EE<ManagerEvents> {
 
     return new Proxy(this, {
       get: (target: Manager, prop: keyof Manager & keyof RequestManager) => {
-        return requestManagerKeys.indexOf(prop) > -1 ? target.requestManager[prop] : target[prop]
+        return requestManagerKeys.indexOf(prop) > -1 ? (target.requestManager[prop] as Function).bind(target.requestManager) : target[prop]
       },
     })
   }
