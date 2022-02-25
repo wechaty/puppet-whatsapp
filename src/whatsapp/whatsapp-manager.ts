@@ -79,28 +79,28 @@ export default class WhatsAppManager extends WhatsAppBase {
   public async initWhatsAppEvents (): Promise<void> {
     log.verbose(PRE, 'initWhatsAppEvents()')
     const whatsAppClient = this.getWhatsAppClient()
-    whatsAppClient.on('qr', this.botEventHandler.onQRCode)
-    whatsAppClient.on('authenticated', this.botEventHandler.onAuthenticated)
+    whatsAppClient.on('qr', this.botEventHandler.onQRCode.bind(this.botEventHandler))
+    whatsAppClient.on('authenticated', this.botEventHandler.onAuthenticated.bind(this.botEventHandler))
     /**
      * There is only one situation that will cause this event, invalid session causing timeout
      * https://github.com/pedroslopez/whatsapp-web.js/blob/d86c39de3ca5699a50db98ee93e264ab8c4f25a3/src/Client.js#L116-L129
      */
-    whatsAppClient.on('auth_failure', this.botEventHandler.onAuthFailure)
-    whatsAppClient.on('ready', this.botEventHandler.onWhatsAppReady)
-    whatsAppClient.on('change_state', this.botEventHandler.onChangeState)
-    whatsAppClient.on('change_battery', this.botEventHandler.onChangeBattery)
+    whatsAppClient.on('auth_failure', this.botEventHandler.onAuthFailure.bind(this.botEventHandler))
+    whatsAppClient.on('ready', this.botEventHandler.onWhatsAppReady.bind(this.botEventHandler))
+    whatsAppClient.on('change_state', this.botEventHandler.onChangeState.bind(this.botEventHandler))
+    whatsAppClient.on('change_battery', this.botEventHandler.onChangeBattery.bind(this.botEventHandler))
 
-    whatsAppClient.on('message', this.messageEventHandler.onMessage)
-    whatsAppClient.on('message_ack', this.messageEventHandler.onMessageAck)
-    whatsAppClient.on('message_create', this.messageEventHandler.onMessageCreate)
-    whatsAppClient.on('message_revoke_everyone', this.messageEventHandler.onMessageRevokeEveryone)
-    whatsAppClient.on('message_revoke_me', this.messageEventHandler.onMessageRevokeMe)
-    whatsAppClient.on('media_uploaded', this.messageEventHandler.onMediaUploaded)
-    whatsAppClient.on('incoming_call', this.messageEventHandler.onIncomingCall)
+    whatsAppClient.on('message', this.messageEventHandler.onMessage.bind(this.messageEventHandler))
+    whatsAppClient.on('message_ack', this.messageEventHandler.onMessageAck.bind(this.messageEventHandler))
+    whatsAppClient.on('message_create', this.messageEventHandler.onMessageCreate.bind(this.messageEventHandler))
+    whatsAppClient.on('message_revoke_everyone', this.messageEventHandler.onMessageRevokeEveryone.bind(this.messageEventHandler))
+    whatsAppClient.on('message_revoke_me', this.messageEventHandler.onMessageRevokeMe.bind(this.messageEventHandler))
+    whatsAppClient.on('media_uploaded', this.messageEventHandler.onMediaUploaded.bind(this.messageEventHandler))
+    whatsAppClient.on('incoming_call', this.messageEventHandler.onIncomingCall.bind(this.messageEventHandler))
 
-    whatsAppClient.on('group_join', this.groupEventHandler.onRoomJoin)
-    whatsAppClient.on('group_leave', this.groupEventHandler.onRoomLeave)
-    whatsAppClient.on('group_update', this.groupEventHandler.onRoomUpdate)
+    whatsAppClient.on('group_join', this.groupEventHandler.onRoomJoin.bind(this.messageEventHandler))
+    whatsAppClient.on('group_leave', this.groupEventHandler.onRoomLeave.bind(this.messageEventHandler))
+    whatsAppClient.on('group_update', this.groupEventHandler.onRoomUpdate.bind(this.messageEventHandler))
 
     const events = [
       'authenticated',
