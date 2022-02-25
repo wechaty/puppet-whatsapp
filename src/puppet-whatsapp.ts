@@ -142,23 +142,21 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   private async onLogin (wxid: string): Promise<void> {
     log.verbose(PRE, 'onLogin(%s)', wxid)
 
-    if (this.logonoff()) {
+    if (this.isLoggedIn) {
       log.warn(PRE, 'onLogin(%s) already login? NOOP', wxid)
       return
     }
     log.info(PRE, `${EventName.LOGIN}, ${wxid}`)
 
-    if (!this.selfId()) {
-      await super.login(wxid)
-    } else {
-      this.emit('login', { contactId: wxid })
-    }
+    await super.login(wxid)
+    // no need to emit login since super.login will do that
+    // this.emit('login', { contactId: wxid })
   }
 
   private async onLogout (wxid: string, message: string): Promise<void> {
     log.verbose(PRE, 'onLogout(%s, %s)', wxid, message)
 
-    if (!this.logonoff()) {
+    if (!this.isLoggedIn) {
       log.warn(PRE, 'onLogout(%s) already logged out?', wxid)
     }
     log.info(PRE, `${EventName.LOGOUT}, ${wxid}`)
@@ -238,6 +236,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   }
 
   override async logout () {
+    await super.logout()
     if (!this.isLoggedIn) {
       log.verbose(PRE, 'logout() do nothing')
       return
