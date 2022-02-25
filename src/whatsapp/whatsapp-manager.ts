@@ -33,6 +33,25 @@ export default class WhatsAppManager extends WhatsAppBase {
     this.botEventHandler = new LoginEventHandler(manager)
     this.messageEventHandler = new MessageEventHandler(manager)
     this.groupEventHandler = new GroupEventHandler(manager)
+
+    this.botEventHandler.on({
+      login: data => this.emit('login', data),
+      logout: (botId, data) => this.emit('logout', botId, data),
+      ready: () => this.emit('ready'),
+      scan: data => this.emit('scan', data),
+    })
+
+    this.messageEventHandler.on({
+      friendship: data => this.emit('friendship', data),
+      message: data => this.emit('message', data),
+      'room-invite': data => this.emit('room-invite', data),
+    })
+
+    this.groupEventHandler.on({
+      'room-join': data => this.emit('room-join', data),
+      'room-leave': data => this.emit('room-leave', data),
+      'room-topic': data => this.emit('room-topic', data),
+    })
   }
 
   public async genWhatsAppClient (
