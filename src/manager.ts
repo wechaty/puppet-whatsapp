@@ -53,10 +53,6 @@ export default class Manager extends EE<ManagerEvents> {
     return this.options
   }
 
-  public get (target: Manager, prop: keyof Manager & keyof RequestManager) {
-    return Object.prototype.hasOwnProperty.call(target, prop) ? target[prop] : target.requestManager[prop]
-  }
-
   /**
    * Lifecycle
    */
