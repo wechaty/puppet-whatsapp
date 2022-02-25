@@ -28,6 +28,19 @@ export default class Manager extends EE<ManagerEvents> {
     super()
     this.whatsAppManager = new WhatsAppManager(this)
     this.scheduleManager = ScheduleManager.Instance
+
+    this.whatsAppManager.on({
+      friendship: data => this.emit('friendship', data),
+      login: data => this.emit('login', data),
+      logout: (botId, data) => this.emit('logout', botId, data),
+      message: data => this.emit('message', data),
+      ready: () => this.emit('ready'),
+      'room-invite': data => this.emit('room-invite', data),
+      'room-join': data => this.emit('room-join', data),
+      'room-leave': data => this.emit('room-leave', data),
+      'room-topic': data => this.emit('room-topic', data),
+      scan: data => this.emit('scan', data),
+    })
   }
 
   public getOptions () {
@@ -46,8 +59,8 @@ export default class Manager extends EE<ManagerEvents> {
     log.verbose(PRE, 'start()')
     const whatsAppClient = await this.whatsAppManager.genWhatsAppClient(this.options['puppeteerOptions'], session)
     try {
-      await this.whatsAppManager.initWhatsAppClient()
       await this.whatsAppManager.initWhatsAppEvents()
+      await this.whatsAppManager.initWhatsAppClient()
     } catch (error) {
       log.error(PRE, `start() error message: ${(error as Error).stack}`)
       await sleep(2 * 1000)
