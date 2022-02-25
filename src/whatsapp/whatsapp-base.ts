@@ -7,9 +7,25 @@ import type { WhatsAppClientType } from '../schema/whatsapp-type.js'
 
 export default class WhatsAppBase extends EE<ManagerEvents> {
 
-  protected botId?: string
+  private static _botId?: string
+  private static _whatsAppClient?: WhatsAppClientType
   protected pendingLogoutEmitTimer?: NodeJS.Timer
-  protected whatsAppClient?: WhatsAppClientType
+
+  public get botId () {
+    return WhatsAppBase._botId
+  }
+
+  public set botId (value: string | undefined) {
+    WhatsAppBase._botId = value
+  }
+
+  public get whatsAppClient () {
+    return WhatsAppBase._whatsAppClient
+  }
+
+  public set whatsAppClient (value: WhatsAppClientType | undefined) {
+    WhatsAppBase._whatsAppClient = value
+  }
 
   constructor (protected manager: Manager) {
     super()
