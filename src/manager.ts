@@ -7,7 +7,7 @@ import { batchProcess, getMaxTimestampForLoadHistoryMessages, isRoomId, sleep } 
 import ScheduleManager from './helper/schedule/schedule-manager.js'
 import type { ManagerEvents } from './manager-event.js'
 import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
-import { RequestManager } from './request/request-manager.js'
+import { RequestManager, requestManagerKeys } from './request/request-manager.js'
 import { MessageAck } from './schema/whatsapp-interface.js'
 import type { ClientSession, GroupChat, WhatsAppContact, WhatsAppMessage } from './schema/whatsapp-type.js'
 import WhatsAppManager from './whatsapp/whatsapp-manager.js'
@@ -41,14 +41,16 @@ export default class Manager extends EE<ManagerEvents> {
       'room-topic': data => this.emit('room-topic', data),
       scan: data => this.emit('scan', data),
     })
+
+    return new Proxy(this, {
+      get: (target: Manager, prop: keyof Manager & keyof RequestManager) => {
+        return requestManagerKeys.indexOf(prop) > -1 ? (target.requestManager[prop] as Function).bind(target.requestManager) : target[prop]
+      },
+    })
   }
 
   public getOptions () {
     return this.options
-  }
-
-  public get (target: Manager, prop: keyof Manager & keyof RequestManager) {
-    return Object.prototype.hasOwnProperty.call(target, prop) ? target[prop] : target.requestManager[prop]
   }
 
   /**
