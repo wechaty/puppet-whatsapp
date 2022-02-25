@@ -171,3 +171,4 @@ export class RequestManager {
 }
 
 export type RequestManagerAPIs = Pick<RequestManager, {readonly [K in keyof RequestManager]: RequestManager[K] extends Function ? K : never}[keyof RequestManager]>
+export const requestManagerKeys = Object.getOwnPropertyNames(RequestManager.prototype)
