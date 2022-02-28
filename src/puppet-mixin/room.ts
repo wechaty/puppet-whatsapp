@@ -11,6 +11,7 @@ import type {
   InviteV4Data,
 } from '../schema/whatsapp-type.js'
 import { isRoomId } from '../helper/miscellaneous.js'
+import { parserRoomRawPayload } from '../helper/pure-function/room-raw-payload-parser.js'
 
 const PRE = 'MIXIN_ROOM'
 
@@ -296,17 +297,9 @@ export async function roomRawPayloadParser (this: PuppetWhatsApp, roomPayload: R
   const roomId = roomPayload.id._serialized
   try {
     const roomChat = await this.manager.getRoomChatById(roomId)
-    if (roomChat.participants.length === 0) {
-      throw WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `roomRawPayloadParser(${roomId}) can not get chat info for this room.`)
-    }
-    return {
-      adminIdList: roomChat.participants.filter(m => m.isAdmin || m.isSuperAdmin).map(m => m.id._serialized),
-      avatar: roomPayload.avatar,
-      id: roomId,
-      memberIdList: roomChat.participants.map(m => m.id._serialized),
-      ownerId: roomChat.owner?._serialized,
-      topic: roomPayload.name || roomPayload.pushname || '',
-    }
+    const result = parserRoomRawPayload(roomPayload, roomChat)
+    log.verbose(PRE, 'roomRawPayloadParser roomPayload(%s) roomChat(%s) result(%s)', JSON.stringify(roomPayload), JSON.stringify(roomChat), JSON.stringify(result))
+    return result
   } catch (error) {
     log.error(PRE, `roomRawPayloadParser(${roomId}) failed, error message: ${(error as Error).message}`)
     throw WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `roomRawPayloadParser(${roomId}) failed, error message: ${(error as Error).message}`)

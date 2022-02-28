@@ -16,7 +16,7 @@ test('message parser for room message which send from bot by web ', async t => {
     body: 'ding',
     type: MessageTypes.TEXT,
     timestamp: 1644563786,
-    from: '8613126768525@c.us',
+    from: '8613812345679@c.us',
     to: '120363039010379837@g.us',
     deviceType: 'web',
     isForwarded: false,
@@ -33,12 +33,10 @@ test('message parser for room message which send from bot by web ', async t => {
     links: [],
   }
   const messagePayload = parserMessageRawPayload(roomMessageFromBotByWeb)
-  t.ok(
-    messagePayload.toId === undefined
-    && messagePayload.roomId === '120363039010379837@g.us'
-    && messagePayload.fromId === '8613126768525@c.us'
-    && messagePayload.text === 'ding',
-  )
+  t.ok(messagePayload.toId === undefined, 'should get no target id')
+  t.ok(messagePayload.roomId === '120363039010379837@g.us', 'should get correct room id')
+  t.ok(messagePayload.fromId === '8613812345679@c.us', 'shuold get correct sender id')
+  t.ok(messagePayload.text === 'ding', 'should get correct message content')
 
   t.pass('message parser for room message which send from bot by web pass')
 })
@@ -60,7 +58,7 @@ test('message parser for room message which send from bot by api ', async t => {
     body: 'dong',
     type: MessageTypes.TEXT,
     timestamp: 1644563785,
-    from: '8613126768525@c.us',
+    from: '8613812345679@c.us',
     to: '120363039010379837@g.us',
     deviceType: 'android',
     isForwarded: false,
@@ -77,12 +75,12 @@ test('message parser for room message which send from bot by api ', async t => {
     links: [],
   }
   const messagePayload = parserMessageRawPayload(roomMessageFromBotByApi)
-  t.ok(
-    messagePayload.toId === undefined
-    && messagePayload.roomId === '120363039010379837@g.us'
-    && messagePayload.fromId === '8613126768525@c.us'
-    && messagePayload.text === 'dong',
-  )
+
+  t.ok(messagePayload.toId === undefined, 'should get no target id')
+  t.ok(messagePayload.roomId === '120363039010379837@g.us', 'should get correct room id')
+  t.ok(messagePayload.fromId === '8613812345679@c.us', 'shuold get correct sender id')
+  t.ok(messagePayload.text === 'dong', 'should get correct message content')
+
   t.pass('message parser for room message which send from bot by api pass')
 })
 
@@ -92,8 +90,8 @@ test('message parser for room message which send from other contact ', async t =
       fromMe: false,
       remote: '120363039010379837@g.us',
       id: 'CC4B5F84340A87BAEFBC87B0588C78E8',
-      participant: '8618500946096@c.us',
-      _serialized: 'false_120363039010379837@g.us_CC4B5F84340A87BAEFBC87B0588C78E8_8618500946096@c.us',
+      participant: '8613812345678@c.us',
+      _serialized: 'false_120363039010379837@g.us_CC4B5F84340A87BAEFBC87B0588C78E8_8613812345678@c.us',
     },
     ack: 0,
     hasMedia: false,
@@ -101,8 +99,8 @@ test('message parser for room message which send from other contact ', async t =
     type: MessageTypes.TEXT,
     timestamp: 1644565075,
     from: '120363039010379837@g.us',
-    to: '8613126768525@c.us',
-    author: '8618500946096@c.us',
+    to: '8613812345679@c.us',
+    author: '8613812345678@c.us',
     deviceType: 'android',
     isForwarded: false,
     forwardingScore: 0,
@@ -118,12 +116,12 @@ test('message parser for room message which send from other contact ', async t =
     links: [],
   }
   const messagePayload = parserMessageRawPayload(roomMessageFromOtherContact)
-  t.ok(
-    messagePayload.toId === undefined
-    && messagePayload.roomId === '120363039010379837@g.us'
-    && messagePayload.fromId === '8618500946096@c.us'
-    && messagePayload.text === 'hello',
-  )
+
+  t.ok(messagePayload.toId === undefined, 'should get no target id')
+  t.ok(messagePayload.roomId === '120363039010379837@g.us', 'should get correct room id')
+  t.ok(messagePayload.fromId === '8613812345678@c.us', 'shuold get correct sender id')
+  t.ok(messagePayload.text === 'hello', 'should get correct message content')
+
   t.pass('message parser for room message which send from other contact pass')
 })
 
@@ -140,7 +138,7 @@ test('message parser for contact message which send from bot by web ', async t =
     body: 'ding',
     type: MessageTypes.TEXT,
     timestamp: 1644564200,
-    from: '8613126768525@c.us',
+    from: '8613812345679@c.us',
     to: '8618710175700@c.us',
     deviceType: 'web',
     isForwarded: false,
@@ -157,12 +155,12 @@ test('message parser for contact message which send from bot by web ', async t =
     links: [],
   }
   const messagePayload = parserMessageRawPayload(contactMessageFromBotByWeb)
-  t.ok(
-    messagePayload.toId === '8618710175700@c.us'
-    && messagePayload.roomId === undefined
-    && messagePayload.fromId === '8613126768525@c.us'
-    && messagePayload.text === 'ding',
-  )
+
+  t.ok(messagePayload.toId === '8618710175700@c.us', 'should get correct target id')
+  t.ok(messagePayload.roomId === undefined, 'should get no room id')
+  t.ok(messagePayload.fromId === '8613812345679@c.us', 'shuold get correct sender id')
+  t.ok(messagePayload.text === 'ding', 'should get correct message content')
+
   t.pass('message parser for contact message which send from bot by web pass')
 })
 
@@ -179,7 +177,7 @@ test('message parser for contact message which send from bot by api ', async t =
     body: 'dong',
     type: MessageTypes.TEXT,
     timestamp: 1644570007,
-    from: '8613126768525@c.us',
+    from: '8613812345679@c.us',
     to: '8613811286503@c.us',
     deviceType: 'android',
     isForwarded: false,
@@ -196,12 +194,12 @@ test('message parser for contact message which send from bot by api ', async t =
     links: [],
   }
   const messagePayload = parserMessageRawPayload(contactMessageFromBotByApi)
-  t.ok(
-    messagePayload.toId === '8613811286503@c.us'
-    && messagePayload.roomId === undefined
-    && messagePayload.fromId === '8613126768525@c.us'
-    && messagePayload.text === 'dong',
-  )
+
+  t.ok(messagePayload.toId === '8613811286503@c.us', 'should get correct target id')
+  t.ok(messagePayload.roomId === undefined, 'should get no room id')
+  t.ok(messagePayload.fromId === '8613812345679@c.us', 'shuold get correct sender id')
+  t.ok(messagePayload.text === 'dong', 'should get correct message content')
+
   t.pass('message parser for contact message which send from bot by api pass')
 })
 
@@ -209,17 +207,17 @@ test('message parser for contact message which send from other contact', async t
   const contactMessageFromOtherContact = {
     id: {
       fromMe: false,
-      remote: '8618500946096@c.us',
+      remote: '8613812345678@c.us',
       id: '157D906AC6B04EA897002C7CCCD7A339',
-      _serialized: 'false_8618500946096@c.us_157D906AC6B04EA897002C7CCCD7A339',
+      _serialized: 'false_8613812345678@c.us_157D906AC6B04EA897002C7CCCD7A339',
     },
     ack: 0,
     hasMedia: false,
     body: 'hola',
     type: MessageTypes.TEXT,
     timestamp: 1644565052,
-    from: '8618500946096@c.us',
-    to: '8613126768525@c.us',
+    from: '8613812345678@c.us',
+    to: '8613812345679@c.us',
     deviceType: 'android',
     isForwarded: false,
     forwardingScore: 0,
@@ -235,11 +233,11 @@ test('message parser for contact message which send from other contact', async t
     links: [],
   }
   const messagePayload = parserMessageRawPayload(contactMessageFromOtherContact)
-  t.ok(
-    messagePayload.toId === '8613126768525@c.us'
-    && messagePayload.roomId === undefined
-    && messagePayload.fromId === '8618500946096@c.us'
-    && messagePayload.text === 'hola',
-  )
+
+  t.ok(messagePayload.toId === '8613812345679@c.us', 'should get correct target id')
+  t.ok(messagePayload.roomId === undefined, 'should get no room id')
+  t.ok(messagePayload.fromId === '8613812345678@c.us', 'shuold get correct sender id')
+  t.ok(messagePayload.text === 'hola', 'should get correct message content')
+
   t.pass('message parser for contact message which send from other contact pass')
 })

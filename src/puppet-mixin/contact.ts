@@ -4,13 +4,14 @@ import * as PUPPET from 'wechaty-puppet'
 import {
   FileBox,
   log,
-  SPECIAL_BOT_PUSHNAME,
 } from '../config.js'
 import { WA_ERROR_TYPE } from '../exception/error-type.js'
 import WAError from '../exception/whatsapp-error.js'
 import type PuppetWhatsApp from '../puppet-whatsapp.js'
 import type { WhatsAppContactPayload } from '../schema/whatsapp-type.js'
 import { isContactId } from '../helper/miscellaneous.js'
+
+import { parserContactRawPayload } from '../helper/pure-function/contact-raw-payload-parser.js'
 
 const PRE = 'MIXIN_CONTACT'
 
@@ -94,34 +95,11 @@ export async function contactRawPayload (this: PuppetWhatsApp, id: string): Prom
 }
 
 export async function contactRawPayloadParser (this: PuppetWhatsApp, contactPayload: WhatsAppContactPayload): Promise<PUPPET.payloads.Contact> {
-  let type
-  if (contactPayload.isUser) {
-    type = PUPPET.types.Contact.Individual
-  } else if (contactPayload.isEnterprise) {
-    type = PUPPET.types.Contact.Corporation
-  } else {
-    type = PUPPET.types.Contact.Unknown
-  }
-  let name
-  if (contactPayload.isMe) {
-    name = this.manager.getWhatsAppClient().info.pushname || contactPayload.pushname
-    if (name === SPECIAL_BOT_PUSHNAME) {
-      name = contactPayload.shortName
-    }
-  } else {
-    name = contactPayload.pushname || contactPayload.name
-  }
   try {
-    return {
-      avatar: contactPayload.avatar,
-      friend: contactPayload.isMyContact && contactPayload.isUser,
-      gender: PUPPET.types.ContactGender.Unknown,
-      id: contactPayload.id._serialized,
-      name: name || contactPayload.id._serialized,
-      phone: [contactPayload.number],
-      type: type,
-      weixin: contactPayload.number,
-    }
+    const userName = this.manager.getWhatsAppClient().info.pushname
+    const result = parserContactRawPayload(contactPayload, userName)
+    log.verbose(PRE, 'contactRawPayloadParser whatsAppPayload(%s) result(%s)', JSON.stringify(contactPayload), JSON.stringify(result))
+    return result
   } catch (error) {
     log.error(PRE, `contactRawPayloadParser(${contactPayload.id._serialized}) failed, error message: ${(error as Error).message}`)
     throw WAError(WA_ERROR_TYPE.ERR_CONTACT_NOT_FOUND, `contactRawPayloadParser(${contactPayload.id._serialized}) failed, error message: ${(error as Error).message}`)
