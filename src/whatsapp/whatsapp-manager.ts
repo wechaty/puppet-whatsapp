@@ -14,7 +14,7 @@ import {
 } from '../schema/whatsapp-interface.js'
 import WhatsAppBase from './whatsapp-base.js'
 import type Manager from '../manager.js'
-import { log, LOGOUT_REASON } from '../config.js'
+import { log, STRINGS, LANGUAGE } from '../config.js'
 import { fromEvent, map, merge, distinctUntilKeyChanged } from 'rxjs'
 import LoginEventHandler from './event-handler/login-event-handler.js'
 import MessageEventHandler from './event-handler/message-event-handler.js'
@@ -133,13 +133,13 @@ export default class WhatsAppManager extends WhatsAppBase {
       if (event === 'disconnected') {
         switch (value) {
           case 'NAVIGATION':
-            void this.botEventHandler.onLogout(LOGOUT_REASON.DEFAULT)
+            void this.botEventHandler.onLogout(STRINGS[LANGUAGE].LOGOUT_REASON.DEFAULT)
             break
           case 'CONFLICT':
-            void this.botEventHandler.onLogout(LOGOUT_REASON.LOGIN_CONFLICT)
+            void this.botEventHandler.onLogout(STRINGS[LANGUAGE].LOGOUT_REASON.LOGIN_CONFLICT)
             break
           default:
-            void this.botEventHandler.onLogout(LOGOUT_REASON.DEFAULT)
+            void this.botEventHandler.onLogout(STRINGS[LANGUAGE].LOGOUT_REASON.DEFAULT)
             break
         }
       }

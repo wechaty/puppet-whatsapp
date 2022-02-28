@@ -18,13 +18,6 @@ export const SPECIAL_BOT_PUSHNAME = '-' // FIXME: pushname is '-', see: https://
 
 export const MIN_BATTERY_VALUE_FOR_LOGOUT = Number(process.env['MIN_BATTERY_VALUE_FOR_LOGOUT']) || 1
 
-export const LOGOUT_REASON = {
-  BATTERY_LOWER_IN_PHONE: '手机电量过低，即将无法继续使用WhatsApp',
-  DEFAULT: '已退出登录',
-  LOGIN_CONFLICT: '已在其他设备上登录',
-  NETWORK_TIMEOUT_IN_PHONE: '手机端网络连接异常',
-}
-
 export const MessageMediaTypeList = [
   // WhatsAppMessageType.CONTACT_CARD_MULTI,
   WhatsAppMessageType.AUDIO,
@@ -44,9 +37,21 @@ export {
 export const STRINGS = {
   en_US: {
     DEFAULT_HELLO_MESSAGE: 'Hello, I\'m your new WhatsApp friend!',
+    LOGOUT_REASON: {
+      BATTERY_LOWER_IN_PHONE: 'Low battery on your phone, please plug into power source',
+      DEFAULT: 'Logged out',
+      LOGIN_CONFLICT: 'Logged in on other device',
+      NETWORK_TIMEOUT_IN_PHONE: 'WhatsApp connect to your phone',
+    },
   },
   zh_CN: {
     DEFAULT_HELLO_MESSAGE: '你好，我是你的新WhatsApp好友！',
+    LOGOUT_REASON: {
+      BATTERY_LOWER_IN_PHONE: '手机电量过低，即将无法继续使用WhatsApp',
+      DEFAULT: '已退出登录',
+      LOGIN_CONFLICT: '已在其他设备上登录',
+      NETWORK_TIMEOUT_IN_PHONE: '手机端网络连接异常',
+    },
   },
 }
 
