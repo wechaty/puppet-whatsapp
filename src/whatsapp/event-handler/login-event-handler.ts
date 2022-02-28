@@ -33,10 +33,10 @@ export default class LoginEventHandler extends WhatsAppBase { // FIXME: I have n
 
   protected loadingData: boolean = false
 
-  public onQRCode (qr: string) {
-    log.info(PRE, `onQRCode(${qr})`)
+  public onQRCode (qrcode: string) {
+    log.info(PRE, `onQRCode(${qrcode})`)
     // NOTE: This event will not be fired if a session is specified.
-    this.emit('scan', { status: PUPPET.types.ScanStatus.Waiting }, qr)
+    this.emit('scan', { qrcode, status: PUPPET.types.ScanStatus.Waiting })
   }
 
   public async onAuthenticated (session: ClientSession) {

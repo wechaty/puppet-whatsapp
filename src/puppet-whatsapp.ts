@@ -172,11 +172,11 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     this.emit('message', message)
   }
 
-  private async onScan (status: PUPPET.payloads.EventScan, qrcode?: string): Promise<void> {
-    log.verbose(PRE, 'onScan(%s, %s)', status, qrcode)
+  private async onScan (payload: PUPPET.payloads.EventScan): Promise<void> {
+    log.verbose(PRE, 'onScan(%s)', JSON.stringify(payload))
 
     log.info(PRE, `${EventName.SCAN}`)
-    this.emit('scan', { qrcode, status })
+    this.emit('scan', payload)
   }
 
   private async onError (e: string) {
