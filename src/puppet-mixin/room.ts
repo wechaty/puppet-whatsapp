@@ -297,8 +297,8 @@ export async function roomRawPayloadParser (this: PuppetWhatsApp, roomPayload: R
   const roomId = roomPayload.id._serialized
   try {
     const roomChat = await this.manager.getRoomChatById(roomId)
-    const result = parserRoomRawPayload(roomChat, roomPayload)
-    log.verbose(PRE, 'roomRawPayloadParser whatsAppPayload(%s) result(%s)', JSON.stringify(roomPayload), JSON.stringify(result))
+    const result = parserRoomRawPayload(roomPayload, roomChat)
+    log.verbose(PRE, 'roomRawPayloadParser roomPayload(%s) roomChat(%s) result(%s)', JSON.stringify(roomPayload), JSON.stringify(roomChat), JSON.stringify(result))
     return result
   } catch (error) {
     log.error(PRE, `roomRawPayloadParser(${roomId}) failed, error message: ${(error as Error).message}`)

@@ -3,7 +3,7 @@ import { WA_ERROR_TYPE } from '../../exception/error-type.js'
 import WAError from '../../exception/whatsapp-error.js'
 import type { WhatsAppContactPayload as RoomPayload, GroupChat } from '../../schema/whatsapp-type.js'
 
-export function parserRoomRawPayload (roomChat: GroupChat, roomPayload: RoomPayload): PUPPET.payloads.Room {
+export function parserRoomRawPayload (roomPayload: RoomPayload, roomChat: GroupChat): PUPPET.payloads.Room {
   const roomId = roomPayload.id._serialized
   if (roomChat.participants.length === 0) {
     throw WAError(WA_ERROR_TYPE.ERR_ROOM_NOT_FOUND, `roomRawPayloadParser(${roomId}) can not get chat info for this room.`)
