@@ -66,5 +66,5 @@ test('parse room info', async t => {
   t.ok(result.memberIdList.length === 4, 'should get correct member count')
   t.ok(result.avatar === 'https://pps.whatsapp.net/v/t61.24694-24/259270979_6900708863337894_342691323244398878_n.jpg?ccb=11-4&oh=ceb59735080411ee0ff36834e5ce688b&oe=6222C441', 'should get correct avatar')
 
-  t.pass('parse self contact info pass')
+  t.pass('parse room info pass')
 })
