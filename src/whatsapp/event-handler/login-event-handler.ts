@@ -1,11 +1,12 @@
 /* eslint-disable no-case-declarations */
 import * as PUPPET from 'wechaty-puppet'
 import {
-  LOGOUT_REASON,
   MIN_BATTERY_VALUE_FOR_LOGOUT,
   DEFAULT_TIMEOUT,
   MEMORY_SLOT,
   log,
+  STRINGS,
+  LANGUAGE,
 } from '../../config.js'
 import { WA_ERROR_TYPE } from '../../exception/error-type.js'
 import WAError from '../../exception/whatsapp-error.js'
@@ -135,7 +136,7 @@ export default class LoginEventHandler extends WhatsAppBase { // FIXME: I have n
     this.loadingData = false
   }
 
-  public async onLogout (reason: string = LOGOUT_REASON.DEFAULT) {
+  public async onLogout (reason: string = STRINGS[LANGUAGE].LOGOUT_REASON.DEFAULT) {
     log.verbose(PRE, `onLogout(${reason})`)
     await this.clearSession()
     this.manager.stopSchedule()
@@ -152,7 +153,7 @@ export default class LoginEventHandler extends WhatsAppBase { // FIXME: I have n
     switch (state) {
       case WAState.TIMEOUT:
         this.pendingLogoutEmitTimer = setTimeout(() => {
-          this.emit('logout', this.getBotId(), LOGOUT_REASON.NETWORK_TIMEOUT_IN_PHONE)
+          this.emit('logout', this.getBotId(), STRINGS[LANGUAGE].LOGOUT_REASON.NETWORK_TIMEOUT_IN_PHONE)
           this.pendingLogoutEmitTimer = undefined
         }, DEFAULT_TIMEOUT.TIMEOUT_WAIT_CONNECTED)
         break
@@ -178,7 +179,7 @@ export default class LoginEventHandler extends WhatsAppBase { // FIXME: I have n
     }
 
     if (batteryInfo.battery <= MIN_BATTERY_VALUE_FOR_LOGOUT && !batteryInfo.plugged) {
-      this.emit('logout', this.botId, LOGOUT_REASON.BATTERY_LOWER_IN_PHONE)
+      this.emit('logout', this.botId, STRINGS[LANGUAGE].LOGOUT_REASON.BATTERY_LOWER_IN_PHONE)
     }
   }
 
