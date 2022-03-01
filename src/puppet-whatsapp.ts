@@ -65,6 +65,10 @@ class PuppetWhatsapp extends PUPPET.Puppet {
     this.manager = new Manager(this.options) as ManagerWithRequestManager
   }
 
+  override version () {
+    return VERSION
+  }
+
   override async onStart (): Promise<void> {
     log.verbose(PRE, 'onStart()')
 
