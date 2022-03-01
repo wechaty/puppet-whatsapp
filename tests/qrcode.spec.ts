@@ -14,7 +14,6 @@ test('qrcode test', async t => {
   })
 
   async function onScan (payload: PUPPET.payloads.EventScan) {
-    console.info(payload)
     t.ok(payload.status === PUPPET.types.ScanStatus.Waiting)
     t.ok(typeof payload.qrcode === 'string')
 
