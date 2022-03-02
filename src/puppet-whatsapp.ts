@@ -72,6 +72,12 @@ class PuppetWhatsapp extends PUPPET.Puppet {
   override async onStart (): Promise<void> {
     log.verbose(PRE, 'onStart()')
 
+    try {
+      await this.memory.load()
+    } catch (e) {
+      log.warn(PRE, 'memory card loaded already')
+    }
+
     let whatsapp: WhatsAppClientType
     try {
       whatsapp = await this.startManager(this.manager)
