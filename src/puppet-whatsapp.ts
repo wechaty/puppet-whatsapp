@@ -121,7 +121,7 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       scan: this.onScan.bind(this),
     })
 
-    const session = await this.options.memory?.get(MEMORY_SLOT)
+    const session = await this.memory.get(MEMORY_SLOT)
     const whatsapp = await this.manager.start(session)
     return whatsapp
   }
