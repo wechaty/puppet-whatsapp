@@ -21,7 +21,6 @@ import { log } from 'wechaty-puppet'
 import type { MemoryCard } from 'memory-card'
 
 import {
-  MEMORY_SLOT,
   VERSION,
 }                                     from './config.js'
 
@@ -121,8 +120,8 @@ class PuppetWhatsapp extends PUPPET.Puppet {
       scan: this.onScan.bind(this),
     })
 
-    const session = await this.memory.get(MEMORY_SLOT)
-    const whatsapp = await this.manager.start(session)
+    const memory = this.memory
+    const whatsapp = await this.manager.start(memory)
     return whatsapp
   }
 
