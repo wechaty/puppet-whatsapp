@@ -1,5 +1,6 @@
 import { EventEmitter as EE } from 'ee-ts'
-import { log, MAX_HEARTBEAT_MISSED } from './config.js'
+import type { MemoryCard } from 'wechaty-puppet/dist/esm/src/config'
+import { log, MAX_HEARTBEAT_MISSED, MEMORY_SLOT } from './config.js'
 import { CacheManager } from './data/cache-manager.js'
 import { WA_ERROR_TYPE } from './exception/error-type.js'
 import WAError from './exception/whatsapp-error.js'
@@ -9,7 +10,7 @@ import type { ManagerEvents } from './manager-event.js'
 import type { PuppetWhatsAppOptions } from './puppet-whatsapp.js'
 import { RequestManager, requestManagerKeys } from './request/request-manager.js'
 import { MessageAck } from './schema/whatsapp-interface.js'
-import type { ClientSession, GroupChat, WhatsAppContact, WhatsAppMessage } from './schema/whatsapp-type.js'
+import type { GroupChat, WhatsAppContact, WhatsAppMessage } from './schema/whatsapp-type.js'
 import WhatsAppManager from './whatsapp/whatsapp-manager.js'
 
 const PRE = 'Manager'
@@ -20,6 +21,7 @@ export default class Manager extends EE<ManagerEvents> {
   private cacheManager?: CacheManager
   private _requestManager?: RequestManager
   private scheduleManager: ScheduleManager
+  private memory?: MemoryCard
 
   private fetchingMessages: boolean = false
   private heartbeatTimer?: NodeJS.Timer
@@ -49,15 +51,23 @@ export default class Manager extends EE<ManagerEvents> {
     })
   }
 
-  public getOptions () {
-    return this.options
+  getMemory (): MemoryCard {
+    if (this.memory) {
+      return this.memory
+    } else {
+      throw WAError(WA_ERROR_TYPE.ERR_INIT, 'No Memory')
+    }
   }
 
   /**
    * Lifecycle
    */
 
-  public async start (session?: ClientSession) {
+  public async start (memory?: MemoryCard) {
+    if (memory) {
+      this.memory = memory
+    }
+    const session = await this.getMemory().get(MEMORY_SLOT)
     log.verbose(PRE, 'start()')
     const whatsAppClient = await this.whatsAppManager.genWhatsAppClient(this.options['puppeteerOptions'], session)
     try {
