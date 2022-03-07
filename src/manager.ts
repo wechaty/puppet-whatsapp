@@ -49,10 +49,6 @@ export default class Manager extends EE<ManagerEvents> {
     })
   }
 
-  public getOptions () {
-    return this.options
-  }
-
   /**
    * Lifecycle
    */

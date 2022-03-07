@@ -188,7 +188,7 @@ export default class LoginEventHandler extends WhatsAppBase { // FIXME: I have n
    */
 
   public async setSession (session: ClientSession) {
-    const memoryCard = this.manager.getOptions().memory
+    const memoryCard = this.manager.getMemory()
     if (memoryCard) {
       await memoryCard.set(MEMORY_SLOT, session)
       await memoryCard.save()
@@ -196,7 +196,7 @@ export default class LoginEventHandler extends WhatsAppBase { // FIXME: I have n
   }
 
   public async clearSession () {
-    const memoryCard = this.manager.getOptions().memory
+    const memoryCard = this.manager.getMemory()
     if (memoryCard) {
       await memoryCard.delete(MEMORY_SLOT)
       await memoryCard.save()
