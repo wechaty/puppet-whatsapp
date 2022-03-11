@@ -35,7 +35,7 @@ export type {
   ChatId,
   PrivateChat,
   GroupParticipant,
-  ChangeParticipantsPermisions,
+  ChangeParticipantsPermissions,
   ChangeGroupParticipants,
   // GroupChat,
   ProductMetadata,
