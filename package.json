@@ -64,7 +64,7 @@
     "wechaty-puppet": "^1.11.17"
   },
   "dependencies": {
-    "@juzi.bot/whatsapp-web.js": "1.15.14",
+    "@juzi/whatsapp-web.js": "^1.16.4",
     "ee-ts": "^1.0.2",
     "flash-store": "^0.12.7",
     "fs-extra": "^10.0.0",
