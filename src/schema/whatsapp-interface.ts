@@ -1,4 +1,4 @@
-import WAWebJS from '@juzi.bot/whatsapp-web.js'
+import WAWebJS from '@juzi/whatsapp-web.js'
 import type { Class } from 'type-fest'
 
 export enum GroupNotificationTypes {
