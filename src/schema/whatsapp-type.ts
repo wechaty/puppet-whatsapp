@@ -1,5 +1,5 @@
-import type { Location } from '@juzi.bot/whatsapp-web.js'
-import type WhatsApp from '@juzi.bot/whatsapp-web.js'
+import type { Location } from '@juzi/whatsapp-web.js'
+import type WhatsApp from '@juzi/whatsapp-web.js'
 import type { SetOptional } from 'type-fest'
 
 export type {
@@ -46,7 +46,7 @@ export type {
   Buttons,
   Row,
   List,
-} from '@juzi.bot/whatsapp-web.js'
+} from '@juzi/whatsapp-web.js'
 
 export interface MessageId {
   fromMe: boolean,

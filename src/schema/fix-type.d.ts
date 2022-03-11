@@ -1,6 +1,6 @@
 import type { SetOptional } from 'type-fest'
-import type {  Contact, MessageMedia, Client as _Client } from '@juzi.bot/whatsapp-web.js'
-declare module '@juzi.bot/whatsapp-web.js' {
+import type {  Contact, MessageMedia, Client as _Client } from '@juzi/whatsapp-web.js'
+declare module '@juzi/whatsapp-web.js' {
   declare namespace WAWebJS {
     export type CreateGroupResult = {
       gid: {
