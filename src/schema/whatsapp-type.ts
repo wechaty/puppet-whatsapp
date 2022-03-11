@@ -1,5 +1,5 @@
-import type { Location } from '@juzi.bot/whatsapp-web.js'
-import type WhatsApp from '@juzi.bot/whatsapp-web.js'
+import type { Location } from '@juzi/whatsapp-web.js'
+import type WhatsApp from '@juzi/whatsapp-web.js'
 import type { SetOptional } from 'type-fest'
 
 export type {
@@ -35,7 +35,7 @@ export type {
   ChatId,
   PrivateChat,
   GroupParticipant,
-  ChangeParticipantsPermisions,
+  ChangeParticipantsPermissions,
   ChangeGroupParticipants,
   // GroupChat,
   ProductMetadata,
@@ -46,7 +46,7 @@ export type {
   Buttons,
   Row,
   List,
-} from '@juzi.bot/whatsapp-web.js'
+} from '@juzi/whatsapp-web.js'
 
 export interface MessageId {
   fromMe: boolean,
@@ -61,7 +61,7 @@ export interface MessageId {
 export type WhatsAppContactPayload = {
   avatar: string
 } & Omit<WhatsApp.Contact, 'getProfilePicUrl' | 'getChat' | 'getCountryCode' | 'getFormattedNumber' | 'block' | 'unblock' | 'getAbout'>
-export type WhatsAppMessagePayload = {mentionedIds: string[], location?:Location, orderId?: string, id: MessageId} & Omit<WhatsApp.Message, 'id' | 'orderId' | 'location' | 'mentionedIds' | 'acceptGroupV4Invite' | 'delete' | 'downloadMedia' | 'getChat' | 'getContact' | 'getMentions' | 'getQuotedMessage' | 'reply' | 'forward' | 'star' | 'unstar' | 'getInfo' | 'getOrder' | 'getPayment'>
+export type WhatsAppMessagePayload = {mentionedIds: string[], location?:Location, orderId?: string, id: MessageId} & Omit<WhatsApp.Message, 'id' | 'orderId' | 'location' | 'mentionedIds' | 'acceptGroupV4Invite' | 'delete' | 'downloadMedia' | 'getChat' | 'getContact' | 'getMentions' | 'getQuotedMessage' | 'reply' | 'forward' | 'star' | 'unstar' | 'getInfo' | 'getOrder' | 'getPayment' | 'duration' | 'rawData' | 'reload'>
 export interface GroupMetadata {
   desc: string
   owner: WhatsApp.ContactId

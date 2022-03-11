@@ -77,7 +77,8 @@ export default class WhatsAppManager extends WhatsAppBase {
 
     this.whatsAppClient = new WhatsApp({
       puppeteer: puppeteerOptions,
-      qrRefreshIntervalMs: 10 * 1000,
+      // can no loger customize refresh interval
+      // refresh time gap is set to 15 seconds
       restartOnAuthFail: true,
       session,
       ...restOptions,

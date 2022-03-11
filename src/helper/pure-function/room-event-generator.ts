@@ -1,5 +1,5 @@
 import type * as PUPPET from 'wechaty-puppet'
-import type {  } from '@juzi.bot/whatsapp-web.js'
+import type {  } from '@juzi/whatsapp-web.js'
 import type {
   GroupNotification,
   WhatsAppContactPayload,
