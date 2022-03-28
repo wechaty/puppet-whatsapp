@@ -20,6 +20,7 @@ export const ContactClass = WAWebJS.Contact as Class<WAWebJS.Contact>
 export const MessageClass = WAWebJS.Message as Class<WAWebJS.Message>
 
 export const {
+  LocalAuth,
   DefaultOptions,
   MessageMedia,
   MessageAck,
