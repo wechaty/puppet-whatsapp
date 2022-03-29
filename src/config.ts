@@ -6,7 +6,7 @@ import { packageJson } from './package-json.js'
 
 const VERSION = packageJson.version || '0.0.0'
 
-const MEMORY_SLOT = 'PUPPET_WHATSAPP'
+const MEMORY_SLOT = 'PUPPET_WHATSAPP_CLIENT_ID'
 const PRE = 'PuppetWhatsApp'
 
 export const SPECIAL_BOT_PUSHNAME = '-' // FIXME: pushname is '-', see: https://github.com/wechaty/puppet-whatsapp/issues/233
@@ -55,3 +55,5 @@ export const DEFAULT_TIMEOUT = {
   MESSAGE_SEND_TEXT: 20 * 1000,
   TIMEOUT_WAIT_CONNECTED: 3 * 1000,
 }
+
+export const HISTORY_MESSAGES_DAYS = Number(process.env['HISTORY_MESSAGES_DAYS'] || '3')

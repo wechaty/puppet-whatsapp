@@ -1,5 +1,6 @@
 import { withPrefix } from './logger/index.js'
 import {
+  LocalAuth,
   Client as WhatsApp,
 } from './schema/whatsapp-interface.js'
 
@@ -7,7 +8,6 @@ import type {
   WhatsAppClientType,
   WhatsAppContact,
   WhatsAppMessage,
-  ClientSession,
   ClientOptions,
 } from './schema/whatsapp-type.js'
 import type {
@@ -23,7 +23,7 @@ async function getWhatsApp (
   options: ClientOptions = {
     // clientId: '',
   },
-  session?: ClientSession,
+  session: string = 'default-client',
 ): Promise<WhatsAppClientType> {
   logger.verbose('getWhatsApp()')
   const { puppeteer = {}, ...restOptions } = options
@@ -43,14 +43,13 @@ async function getWhatsApp (
   }
 
   const whatsapp = new WhatsApp({
+    authStrategy: new LocalAuth({ clientId: session }),
     puppeteer: puppeteerOptions,
     // can no loger customize refresh interval
     // refresh time gap is set to 15 seconds
     restartOnAuthFail: true,
-    session,
     ...restOptions,
   })
-
   return whatsapp
 }
 

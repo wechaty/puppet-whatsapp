@@ -28,6 +28,7 @@ import { withPrefix } from './logger/index.js'
 import {
   batchProcess,
   getInviteCode,
+  getMaxTimestampForLoadHistoryMessages,
   isContactId,
   isInviteLink,
   isRoomId,
@@ -94,6 +95,14 @@ export class Manager extends EventEmitter {
     super()
     this.options = options
     this.scheduleManager = new ScheduleManager(this)
+
+    process.on('uncaughtException', async (err, origin) => {
+      if (err.message.includes('Session closed') || err.message.includes('browser has disconnected')) {
+        logger.warn(`uncaughtException: ${err.message} at ${origin}`)
+        await this.stop()
+        await this.start()
+      }
+    })
   }
 
   public override emit (event: 'message', payload: PUPPET.EventMessagePayload): boolean
@@ -135,8 +144,10 @@ export class Manager extends EventEmitter {
     return this
   }
 
-  public async start (session?: ClientSession) {
+  public async start (session: string = 'default-client') {
     logger.info('start()')
+    await this.options.memory?.set(MEMORY_SLOT, session)
+    await this.options.memory?.save()
     this.whatsAppClient = await getWhatsApp(this.options['puppeteerOptions'], session)
     this.whatsAppClient
       .initialize()
@@ -167,23 +178,11 @@ export class Manager extends EventEmitter {
 
   private async onAuthenticated (session: ClientSession) {
     logger.info(`onAuthenticated(${JSON.stringify(session)})`)
-    try {
-      await this.options.memory?.set(MEMORY_SLOT, session)
-      await this.options.memory?.save()
-    } catch (e) {
-      console.error(e)
-      logger.error('getClient() whatsapp.on(authenticated) rejection: %s', e)
-    }
   }
 
   private async onAuthFailure (message: string) {
     // Unable to log in. Are the session details valid?, then restart no use exist session
     logger.warn('auth_failure: %s, then restart no use exist session', message)
-    // msg -> auth_failure message
-    // auth_failure due to session invalidation
-    // clear sessionData -> reinit
-    await this.options.memory?.delete(MEMORY_SLOT)
-    await this.options.memory?.save()
   }
 
   private async onWhatsAppReady () {
@@ -293,11 +292,13 @@ export class Manager extends EventEmitter {
     const cacheManager = await this.getCacheManager()
     try {
       const chat = await contactOrRoom.getChat()
-      const latestMessageTimestampInCache = await cacheManager.getLatestMessageTimestampForChat(contactOrRoomId)
       let messageList = await chat.fetchMessages({})
-      if (latestMessageTimestampInCache) {
-        messageList = messageList.filter(m => m.timestamp >= latestMessageTimestampInCache)
-      }
+
+      const maxTimestampForLoadHistoryMessages = getMaxTimestampForLoadHistoryMessages()
+      const latestTimestampInCache = await cacheManager.getLatestMessageTimestampForChat(contactOrRoomId)
+      const minTimestamp = Math.min(latestTimestampInCache, maxTimestampForLoadHistoryMessages)
+      messageList = messageList.filter(m => m.timestamp >= minTimestamp)
+
       const latestMessageTimestamp = messageList[messageList.length - 1]?.timestamp
       if (latestMessageTimestamp) {
         await cacheManager.setLatestMessageTimestampForChat(contactOrRoomId, latestMessageTimestamp)

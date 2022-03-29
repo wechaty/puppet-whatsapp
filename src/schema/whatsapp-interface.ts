@@ -27,4 +27,5 @@ export const {
   WAState,
   WhatsWebURL,
   Client,
+  LocalAuth,
 } = WAWebJS
