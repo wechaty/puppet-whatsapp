@@ -1,4 +1,5 @@
 import { EventEmitter as EE } from 'ee-ts'
+import { MEMORY_SLOT } from '../config.js'
 import { WA_ERROR_TYPE } from '../exception/error-type.js'
 import WAError from '../exception/whatsapp-error.js'
 import type { ManagerEvents } from '../manager-event.js'
@@ -56,6 +57,22 @@ export default class WhatsAppBase extends EE<ManagerEvents> {
       throw WAError(WA_ERROR_TYPE.ERR_INIT, 'Not init whatsapp')
     }
     return this.whatsAppClient
+  }
+
+  /**
+   * MemoryCard Session Section
+   */
+
+  public async setSession (session: string) {
+    const memoryCard = this.manager.getMemory()
+    await memoryCard.set(MEMORY_SLOT, session)
+    await memoryCard.save()
+  }
+
+  public async clearSession () {
+    const memoryCard = this.manager.getMemory()
+    await memoryCard.delete(MEMORY_SLOT)
+    await memoryCard.save()
   }
 
 }

@@ -3,7 +3,6 @@ import * as PUPPET from 'wechaty-puppet'
 import {
   MIN_BATTERY_VALUE_FOR_LOGOUT,
   DEFAULT_TIMEOUT,
-  MEMORY_SLOT,
   log,
   STRINGS,
   LANGUAGE,
@@ -17,7 +16,6 @@ import WhatsAppBase from '../whatsapp-base.js'
 
 import type {
   WhatsAppContact,
-  ClientSession,
   BatteryInfo,
   WAStateType,
 } from '../../schema/whatsapp-type.js'
@@ -39,9 +37,8 @@ export default class LoginEventHandler extends WhatsAppBase { // FIXME: I have n
     this.emit('scan', { qrcode, status: PUPPET.types.ScanStatus.Waiting })
   }
 
-  public async onAuthenticated (session: ClientSession) {
-    log.info(PRE, `onAuthenticated(${JSON.stringify(session)})`)
-    await this.setSession(session)
+  public async onAuthenticated () {
+    log.info(PRE, 'onAuthenticated()')
   }
 
   public async onAuthFailure (message: string) {
@@ -181,22 +178,6 @@ export default class LoginEventHandler extends WhatsAppBase { // FIXME: I have n
     if (batteryInfo.battery <= MIN_BATTERY_VALUE_FOR_LOGOUT && !batteryInfo.plugged) {
       this.emit('logout', this.botId, STRINGS[LANGUAGE].LOGOUT_REASON.BATTERY_LOWER_IN_PHONE)
     }
-  }
-
-  /**
-   * MemoryCard Session Section
-   */
-
-  public async setSession (session: ClientSession) {
-    const memoryCard = this.manager.getMemory()
-    await memoryCard.set(MEMORY_SLOT, session)
-    await memoryCard.save()
-  }
-
-  public async clearSession () {
-    const memoryCard = this.manager.getMemory()
-    await memoryCard.delete(MEMORY_SLOT)
-    await memoryCard.save()
   }
 
 }
