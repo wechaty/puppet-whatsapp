@@ -6,7 +6,6 @@ import type {
 
 import type {
   WhatsAppClientType,
-  ClientSession,
   ClientOptions,
 } from '../schema/whatsapp-type.js'
 import {
@@ -56,7 +55,7 @@ export default class WhatsAppManager extends WhatsAppBase {
 
   public async genWhatsAppClient (
     options: ClientOptions = {},
-    _session?: ClientSession,
+    session: string = 'default-client',
   ): Promise<WhatsAppClientType> {
     log.verbose(PRE, 'initWhatsAppClient()')
     const { puppeteer = {}, ...restOptions } = options
@@ -76,14 +75,14 @@ export default class WhatsAppManager extends WhatsAppBase {
     }
 
     this.whatsAppClient = new WhatsApp({
-      authStrategy: new LocalAuth({ clientId: 'default-client' }), // FIXME: if we give it a new client name, it will start a new session. And the old client name will still keep login status.
+      authStrategy: new LocalAuth({ clientId: session }),
       puppeteer: puppeteerOptions,
       // can no longer customize refresh interval
       // refresh time gap is set to 15 seconds
       restartOnAuthFail: true,
-      // session,
       ...restOptions,
     })
+    await this.setSession(session)
     return this.whatsAppClient
   }
 
