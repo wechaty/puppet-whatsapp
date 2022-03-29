@@ -6,7 +6,7 @@ import { packageJson } from './package-json.js'
 
 const VERSION = packageJson.version || '0.0.0'
 
-const MEMORY_SLOT = 'PUPPET_WHATSAPP'
+const MEMORY_SLOT = 'PUPPET_WHATSAPP_CLIENT_ID'
 const PRE = 'PuppetWhatsApp'
 
 export const SPECIAL_BOT_PUSHNAME = '-' // FIXME: pushname is '-', see: https://github.com/wechaty/puppet-whatsapp/issues/233

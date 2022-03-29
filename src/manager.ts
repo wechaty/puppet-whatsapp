@@ -144,8 +144,10 @@ export class Manager extends EventEmitter {
     return this
   }
 
-  public async start (session?: ClientSession) {
+  public async start (session: string = 'default-client') {
     logger.info('start()')
+    await this.options.memory?.set(MEMORY_SLOT, session)
+    await this.options.memory?.save()
     this.whatsAppClient = await getWhatsApp(this.options['puppeteerOptions'], session)
     this.whatsAppClient
       .initialize()
@@ -176,23 +178,11 @@ export class Manager extends EventEmitter {
 
   private async onAuthenticated (session: ClientSession) {
     logger.info(`onAuthenticated(${JSON.stringify(session)})`)
-    try {
-      await this.options.memory?.set(MEMORY_SLOT, session)
-      await this.options.memory?.save()
-    } catch (e) {
-      console.error(e)
-      logger.error('getClient() whatsapp.on(authenticated) rejection: %s', e)
-    }
   }
 
   private async onAuthFailure (message: string) {
     // Unable to log in. Are the session details valid?, then restart no use exist session
     logger.warn('auth_failure: %s, then restart no use exist session', message)
-    // msg -> auth_failure message
-    // auth_failure due to session invalidation
-    // clear sessionData -> reinit
-    await this.options.memory?.delete(MEMORY_SLOT)
-    await this.options.memory?.save()
   }
 
   private async onWhatsAppReady () {
