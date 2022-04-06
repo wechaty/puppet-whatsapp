@@ -1,6 +1,6 @@
 import * as PUPPET from 'wechaty-puppet'
 import { log } from '../config.js'
-import type PuppetWhatsApp from '../puppet-whatsapp'
+import type PuppetWhatsApp from '../puppet-whatsapp.js'
 
 const PRE = 'MIXIN_CONTACT_SELF'
 
