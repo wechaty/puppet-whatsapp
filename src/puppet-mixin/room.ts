@@ -5,7 +5,7 @@ import { WA_ERROR_TYPE } from '../exception/error-type.js'
 import WAError from '../exception/whatsapp-error.js'
 import { contactRawPayload } from './contact.js'
 
-import type PuppetWhatsApp from '../puppet-whatsapp'
+import type PuppetWhatsApp from '../puppet-whatsapp.js'
 import type {
   WhatsAppContactPayload as RoomPayload,
   InviteV4Data,

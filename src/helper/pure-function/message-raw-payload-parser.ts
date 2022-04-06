@@ -12,35 +12,48 @@ import type {
 } from '../../schema/whatsapp-type.js'
 
 export function parserMessageRawPayload (messagePayload: WhatsAppMessagePayload): PUPPET.payloads.Message {
-  const fromId = messagePayload.author || messagePayload.from
-  let toId: string | undefined
+  const talkerId = messagePayload.author || messagePayload.from
+  let listenerId: string | undefined
   let roomId: string | undefined
 
   if (typeof messagePayload.id.remote === 'object') {
     const { _serialized } = messagePayload.id.remote
     roomId = isRoomId(_serialized) ? _serialized : undefined
-    toId = isRoomId(_serialized) ? undefined : messagePayload.to
+    listenerId = isRoomId(_serialized) ? undefined : messagePayload.to
   } else {
     roomId = isRoomId(messagePayload.id.remote) ? messagePayload.id.remote : undefined
-    toId = isRoomId(messagePayload.id.remote) ? undefined : messagePayload.to
+    listenerId = isRoomId(messagePayload.id.remote) ? undefined : messagePayload.to
   }
 
-  if (!fromId) {
-    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, 'empty fromId!')
+  if (!talkerId) {
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, 'empty talkerIdId!')
   }
 
-  if (!roomId && !toId) {
-    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, 'empty roomId and empty toId!')
+  if (!roomId && !listenerId) {
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, 'empty roomId and empty listenerId!')
   }
 
   return {
-    fromId,
+    /**
+     * @deprecated `fromId` is deprecated, use `talkerId` instead.
+     *  `fromId` will be removed in v2.0
+     */
+    fromId: talkerId,
+    talkerId,
+    // eslint-disable-next-line sort-keys
     id: messagePayload.id.id,
     mentionIdList: messagePayload.mentionedIds,
     roomId,
     text: messagePayload.body,
     timestamp: messagePayload.timestamp,
-    toId,
+    /**
+     * @deprecated `toId` is deprecated, use `listenerId` instead.
+     *  `toId` will be removed in v2.0
+     */
+    toId: listenerId,
+    // eslint-disable-next-line sort-keys
+    listenerId,
+
     type: getMessageType(messagePayload),
   } as any
 
