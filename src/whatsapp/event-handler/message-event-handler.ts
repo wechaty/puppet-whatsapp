@@ -97,7 +97,7 @@ export default class MessageEventHandler extends WhatsAppBase {
    */
   public async onMessageCreate (message: WhatsAppMessage) {
     log.silly(PRE, `onMessageCreate(${JSON.stringify(message)})`)
-    if (message.id.fromMe && message.to === this.getBotId()) {
+    if (message.id.fromMe) {
       const messageId = message.id.id
       const cacheManager = await this.manager.getCacheManager()
       await cacheManager.setMessageRawPayload(messageId, message)
