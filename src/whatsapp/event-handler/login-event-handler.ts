@@ -157,6 +157,7 @@ export default class LoginEventHandler extends WhatsAppBase { // FIXME: I have n
       case WAState.CONNECTED:
         this.clearPendingLogoutEmitTimer()
         this.emit('login', this.botId)
+        this.loadingData = false
         const contactOrRoomList = await this.manager.syncContactOrRoomList()
         await this.onReady(contactOrRoomList)
         break
