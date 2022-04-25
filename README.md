@@ -17,11 +17,11 @@ Puppet Whatsapp
 ### Puppet Whatsapp
 
 ```ts
-import { Wechaty }   from 'wechaty'
+import { WechatyBuilder }   from 'wechaty'
 import { PuppetWhatsapp } from 'wechaty-puppet-whatsapp'
 
 const puppet  = new PuppetWhatsapp()
-const wechaty = new Wechaty({ puppet })
+const wechaty = WechatyBuilder.build({ puppet })
 
 wechaty.start()
 ```
@@ -39,7 +39,18 @@ Learn how to run Wechaty bot from <https://github.com/wechaty/wechaty-getting-st
 
 ## HISTORY
 
-### main v1.0 (Oct 30, 2021)
+### main v1.19
+
+1. Upgrade to Wechaty Puppet v1.19 API
+1. Upgrade dependencies
+
+### v1.16 (Apr 6, 2022)
+
+Supported all features from [whatsapp-web.js](https://github.com/pedroslopez/whatsapp-web.js/) by [Issue #19](https://github.com/wechaty/puppet-whatsapp/issues/19).
+
+Thanks for all efforts from the [@juzibot](https://github.com/orgs/wechaty/teams/juzi) team: [@su-chang](https://github.com/su-chang), [@hcfw007](https://github.com/hcfw007), and [@windmemory](https://github.com/windmemory), who has implemented those features to the Wechaty community!
+
+### v1.0 (Oct 30, 2021)
 
 Release 1.0 of Wechaty Puppet Whatsapp.
 

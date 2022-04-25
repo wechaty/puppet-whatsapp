@@ -33,9 +33,9 @@ test('message parser for room message which send from bot by web ', async t => {
     links: [],
   }
   const messagePayload = parserMessageRawPayload(roomMessageFromBotByWeb)
-  t.ok(messagePayload.toId === undefined, 'should get no target id')
+  t.ok(messagePayload.listenerId === undefined, 'should get no target id')
   t.ok(messagePayload.roomId === '120363039010379837@g.us', 'should get correct room id')
-  t.ok(messagePayload.fromId === '8613812345679@c.us', 'shuold get correct sender id')
+  t.ok(messagePayload.talkerId === '8613812345679@c.us', 'shuold get correct sender id')
   t.ok(messagePayload.text === 'ding', 'should get correct message content')
 
   t.pass('message parser for room message which send from bot by web pass')
@@ -76,9 +76,9 @@ test('message parser for room message which send from bot by api ', async t => {
   }
   const messagePayload = parserMessageRawPayload(roomMessageFromBotByApi)
 
-  t.ok(messagePayload.toId === undefined, 'should get no target id')
+  t.ok(messagePayload.listenerId === undefined, 'should get no target id')
   t.ok(messagePayload.roomId === '120363039010379837@g.us', 'should get correct room id')
-  t.ok(messagePayload.fromId === '8613812345679@c.us', 'shuold get correct sender id')
+  t.ok(messagePayload.talkerId === '8613812345679@c.us', 'shuold get correct sender id')
   t.ok(messagePayload.text === 'dong', 'should get correct message content')
 
   t.pass('message parser for room message which send from bot by api pass')
@@ -117,9 +117,9 @@ test('message parser for room message which send from other contact ', async t =
   }
   const messagePayload = parserMessageRawPayload(roomMessageFromOtherContact)
 
-  t.ok(messagePayload.toId === undefined, 'should get no target id')
+  t.ok(messagePayload.listenerId === undefined, 'should get no target id')
   t.ok(messagePayload.roomId === '120363039010379837@g.us', 'should get correct room id')
-  t.ok(messagePayload.fromId === '8613812345678@c.us', 'shuold get correct sender id')
+  t.ok(messagePayload.talkerId === '8613812345678@c.us', 'shuold get correct sender id')
   t.ok(messagePayload.text === 'hello', 'should get correct message content')
 
   t.pass('message parser for room message which send from other contact pass')
@@ -156,9 +156,9 @@ test('message parser for contact message which send from bot by web ', async t =
   }
   const messagePayload = parserMessageRawPayload(contactMessageFromBotByWeb)
 
-  t.ok(messagePayload.toId === '8618710175700@c.us', 'should get correct target id')
+  t.ok(messagePayload.listenerId === '8618710175700@c.us', 'should get correct target id')
   t.ok(messagePayload.roomId === undefined, 'should get no room id')
-  t.ok(messagePayload.fromId === '8613812345679@c.us', 'shuold get correct sender id')
+  t.ok(messagePayload.talkerId === '8613812345679@c.us', 'shuold get correct sender id')
   t.ok(messagePayload.text === 'ding', 'should get correct message content')
 
   t.pass('message parser for contact message which send from bot by web pass')
@@ -195,9 +195,9 @@ test('message parser for contact message which send from bot by api ', async t =
   }
   const messagePayload = parserMessageRawPayload(contactMessageFromBotByApi)
 
-  t.ok(messagePayload.toId === '8613811286503@c.us', 'should get correct target id')
+  t.ok(messagePayload.listenerId === '8613811286503@c.us', 'should get correct target id')
   t.ok(messagePayload.roomId === undefined, 'should get no room id')
-  t.ok(messagePayload.fromId === '8613812345679@c.us', 'shuold get correct sender id')
+  t.ok(messagePayload.talkerId === '8613812345679@c.us', 'shuold get correct sender id')
   t.ok(messagePayload.text === 'dong', 'should get correct message content')
 
   t.pass('message parser for contact message which send from bot by api pass')
@@ -234,9 +234,9 @@ test('message parser for contact message which send from other contact', async t
   }
   const messagePayload = parserMessageRawPayload(contactMessageFromOtherContact)
 
-  t.ok(messagePayload.toId === '8613812345679@c.us', 'should get correct target id')
+  t.ok(messagePayload.listenerId === '8613812345679@c.us', 'should get correct target id')
   t.ok(messagePayload.roomId === undefined, 'should get no room id')
-  t.ok(messagePayload.fromId === '8613812345678@c.us', 'shuold get correct sender id')
+  t.ok(messagePayload.talkerId === '8613812345678@c.us', 'shuold get correct sender id')
   t.ok(messagePayload.text === 'hola', 'should get correct message content')
 
   t.pass('message parser for contact message which send from other contact pass')
