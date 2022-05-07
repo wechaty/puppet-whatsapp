@@ -234,10 +234,6 @@ class PuppetWhatsapp extends PUPPET.Puppet {
    * Override Methods
    */
 
-  override async onDirty (payload: PUPPET.payloads.EventDirty) {
-    this.emit('dirty', payload)
-  }
-
   override async logout () {
     await super.logout()
     if (!this.isLoggedIn) {
