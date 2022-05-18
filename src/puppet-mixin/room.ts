@@ -117,9 +117,36 @@ async function addMemberListToRoom (
 ) {
   const roomChat = await this.manager.getRoomChatById(roomId)
   const contactIdList = Array.isArray(contactIds) ? contactIds : [contactIds]
-  await roomChat.addParticipants(contactIdList)
+  const result = await roomChat.addParticipants(contactIdList)
   const cacheManager = await this.manager.getCacheManager()
-  await cacheManager.addRoomMemberToList(roomId, contactIds)
+  const successContactIdList = []
+  if (!result.status || Number(result.status) !== 207) {
+    switch (Number(result.status)) {
+      case 401:
+        throw WAError(WA_ERROR_TYPE.ERR_ADD_ROOM, `cannot add contact: ${contactIdList.join(', ')} to room ${roomId}, please check if you are room admin`)
+      default:
+        throw WAError(WA_ERROR_TYPE.ERR_ADD_ROOM, `cannot add contact: ${contactIdList.join(', ')} to room ${roomId} for unknown reason`)
+    }
+  }
+  for (const item of result.participants) {
+    for (const contactId in item) {
+      const contactResult = item[contactId]
+      if (Number(contactResult?.code) === 200) {
+        log.silly(PRE, `add member ${contactId} to room ${roomId} succeded`)
+        successContactIdList.push(contactId)
+      } else {
+        switch (Number(contactResult?.code)) {
+          case 409:
+            log.warn(PRE, `add member ${contactId} to room ${roomId} failed, contact is already in room`)
+            break
+          default:
+            log.warn(PRE, `add member ${contactId} to room ${roomId} failed for unknown reason`)
+        }
+      }
+    }
+  }
+  await cacheManager.addRoomMemberToList(roomId, successContactIdList)
+
 }
 
 export async function roomDel (
