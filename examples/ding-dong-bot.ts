@@ -105,7 +105,7 @@ function onError (payload: PUPPET.payloads.EventError) {
 async function onMessage (payload: PUPPET.payloads.EventMessage) {
   const msgPayload = await puppet.messagePayload(payload.messageId)
   if ((/ding/i.test(msgPayload.text || ''))) {
-    await puppet.messageSendText(msgPayload.talkerId!, 'dong')
+    await puppet.messageSendText(msgPayload.fromId!, 'dong')
   }
 }
 

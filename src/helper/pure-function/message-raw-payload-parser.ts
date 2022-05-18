@@ -12,34 +12,34 @@ import type {
 } from '../../schema/whatsapp-type.js'
 
 export function parserMessageRawPayload (messagePayload: WhatsAppMessagePayload): PUPPET.payloads.Message {
-  const talkerId = messagePayload.author || messagePayload.from
-  let listenerId: string | undefined
+  const fromId = messagePayload.author || messagePayload.from
+  let toId: string | undefined
   let roomId: string | undefined
 
   if (typeof messagePayload.id.remote === 'object') {
     const { _serialized } = messagePayload.id.remote
     roomId = isRoomId(_serialized) ? _serialized : undefined
-    listenerId = isRoomId(_serialized) ? undefined : messagePayload.to
+    toId = isRoomId(_serialized) ? undefined : messagePayload.to
   } else {
     roomId = isRoomId(messagePayload.id.remote) ? messagePayload.id.remote : undefined
-    listenerId = isRoomId(messagePayload.id.remote) ? undefined : messagePayload.to
+    toId = isRoomId(messagePayload.id.remote) ? undefined : messagePayload.to
   }
 
-  if (!talkerId) {
-    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, 'empty talkerIdId!')
+  if (!fromId) {
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, 'empty fromIdId!')
   }
 
-  if (!roomId && !listenerId) {
-    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, 'empty roomId and empty listenerId!')
+  if (!roomId && !toId) {
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, 'empty roomId and empty toId!')
   }
 
   return {
     /**
-     * @deprecated `fromId` is deprecated, use `talkerId` instead.
+     * @deprecated `fromId` is deprecated, use `fromId` instead.
      *  `fromId` will be removed in v2.0
      */
-    fromId: talkerId,
-    talkerId,
+    fromId: fromId,
+    talkerId: fromId,
     // eslint-disable-next-line sort-keys
     id: messagePayload.id.id,
     mentionIdList: messagePayload.mentionedIds,
@@ -47,12 +47,12 @@ export function parserMessageRawPayload (messagePayload: WhatsAppMessagePayload)
     text: messagePayload.body,
     timestamp: messagePayload.timestamp,
     /**
-     * @deprecated `toId` is deprecated, use `listenerId` instead.
+     * @deprecated `toId` is deprecated, use `toId` instead.
      *  `toId` will be removed in v2.0
      */
-    toId: listenerId,
+    toId: toId,
     // eslint-disable-next-line sort-keys
-    listenerId,
+    listenerId: toId,
 
     type: getMessageType(messagePayload),
   } as any
