@@ -71,6 +71,8 @@ function getMessageType (messagePayload: WhatsAppMessagePayload): PUPPET.types.M
     case WhatsAppMessageType.TEXT:
       if (messagePayload.title || messagePayload.description) {
         type = PUPPET.types.Message.Url
+      } else if (messagePayload.isStatus) {
+        type = PUPPET.types.Message.Post
       } else {
         type = PUPPET.types.Message.Text
       }
@@ -82,13 +84,21 @@ function getMessageType (messagePayload: WhatsAppMessagePayload): PUPPET.types.M
       type = PUPPET.types.Message.Audio
       break
     case WhatsAppMessageType.IMAGE:
-      type = PUPPET.types.Message.Image
+      if (messagePayload.isStatus) {
+        type = PUPPET.types.Message.Post
+      } else {
+        type = PUPPET.types.Message.Image
+      }
       break
     case WhatsAppMessageType.AUDIO:
       type = PUPPET.types.Message.Audio
       break
     case WhatsAppMessageType.VIDEO:
-      type = PUPPET.types.Message.Video
+      if (messagePayload.isStatus) {
+        type = PUPPET.types.Message.Post
+      } else {
+        type = PUPPET.types.Message.Video
+      }
       break
     case WhatsAppMessageType.CONTACT_CARD:
       type = PUPPET.types.Message.Contact
