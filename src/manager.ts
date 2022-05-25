@@ -271,7 +271,12 @@ export default class Manager extends EE<ManagerEvents> {
      * it will not return true if the Chromium process is terminated with command + q
      */
 
-    const alive = this.getWhatsAppClient().pupBrowser?.isConnected()
+    let alive = false
+    try {
+      alive = !!this.getWhatsAppClient().pupBrowser?.isConnected()
+    } catch (e) {
+      alive = false
+    }
     if (alive) {
       this.asystoleCount = 0
       this.emit('heartbeat', 'puppeteer still connected')
