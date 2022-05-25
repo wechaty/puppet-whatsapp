@@ -77,6 +77,36 @@ export async function messageRecall (this: PuppetWhatsApp, messageId: string): P
 }
 
 /**
+* Get moment detail image or video from message
+* @param messageId message id
+* @param imageType image size to get (may not apply to WhatsApp)
+* @returns the image or video
+*/
+export async function messagePost (this: PuppetWhatsApp, messageId: string, imageType: PUPPET.types.Image) {
+  log.verbose(PRE, 'messagePost(%s, %s)', messageId, PUPPET.types.Image[imageType])
+  const cacheManager = await this.manager.getCacheManager()
+  const msg = await cacheManager.getMessageRawPayload(messageId)
+  if (!msg) {
+    log.error(PRE, 'Message %s not found', messageId)
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_FOUND, `Message ${messageId} Not Found`)
+  }
+
+  if (!msg.hasMedia) {
+    log.error(PRE, 'Message %s does not contain any media', messageId)
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Message ${messageId} does not contain any media`)
+  }
+
+  if (msg.type === WhatsAppMessageType.IMAGE) {
+    return this.messageImage(messageId, imageType)
+  } else if (msg.type === WhatsAppMessageType.VIDEO) {
+    return this.messageFile(messageId)
+  } else {
+    throw WAError(WA_ERROR_TYPE.ERR_MSG_NOT_MATCH, `Post message ${messageId} with wrong message type: ${msg.type}`)
+  }
+
+}
+
+/**
 * Get image from message
 * @param messageId message id
 * @param imageType image size to get (may not apply to WhatsApp)
