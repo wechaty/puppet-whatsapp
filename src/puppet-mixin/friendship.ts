@@ -48,6 +48,13 @@ export async function friendshipSearchWeixin (
   return PUPPET.throwUnsupportedError()
 }
 
+export async function friendshipSearchHandle (
+  handle: string,
+): Promise<null | string> {
+  log.verbose(PRE, 'friendshipSearchHandle(%s)', handle)
+  return PUPPET.throwUnsupportedError()
+}
+
 export async function friendshipAdd (
   this: PuppetWhatsApp,
   contactId: string,
