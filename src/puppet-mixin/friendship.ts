@@ -33,13 +33,25 @@ export async function friendshipSearchPhone (
   phone: string,
 ): Promise<null | string> {
   log.verbose(PRE, 'friendshipSearchPhone(%s)', phone)
-  return `${phone}@c.us`
+  const contactId = `${phone}@c.us`
+  const isUser = await this.manager.isWhatsappUser(contactId)
+  if (!isUser) {
+    throw WAError(WA_ERROR_TYPE.ERR_CONTACT_NOT_FOUND, 'Not a registered user on WhatsApp.', `contactId: ${contactId}`)
+  }
+  return contactId
 }
 
 export async function friendshipSearchWeixin (
   weixin: string,
 ): Promise<null | string> {
   log.verbose(PRE, 'friendshipSearchWeixin(%s)', weixin)
+  return PUPPET.throwUnsupportedError()
+}
+
+export async function friendshipSearchHandle (
+  handle: string,
+): Promise<null | string> {
+  log.verbose(PRE, 'friendshipSearchHandle(%s)', handle)
   return PUPPET.throwUnsupportedError()
 }
 
