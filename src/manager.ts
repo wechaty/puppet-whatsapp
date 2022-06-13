@@ -179,7 +179,10 @@ export default class Manager extends EE<ManagerEvents> {
   public async syncRoomMemberList (roomId: string): Promise<string[]> {
     const roomChat = await this.getRoomChatById(roomId)
     // FIXME: How to deal with pendingParticipants? Maybe we should find which case could has this attribute.
-    return roomChat.participants.map(m => m.id._serialized)
+    const memberIdList = roomChat.participants.map(m => m.id._serialized)
+    const cacheManager = await this.getCacheManager()
+    await cacheManager.setRoomMemberIdList(roomId, memberIdList)
+    return memberIdList
   }
 
   public async syncContactOrRoomList () {
