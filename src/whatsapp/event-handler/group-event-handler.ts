@@ -28,8 +28,7 @@ export default class GroupEventHandler extends WhatsAppBase {
       roomId,
       timestamp: notification.timestamp,
     }
-    const cacheManager = await this.manager.getCacheManager()
-    await cacheManager.addRoomMemberToList(roomId, notification.recipientIds)
+    await this.manager.syncRoomMemberList(roomId)
     this.emit('room-join', roomJoinPayload)
   }
 

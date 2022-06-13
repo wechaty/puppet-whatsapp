@@ -117,7 +117,6 @@ export default class LoginEventHandler extends WhatsAppBase { // FIXME: I have n
         if (memberList.length > 0) {
           roomCount++
           await cacheManager.setContactOrRoomRawPayload(contactOrRoomId, contactWithAvatar)
-          await cacheManager.setRoomMemberIdList(contactOrRoomId, memberList)
         } else {
           await cacheManager.deleteContactOrRoom(contactOrRoomId)
           await cacheManager.deleteRoomMemberIdList(contactOrRoomId)
