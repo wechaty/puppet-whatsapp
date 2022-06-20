@@ -30,11 +30,35 @@ const PRE = 'LoginEventHandler'
 export default class LoginEventHandler extends WhatsAppBase { // FIXME: I have no good idea for this class name.
 
   protected loadingData: boolean = false
+  private qrcodeOrLoginCheckTimer?: NodeJS.Timer
+  private hasLogin: boolean = false
+  private lastQRCodeTime = Date.now()
 
   public onQRCode (qrcode: string) {
     log.info(PRE, `onQRCode(${qrcode})`)
     // NOTE: This event will not be fired if a session is specified.
+    this.lastQRCodeTime = Date.now()
+    this.hasLogin = false
     this.emit('scan', { qrcode, status: PUPPET.types.ScanStatus.Waiting })
+    this.checkQRCodeOrLoginEvent()
+  }
+
+  private checkQRCodeOrLoginEvent () {
+    if (this.qrcodeOrLoginCheckTimer) {
+      return
+    }
+    this.qrcodeOrLoginCheckTimer = setInterval(() => {
+      if (!this.hasLogin && Date.now() > this.lastQRCodeTime + 2 * 60 * 1000) {
+        this.emit('error', 'can not get scan or login event more than 2 mins')
+      }
+    }, 25 * 1000)
+  }
+
+  private clearQrcodeOrLoginCheckTimer () {
+    if (!this.qrcodeOrLoginCheckTimer) {
+      return
+    }
+    clearInterval(this.qrcodeOrLoginCheckTimer)
   }
 
   public async onAuthenticated () {
@@ -49,6 +73,8 @@ export default class LoginEventHandler extends WhatsAppBase { // FIXME: I have n
 
   public async onWhatsAppReady () {
     log.verbose(PRE, 'onWhatsAppReady()')
+    this.hasLogin = true
+    this.clearQrcodeOrLoginCheckTimer()
     const contactOrRoomList = await this.manager.syncContactOrRoomList()
     await this.onLogin(contactOrRoomList)
     await this.onReady(contactOrRoomList)
@@ -135,6 +161,7 @@ export default class LoginEventHandler extends WhatsAppBase { // FIXME: I have n
   public async onLogout (reason: string = STRINGS[LANGUAGE].LOGOUT_REASON.DEFAULT) {
     log.verbose(PRE, `onLogout(${reason})`)
     await this.clearSession()
+    this.hasLogin = false
     this.manager.stopSchedule()
     this.emit('logout', this.getBotId(), reason as string)
     this.clearWhatsAppRelatedData()
