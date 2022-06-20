@@ -53,6 +53,12 @@ export default class WhatsAppManager extends WhatsAppBase {
     })
   }
 
+  public async stop () {
+    await this.getWhatsAppClient().stop()
+    this.baseStop()
+    this.botEventHandler.clearQrcodeOrLoginCheckTimer()
+  }
+
   public async genWhatsAppClient (
     options: ClientOptions = {},
     session: string = 'default-client',

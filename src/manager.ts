@@ -86,10 +86,9 @@ export default class Manager extends EE<ManagerEvents> {
 
   public async stop () {
     log.verbose(PRE, 'stop()')
-    await this.getWhatsAppClient().stop()
+    await this.whatsAppManager.stop()
     await this.releaseCache()
     this._requestManager = undefined
-    this.whatsAppManager.clearWhatsAppRelatedData()
 
     this.stopHeartbeat()
   }
