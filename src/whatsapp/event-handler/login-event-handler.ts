@@ -54,7 +54,7 @@ export default class LoginEventHandler extends WhatsAppBase { // FIXME: I have n
     }, 25 * 1000)
   }
 
-  private clearQrcodeOrLoginCheckTimer () {
+  public clearQrcodeOrLoginCheckTimer () {
     if (!this.qrcodeOrLoginCheckTimer) {
       return
     }
@@ -164,7 +164,7 @@ export default class LoginEventHandler extends WhatsAppBase { // FIXME: I have n
     this.hasLogin = false
     this.manager.stopSchedule()
     this.emit('logout', this.getBotId(), reason as string)
-    this.clearWhatsAppRelatedData()
+    this.baseStop()
   }
 
   public async onChangeState (state: WAStateType) {

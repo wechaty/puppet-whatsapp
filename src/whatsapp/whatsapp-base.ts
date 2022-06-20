@@ -32,7 +32,7 @@ export default class WhatsAppBase extends EE<ManagerEvents> {
     super()
   }
 
-  public clearWhatsAppRelatedData () {
+  protected baseStop () {
     this.botId = undefined
     this.whatsAppClient = undefined
     this.clearPendingLogoutEmitTimer()
