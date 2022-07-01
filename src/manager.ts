@@ -86,6 +86,7 @@ export default class Manager extends EE<ManagerEvents> {
 
   public async stop () {
     log.verbose(PRE, 'stop()')
+    this.stopSchedule()
     await this.whatsAppManager.stop()
     await this.releaseCache()
     this._requestManager = undefined
