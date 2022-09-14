@@ -246,7 +246,7 @@ export async function messageSendFile (this: PuppetWhatsApp, conversationId: str
     : path.extname(file.name)
   log.silly(PRE, `message type: ${type}, filename: ${file.name}`)
   const fileBoxJsonObject: any = file.toJSON() // FIXME: need import FileBoxJsonObject from file-box
-  const remoteUrl = fileBoxJsonObject.remoteUrl
+  const remoteUrl = fileBoxJsonObject.url
   let msgContent
   if (remoteUrl) {
     msgContent = await MessageMedia.fromUrl(remoteUrl, { filename: file.name })
